@@ -24,7 +24,8 @@
 #'     \item{`"rvp"`}{residual vs predictor (such as age) plot showing 
 #'     residuals plotted against predictor values derived from posterior draws.}
 #'     \item{`"qqn"`}{Normal Q-Q plot based on summarized posterior residuals.}
-#'     \item{`"qqp"`}{Pearson Q-Q plot based on standardized posterior residuals.}
+#'     \item{`"qqp"`}{Pearson Q-Q plot based on standardized posterior
+#'     residuals.}
 #'     \item{`"qq"`}{Same as \code{"qqp"}.}
 #'     \item{`"pairs"`}{Pair plots for MCMC draws via
 #'     [bayesplot::mcmc_pairs()].}
@@ -45,8 +46,8 @@
 #'     \item{`"ppc_scatter_avg"`}{Posterior predictive observed-versus-replicated
 #'     average scatter plot via [brms::pp_check()] with \code{type =
 #'     "scatter_avg"}.}
-#'     \item{`"ppc_stat"`}{Posterior predictive check for a summary statistic via
-#'     [brms::pp_check()] with \code{type = "stat"}.}
+#'     \item{`"ppc_stat"`}{Posterior predictive check for a summary statistic 
+#'     via [brms::pp_check()] with \code{type = "stat"}.}
 #'   }
 #'
 #' @param set_draws Character scalar indicating which fitted-value draw type to
@@ -105,13 +106,13 @@
 #'   residual-versus-fitted plot. The default is \code{"lm"}.
 #'
 #' @param ppc_stat Summary statistic to use when \code{plots} includes
-#'   \code{"ppc_stat"}. This value is passed to [brms::pp_check()] as \code{type
-#'   = "stat", stat = 'ppc_stat'}.
-#'
+#'   \code{"ppc_stat"}. This value is passed to [brms::pp_check()] as
+#'    \code{type = "stat", stat = 'ppc_stat'}.
+#' 
 #' @param rank_overlay Logical; if \code{TRUE}, sets the \pkg{bayesplot} color
 #'   scheme to \code{"blue"}. This does not itself create a rank-overlay plot,
-#'   but allows a simple style customization for compatible \pkg{bayesplot}-based
-#'   outputs.
+#'   but allows a simple style customization for compatible
+#'   \pkg{bayesplot}-based outputs.
 #'   
 #' @param add_plot_df Optional logical (default \code{FALSE}) indicating whether
 #'   to add \code{plot_df} to the returned value.
@@ -124,7 +125,7 @@
 #' @param qq_plot_args A named list of arguments passed on to the
 #'   \code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
 #'   \code{plots = `"qq"`}. Note that \code{plots = `"qq"`} is internally
-#'   evalauted as \code{plots = `"qqp"`}.
+#'   evaluated as \code{plots = `"qqp"`}.
 #'   
 #' @param patch_plot.margin Optional setting the margins for the
 #'   \pkg{patchwork}.
@@ -314,7 +315,7 @@ model_diagnostics.bgmfit <- function(
                         summary = "robust", 
                         qq_type = 'qq',
                         seed = 123),
-    patch_plot.margin = ggplot2::margin(10, 0, 10, 0), # Top, Right, Bottom, Left
+    patch_plot.margin = ggplot2::margin(10, 0, 10, 0),# Top, Right, Bottom, Left
     funlist = NULL,
     future = FALSE,
     future_session = 'multisession',
@@ -764,9 +765,12 @@ model_diagnostics.bgmfit <- function(
     if(all(!check_trace_back.bgmfit)) {
       # nothing
     } else {
-      rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
-      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
-      rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
+      rlang_trace_back.bgmfit_i <- 
+        min(which(check_trace_back.bgmfit == TRUE))
+      rlang_trace_back.bgmfit <- 
+        rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_call_name <- 
+        rlang::call_name(rlang_trace_back.bgmfit)
       xcall <- rlang_call_name
     }
   }
@@ -1185,7 +1189,7 @@ model_diagnostics.bgmfit <- function(
       out$rvf <- plot_df %>%
         ggplot2::ggplot(ggplot2::aes(x = .fitted_value, y = .residual)) +
         ggplot2::geom_point(alpha = point_alpha, color = "gray40") +
-        ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+        ggplot2::geom_hline(yintercept = 0, linetype="dashed", color = "red") +
         ggplot2::geom_smooth(
           method = smooth_method,
           formula = y ~ x,
@@ -1316,8 +1320,8 @@ model_diagnostics.bgmfit <- function(
   
   if ("ppc_dens_overlay" %in% plots) {
     out$ppc_dens_overlay <- brms::pp_check(
-      model, type = "dens_overlay", ndraws = ndraws
-    ) + 
+      model, type = "dens_overlay", ndraws = ndraws, size = 2,  alpha = 4
+    ) +
       ggplot2::theme(
         legend.position = "inside",
         legend.position.inside = c(0.15, 0.9)
@@ -1325,6 +1329,7 @@ model_diagnostics.bgmfit <- function(
       ggplot2::labs(title = "Posterior Predictive Check: Density Overlay")
   }
   
+
   if ("ppc_hist" %in% plots) {
     out$ppc_hist <- brms::pp_check(
       model, type = "hist", ndraws = ndraws, bins  = bins
@@ -1334,7 +1339,7 @@ model_diagnostics.bgmfit <- function(
   
   if ("ppc_scatter_avg" %in% plots) {
     out$ppc_scatter_avg <- brms::pp_check(
-      model, type = "scatter_avg", ndraws = ndraws
+      model, type = "scatter_avg", ndraws = ndraws, size = 1
     ) +
       ggplot2::labs(title = "Posterior Predictive Check: Scatter Average")
   }
@@ -1366,11 +1371,15 @@ model_diagnostics.bgmfit <- function(
     insight::check_if_installed('ggtext')
     for (namespi in names(out)) {
       out[[namespi]] <-  out[[namespi]] +
-        ept("ggplot2::theme(plot.title = ggtext::element_textbox_simple(hjust = 0,
-                                                                   vjust = 0,
-                                                                   margin = ggplot2::margin(b = 10),
-                                                                   halign = 0.5,
-                                                                   valign = 0.5))")
+        ept(
+        "ggplot2::theme(plot.title = 
+                         ggtext::element_textbox_simple(
+                           hjust = 0,
+                           vjust = 0,
+                           margin = ggplot2::margin(b = 10),
+                           halign = 0.5,
+                           valign = 0.5))"
+        ) # ept
     }
   }
   
@@ -1457,7 +1466,7 @@ model_diagnostics.bgmfit <- function(
     })
   }
   
-  ###
+  
   out <- list(combined = combined, plots = out)
   if(add_plot_df) {
     out[['plot_df']] = if (exists("plot_df")) plot_df else NULL

@@ -59,7 +59,7 @@
   linewidth.main = NULL,
   linewidth.apv = NULL,
   linetype.groupby = NA,
-  color.groupby = NA,
+  color.groupby = NULL,
   fill.groupby = NULL,
   band.alpha = NULL,
   band.legends = FALSE,
@@ -108,7 +108,7 @@ plotting options:
 random effects)
 }
 
-Note that 'd' and 'D' cannot be specified simultaneously, nor can 'v' and
+Note that 'd' and 'D' cannot be specified together, nor can 'v' and
 'V'. Other combinations are allowed, e.g., 'dvau', 'Dvau', 'dVau', etc.}
 
 \item{apv}{A logical value (default \code{FALSE}) indicating whether to
@@ -428,20 +428,23 @@ and velocity curves. The default \code{NULL} sets the width to 0.35.}
 \item{linewidth.apv}{A numeric value to specify the width of the vertical
 line marking the APGV. The default \code{NULL} sets the width to 0.25.}
 
-\item{linetype.groupby}{A character string specifying the line type for
-distance and velocity curves when drawing plots for a model with factor
-covariates or individual-specific curves. The default is \code{NA}, which
-sets the line type to 'solid' and suppresses legends.}
+\item{linetype.groupby}{A character string specifying the line type of
+distance and velocity curves for \code{covariates} or individual-specific
+curves. If \code{NA}, then default color is \code{'black'} for all lines.}
 
-\item{color.groupby}{A character string specifying the line color for
-distance and velocity curves when drawing plots for a model with factor
-\code{covariates} or individual-specific curves. The default is \code{NA},
-which suppresses legends.}
+\item{color.groupby}{A character string specifying the line color of distance
+and velocity curves for \code{covariates} or individual-specific curves. If
+\code{NA}, then default color is \code{'black'} for all lines. If
+\code{NULL} (default), then line color is set based on the co variate
+extracted from the \code{model_info}. Note that for individual-specific
+curves for co variate adjusted models, user can set it as
+\code{color.groupby = interaction(covariate, id)}}
 
-\item{fill.groupby}{A character string specifying the fill color for distance
-and velocity curve bands when drawing plots for a model with factor
-\code{covariates} or individual-specific curves. The default is \code{NA},
-which suppresses legends.}
+\item{fill.groupby}{A character string specifying the fill color of distance
+and velocity curves for \code{covariates} or individual-specific curves. If
+\code{NA}, then default color is \code{'black'} for all lines. If
+\code{NULL} (default), then fill color is set same as the
+\code{color.groupby}.}
 
 \item{band.alpha}{A numeric value to specify the transparency of the CI bands
 around the curves. The default \code{NULL} sets the transparency to 0.4.}

@@ -81,7 +81,8 @@ fitted values derived from posterior draws.}
 \item{\code{"rvp"}}{residual vs predictor (such as age) plot showing
 residuals plotted against predictor values derived from posterior draws.}
 \item{\code{"qqn"}}{Normal Q-Q plot based on summarized posterior residuals.}
-\item{\code{"qqp"}}{Pearson Q-Q plot based on standardized posterior residuals.}
+\item{\code{"qqp"}}{Pearson Q-Q plot based on standardized posterior
+residuals.}
 \item{\code{"qq"}}{Same as \code{"qqp"}.}
 \item{\code{"pairs"}}{Pair plots for MCMC draws via
 \code{\link[bayesplot:MCMC-scatterplots]{bayesplot::mcmc_pairs()}}.}
@@ -102,8 +103,8 @@ residuals plotted against predictor values derived from posterior draws.}
 \item{\code{"ppc_scatter_avg"}}{Posterior predictive observed-versus-replicated
 average scatter plot via \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type =
     "scatter_avg"}.}
-\item{\code{"ppc_stat"}}{Posterior predictive check for a summary statistic via
-\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "stat"}.}
+\item{\code{"ppc_stat"}}{Posterior predictive check for a summary statistic
+via \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "stat"}.}
 }}
 
 \item{set_draws}{Character scalar indicating which fitted-value draw type to
@@ -168,13 +169,13 @@ standard-error ribbon.}
 residual-versus-fitted plot. The default is \code{"lm"}.}
 
 \item{ppc_stat}{Summary statistic to use when \code{plots} includes
-\code{"ppc_stat"}. This value is passed to \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} as \code{type
-  = "stat", stat = 'ppc_stat'}.}
+\code{"ppc_stat"}. This value is passed to \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} as
+\code{type = "stat", stat = 'ppc_stat'}.}
 
 \item{rank_overlay}{Logical; if \code{TRUE}, sets the \pkg{bayesplot} color
 scheme to \code{"blue"}. This does not itself create a rank-overlay plot,
-but allows a simple style customization for compatible \pkg{bayesplot}-based
-outputs.}
+but allows a simple style customization for compatible
+\pkg{bayesplot}-based outputs.}
 
 \item{add_plot_df}{Optional logical (default \code{FALSE}) indicating whether
 to add \code{plot_df} to the returned value.}
@@ -227,7 +228,7 @@ to wrap plot title.}
 \item{qq_plot_args}{A named list of arguments passed on to the
 \code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
 \code{plots = `"qq"`}. Note that \code{plots = `"qq"`} is internally
-evalauted as \code{plots = `"qqp"`}.}
+evaluated as \code{plots = `"qqp"`}.}
 
 \item{patch_plot.margin}{Optional setting the margins for the
 \pkg{patchwork}.}

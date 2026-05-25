@@ -40,7 +40,7 @@
 #'   - 'a': Adjusted individual-specific distance curves (adjusted for 
 #'   random effects)
 #'   
-#'   Note that 'd' and 'D' cannot be specified simultaneously, nor can 'v' and
+#'   Note that 'd' and 'D' cannot be specified together, nor can 'v' and
 #'   'V'. Other combinations are allowed, e.g., 'dvau', 'Dvau', 'dVau', etc.
 #'
 #' @param apv A logical value (default \code{FALSE}) indicating whether to
@@ -119,20 +119,23 @@
 #' @param linewidth.apv A numeric value to specify the width of the vertical
 #'   line marking the APGV. The default \code{NULL} sets the width to 0.25.
 #'
-#' @param linetype.groupby A character string specifying the line type for
-#'   distance and velocity curves when drawing plots for a model with factor
-#'   covariates or individual-specific curves. The default is \code{NA}, which
-#'   sets the line type to 'solid' and suppresses legends.
-#'
-#' @param color.groupby A character string specifying the line color for
-#'   distance and velocity curves when drawing plots for a model with factor
-#'   \code{covariates} or individual-specific curves. The default is \code{NA},
-#'   which suppresses legends.
+#' @param linetype.groupby A character string specifying the line type of
+#'   distance and velocity curves for \code{covariates} or individual-specific
+#'   curves. If \code{NA}, then default color is \code{'black'} for all lines.
+#' 
+#' @param color.groupby A character string specifying the line color of distance
+#'   and velocity curves for \code{covariates} or individual-specific curves. If
+#'   \code{NA}, then default color is \code{'black'} for all lines. If
+#'   \code{NULL} (default), then line color is set based on the co variate
+#'   extracted from the \code{model_info}. Note that for individual-specific
+#'   curves for co variate adjusted models, user can set it as
+#'   \code{color.groupby = interaction(covariate, id)}
 #'   
-#' @param fill.groupby A character string specifying the fill color for distance
-#'   and velocity curve bands when drawing plots for a model with factor
-#'   \code{covariates} or individual-specific curves. The default is \code{NA},
-#'   which suppresses legends.
+#' @param fill.groupby A character string specifying the fill color of distance
+#'   and velocity curves for \code{covariates} or individual-specific curves. If
+#'   \code{NA}, then default color is \code{'black'} for all lines. If
+#'   \code{NULL} (default), then fill color is set same as the
+#'   \code{color.groupby}.
 #'
 #' @param band.alpha A numeric value to specify the transparency of the CI bands
 #'   around the curves. The default \code{NULL} sets the transparency to 0.4.
@@ -301,7 +304,7 @@ plot_curves.bgmfit <- function(model,
                                linewidth.main = NULL,
                                linewidth.apv = NULL,
                                linetype.groupby = NA,
-                               color.groupby = NA,
+                               color.groupby = NULL,
                                fill.groupby = NULL,
                                band.alpha = NULL,
                                band.legends = FALSE,
@@ -498,6 +501,61 @@ plot_curves.bgmfit <- function(model,
     newdata <- newdata
   } 
   
+  
+  
+  
+  
+  
+
+ 
+  unique_opt_bands_c <- get_unique_opt_bands(opt, bands, upper = FALSE)
+  opt       <- unique_opt_bands_c[['opt']]
+  bands     <- unique_opt_bands_c[['bands']]
+  unique_opt_sort <- opt
+
+  ############################################################################
+  loop_opt_bands_no <- check_unique_cap_opt(opt)
+  opt_old       <- opt
+  bands_old     <- bands
+  plot.list.DV <- NULL
+  if(!loop_opt_bands_no) {
+    opt_bands_old <- get_opt_bands(opt, bands, upper = FALSE)
+    opt_old       <- opt_bands_old[['opt']]
+    bands_old     <- opt_bands_old[['bands']]
+    returndata <- FALSE
+    layout     <- 'facet'
+    internal_formula_args_names <- methods::formalArgs(plot_curves.bgmfit)
+    internal_formula_args_names_exclude <- c("opt", "bands", "...")
+    internal_formula_args_names[!internal_formula_args_names %in% 
+                                  internal_formula_args_names_exclude]
+    internal_formula_args_names <- c(internal_formula_args_names,
+                                     "returndata",
+                                     "layout")
+    internal_formula_args <- list()
+    internal_formula_args <- mget(internal_formula_args_names)
+    
+    opt_bands_DV <- get_opt_bands(opt, bands, upper = TRUE)
+    opt_DV       <-  opt_bands_DV[['opt']]
+    bands_DV     <- opt_bands_DV[['bands']]
+   
+    plot.list.DV <- list()
+    for (opt_ci in 1:length(opt_DV)) {
+      plot.list.DV [[opt_DV[opt_ci]]] <- 
+        loop_opt_bands(opti = opt_DV[opt_ci], bandsi =  bands_DV[opt_ci],
+                       arguments = arguments, 
+                       internal_formula_args = internal_formula_args,
+                       ...)
+    }
+  }
+  
+  
+  opt           <- paste0(opt_old, collapse = "")
+  bands         <- paste0(bands_old, collapse = "")
+  arguments$opt <- opt
+
+  ############################################################################
+  
+
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
   } else {
@@ -673,6 +731,66 @@ plot_curves.bgmfit <- function(model,
     bands <- ''
   }
   
+  
+  ##############
+  
+  xvar_      <- paste0('xvar', resp_rev_)
+  sigmaxvar_ <- paste0('sigma', xvar_)
+  cov_       <- paste0('cov', resp_rev_)
+  sigmacov_  <- paste0('sigma', cov_)
+  uvarby     <- model$model_info$univariate_by$by
+  if(is.null(uvarby)) uvarby <- NA 
+  
+  if(dpar == "mu") {
+    if(is.null(xvar)) {
+      xvar   <- model$model_info[[xvar_]]
+    }
+    cov    <- model$model_info[[cov_]]
+  } else if(dpar == "sigma") {
+    if(!is.na(model$model_info[[sigmaxvar_]])) {
+      xvar   <- model$model_info[[sigmaxvar_]]
+    } else if(is.na(model$model_info[[sigmaxvar_]]) & 
+              !is.null(model$model_info[[xvar_]])) {
+      xvar   <- model$model_info[[xvar_]]
+    }
+    cov    <- model$model_info[[sigmacov_]]
+  } 
+  
+  groupvar_     <- paste0('groupvar', resp_rev_)
+  yvar_         <- paste0('yvar', resp_rev_)
+  yvar          <- model$model_info[[yvar_]]
+  hierarchical_ <- paste0('hierarchical', resp_rev_)
+  
+  
+  if(is.null(levels_id) & is.null(idvar)) {
+    idvar <- model$model_info[[groupvar_]]
+    if (!is.null(model$model_info[[hierarchical_]])) {
+      idvar <- model$model_info[[hierarchical_]]
+    }
+    # 29.08.2025 - re assign idvar to groupvar_ if hierarchical_
+    model$model_info[[groupvar_]] <- idvar # idvar[1]
+  } else if (!is.null(levels_id)) {
+    idvar <- levels_id
+  } else if (!is.null(idvar)) {
+    idvar <- idvar
+  }
+  
+  cov_       <- paste0('cov', resp_rev_)
+  sigmacov_  <- paste0('sigma', cov_)
+  
+  # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
+  if(is.null(idvar)) {
+    if(is.null(idvar)) {
+      if(!is.null(model$model_info[['idvars']])) {
+        idvar <- model$model_info[['idvars']]
+      }
+    }
+  }
+  
+  
+  ##############
+  
+  
   if (grepl("d", opt, ignore.case = F) &
       grepl("D", opt, ignore.case = F)) {
     stop2c(
@@ -803,24 +921,8 @@ plot_curves.bgmfit <- function(model,
     }
   }
 
-  line_color_key <- function(data, colorkey = NULL) {
-    if(!is.null(colorkey)) {
-      if(length(colorkey) == 1) {
-        if(is.na(colorkey)) colorkey <- NULL
-      }
-    }
-    if (is.null(colorkey)) {
-      out <- NULL
-    } else if (length(colorkey) == 1) {
-      out <- data[[colorkey]]
-    } else {
-      cols_df <- data.frame(lapply(colorkey, function(name) data[[name]]))
-      names(cols_df) <- colorkey
-      out <- interaction(cols_df, drop = TRUE)
-    }
-    return(out)
-  }
-
+  # line_color_key <- function(data, colorkey = NULL) {
+ 
   check_set_fun <- check_set_fun_transform(model = model, 
                                            which = 'ixfuntransform2',
                                            dpar = dpar, 
@@ -986,71 +1088,29 @@ plot_curves.bgmfit <- function(model,
     band.alpha <- 0.25
   }
   
+  
+  if(is.null(color.groupby)) {
+    if(dpar == "mu")    color.groupby <- model$model_info [[cov_]]
+    if(dpar == "sigma") color.groupby <- model$model_info [[sigmacov_]]
+  }
+  
+  
   if(is.null(fill.groupby)) {
     fill.groupby <- color.groupby
   } else if(!is.null(fill.groupby)) {
     if(isFALSE(fill.groupby)) fill.groupby <- NA
   }
   
-  # Define a custom transformation:
-  # - transform: apply log to original age (to match your data)
-  # - inverse: apply exp to log-age (to show age on axis)
-  log_age_trans <- scales::trans_new(
-    name    = "log_age",
-    transform = exp,             # original -> log (for breaks computation)
-    inverse = log # ,               # log -> original (for labels)
-    # breaks  = scales::extended_breaks(n = 13)  # default nice breaks on un-transformed scale
-  )
   
-  # Function to count max decimal places in breaks
-  max_decimals <- function(x) {
-    parts <- strsplit(as.character(x), "\\.")
-    decimals <- sapply(parts, function(p) if (length(p) == 2) nchar(p[2]) else 0L)
-    max(decimals)
-  }
   
-  scale_x_continuous_fun <- function(x_minimum, x_maximum, by = 1, fun) {
-    xseq <- seq(x_minimum, x_maximum, by)
-    dec <- max_decimals(xseq)
-    accuracy <- 10^-dec
-    label_fun <- scales::label_number(accuracy = accuracy)
-    body(fun) <- call("(", body(fun))
-    ggplot2::scale_x_continuous(breaks = xseq, labels = fun(xseq) %>% label_fun())
-  }
+  # max_decimals <- function(x) {
+ 
+  # get_fun_form <- function(xaxis_breaks_fun) {
   
-  if(is.null(xaxis_breaks_fun)) {
-    xaxis_bk_call <- function(x)x
-  } else if(is.character(xaxis_breaks_fun)) {
-      if(xaxis_breaks_fun == "identity") xaxis_bk_call <- function(x)x
-      if(xaxis_breaks_fun == "log") xaxis_bk_call <- function(x)log(x)
-      if(xaxis_breaks_fun == "exp") xaxis_bk_call <- function(x)exp(x)
-      if(xaxis_breaks_fun == "sqrt") xaxis_bk_call <- function(x)sqrt(x)
-      if(xaxis_breaks_fun == "square") xaxis_bk_call <- function(x)x^2
-  } else if(is.function(xaxis_breaks_fun)) {
-    xaxis_bk_call <- xaxis_breaks_fun
-  }
+
+  # build_scale_x_continuous_str <- function(x_minimum, x_maximum, by = 1,
   
-  build_scale_x_continuous_str <- function(x_minimum, x_maximum, by = 1,
-                                           xaxis_bk_call) {
-    scale_x_continuous_str <- 
-      "scale_x_continuous_fun(x_minimum_str, x_maximum_str, by=, fun=)"
-    scale_x_continuous_str <- gsub("x_minimum_str", paste0("", 
-                                                           x_minimum), 
-                                   scale_x_continuous_str, fixed = T)
-    scale_x_continuous_str <- gsub("x_maximum_str", paste0("", 
-                                                           x_maximum), 
-                                   scale_x_continuous_str, fixed = T)
-    scale_x_continuous_str <- gsub("by=", paste0("by=", 
-                                                 by), 
-                                   scale_x_continuous_str, fixed = T)
-    scale_x_continuous_str <- gsub("fun=", paste0("fun=", 
-                                                  deparse_0(xaxis_bk_call)), 
-                                   scale_x_continuous_str, fixed = T)
-    return(scale_x_continuous_str)
-  }
-  
-  # scale_x_continuous_str <- 
-  #   "ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1))" 
+  xaxis_bk_call <- get_fun_form(xaxis_breaks_fun) 
   
   scale_x_continuous_str <- build_scale_x_continuous_str(x_minimum, 
                                                          x_maximum, 
@@ -1463,7 +1523,7 @@ plot_curves.bgmfit <- function(model,
       if(length( unique(round(data_dv$Estimate.y, 6))) == 1) {
         stop2c("The velocity estimates are identical over the entire range of x",
              "\n  ", 
-             "Can't draw distance and velocity curves together")
+             "Therefore, can't draw distance and velocity curves together")
       }
       
       plot.o <- data_dv %>%
@@ -1489,7 +1549,7 @@ plot_curves.bgmfit <- function(model,
         ggplot2::scale_y_continuous(sec.axis =
                                       ggplot2::sec_axis(~ t.s.axis$rev(.),
                                                         name = label.v)) +
-        ggplot2::labs(x = label.x, y = label.d, color = "") +
+        ggplot2::labs(x = label.x, y = label.d, title  = "") +
         ept(scale_x_continuous_str) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
@@ -1818,11 +1878,11 @@ plot_curves.bgmfit <- function(model,
           ),
           linewidth = linewidth.main
         ) +
-        ggplot2::labs(x = label.x, y = label.d, color = "") +
+        ggplot2::labs(x = label.x, y = label.d, title  = "") +
         ept(scale_x_continuous_a_str) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(legend.position = "none") +
-        ggplot2::labs(y = paste0("Adjusted ", "individual curves")) +
+        ggplot2::labs(y = paste0("Adjusted ", "Individual Curves")) +
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90)) +
         ggplot2::labs(title = label.adj) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -1858,9 +1918,12 @@ plot_curves.bgmfit <- function(model,
               ymin = .data[[paste0(probtitles[1], '')]],
               ymax = .data[[paste0(probtitles[2], '')]],
               group = groupby.x,
-              linetype = groupby_line.x,
-              # color = groupby_color.x,
-              fill = groupby_color.x,
+              linetype = line_color_key(.data, linetype.groupby),
+              color = line_color_key(.data, color.groupby),
+              fill = line_color_key(.data, fill.groupby)
+              # linetype = groupby_line.x,
+              # # color = groupby_color.x,
+              # fill = groupby_color.x,
             ),
             alpha = band.alpha, show.legend = band.legends
           )
@@ -1994,12 +2057,12 @@ plot_curves.bgmfit <- function(model,
         ),
         linewidth = linewidth.main
       ) +
-      ggplot2::labs(x = label.x, y = label.d, color = "") +
+      ggplot2::labs(x = label.x, y = label.d, title  = "") +
       ept(scale_x_continuous_u_str) +
       jtools::theme_apa(legend.pos = legendpos) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
       ggplot2::theme(legend.position = "none") +
-      ggplot2::labs(y = paste0("Unadjusted ", "individual curves")) +
+      ggplot2::labs(y = paste0("Unadjusted ", "Individual Curves")) +
       ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90)) +
       ggplot2::labs(title = label.unadj) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -2123,7 +2186,7 @@ plot_curves.bgmfit <- function(model,
           ) +
           ggplot2::labs(x = label.x,
                         y = label.d,
-                        color = "") +
+                        title  = "") +
           ept(scale_x_continuous_au_str) +
           jtools::theme_apa(legend.pos = legendpos) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
@@ -2132,7 +2195,6 @@ plot_curves.bgmfit <- function(model,
           ggplot2::theme(legend.position = "none") +
           ggplot2::labs(y = paste0("Individual curves")) +
           ggplot2::facet_wrap(~ curve, scales = 'free_x')
-        
         
         getbuiltingg <- ggplot2::ggplot_build(plot.o)
         get_line_  <- getbuiltingg$data[[1]]["linetype"]
@@ -2187,7 +2249,7 @@ plot_curves.bgmfit <- function(model,
           ) +
           ggplot2::labs(x = label.x,
                         y = label.d,
-                        color = "") +
+                        title  = "") +
           ggplot2::scale_color_manual(values = single_plot_pair_color_dv_au) +
           ept(scale_x_continuous_a_str) +
           jtools::theme_apa(legend.pos = legendpos.adj.unadj) +
@@ -2199,7 +2261,14 @@ plot_curves.bgmfit <- function(model,
     }
   }
   
+  
+  
+  
+  
+  
+
   if (nchar(opt) > 2) {
+  # if (nchar(opt) > 1) {
     if (!exists('plot.o.d'))
       plot.o.d <- NULL
     if (!exists('plot.o.v'))
@@ -2212,28 +2281,73 @@ plot_curves.bgmfit <- function(model,
     suppressMessages({
       if (!is.null(plot.o.d)) {
         plot.o.d <- plot.o.d +
-          ggplot2::scale_color_manual(values = c(color_single)) +
+          # ggplot2::scale_color_manual(values = c(color_single)) +
           ggplot2::theme(axis.title.x = ggplot2::element_blank())
       }
       if (!is.null(plot.o.v)) {
         plot.o.v <- plot.o.v +
-          ggplot2::scale_color_manual(values = c(color_single)) +
+          # ggplot2::scale_color_manual(values = c(color_single)) +
           ggplot2::theme(axis.title.x = ggplot2::element_blank())
       }
       if (!is.null(plot.o.a)) {
         plot.o.a <- plot.o.a +
-          ggplot2::scale_color_manual(values = c(color_single)) +
+          # ggplot2::scale_color_manual(values = c(color_single)) +
           ggplot2::theme(axis.title.x = ggplot2::element_blank())
       }
       if (!is.null(plot.o.u)) {
         plot.o.u <- plot.o.u +
-          ggplot2::scale_color_manual(values = c(color_single)) +
+          # ggplot2::scale_color_manual(values = c(color_single)) +
           ggplot2::theme(axis.title.x = ggplot2::element_blank())
       }
     })
     
-    plot.list <- list(plot.o.d, plot.o.v, plot.o.a, plot.o.u)
+    
+    plot.list <- list(d = plot.o.d, v = plot.o.v, a = plot.o.a, u = plot.o.u)
+    # plot.list <- list(plot.o.d, plot.o.v, plot.o.a, plot.o.u)
     plot.list <- plot.list[lengths(plot.list) != 0]
+    
+    
+    # !loop_opt_bands_no
+    if(!loop_opt_bands_no) {
+      plot.o.D <- plot.list.DV[['D']]
+      plot.o.V <- plot.list.DV[['V']]
+      if(!is.null(plot.o.D)) plot.o.D + 
+        ggplot2::theme(axis.title.x = ggplot2::element_blank())
+      if(!is.null(plot.o.V)) plot.o.V + 
+        ggplot2::theme(axis.title.x = ggplot2::element_blank())
+      plot.list [['D']] <- plot.o.D
+      plot.list [['V']] <- plot.o.V
+      plot.list <- plot.list[lengths(plot.list) != 0]
+    }
+    # End !loop_opt_bands_no
+    
+    
+    plot.list <- plot.list[strsplit(unique_opt_sort, "")[[1]]]
+    
+    for (nai in names(plot.list)) {
+      if(nai == "d") add_suffix <- " (Population)"
+      if(nai == "v") add_suffix <- " (Population)"
+      if(nai == "D") add_suffix <- " (Individual)"
+      if(nai == "V") add_suffix <- " (Individual)"
+      if(nai == "a") add_suffix <- " (Individual)"
+      if(nai == "u") add_suffix <- " (Individual)"
+      if(nai == "v" | nai == "V") addylab <- "Velocity" else addylab <- "Distance"
+      if(nai == "a" | nai == "u") addylab <- "Distance"
+      plot.list[[nai]] <- plot.list[[nai]] + ggplot2::labs(title = paste0(
+        ifelse(is.null(plot.list[[nai]]$labels$title), "", 
+               plot.list[[nai]]$labels$title), add_suffix)
+      ) +
+        ggplot2::labs(y = addylab) + 
+        ggplot2::theme(plot.title = ggplot2::element_text(face = "plain"))
+      if(nai == "a" | nai == "u") {
+        plot.list[[nai]] <- plot.list[[nai]] +  ggplot2::theme(
+          axis.title.y = ggplot2::element_text(angle = 90)
+        )
+      }
+    }
+    
+    
+    
     
     ######################################
     # Add manual linetype.groupby and color.groupby
@@ -2250,8 +2364,12 @@ plot_curves.bgmfit <- function(model,
         size = 5,
         Xgap = 0.08,
         Ygap = 0.04)
-    plot.o <- plot.o +  patchwork::plot_layout(guides = "collect")
+    plot.o <- plot.o + patchwork::plot_layout(guides = "collect")
+    plot.o <-  plot.o & ggplot2::theme(legend.position = legendpos)
   }
+  
+  
+ 
 
   if (!returndata) {
     if(print) print(plot.o)
@@ -2262,6 +2380,12 @@ plot_curves.bgmfit <- function(model,
       }
     }
     if(!is.null(p.as.d.out_attr)) {
+     # if(inherits(plot.o, "patchwork")) {
+     #   attr(plot.o, 'growthparameters') <- p.as.d.out_attr
+     # } else {
+     #   # plot.o[['growthparameters']] <- p.as.d.out_attr
+     #   attr(plot.o, 'growthparameters') <- p.as.d.out_attr
+     # }
       plot.o[['growthparameters']] <- p.as.d.out_attr
     }
     return(plot.o)

@@ -28,7 +28,7 @@
 #' @inheritParams add_model_criterion
 #'
 #'
-#' @rdname compare_model
+#' @rdname compare_models
 #' @export
 #' 
 #' @seealso [brms::loo_compare()]
@@ -45,16 +45,19 @@
 #' 
 #' model <- getNsObject(berkeley_exfit)
 #' 
-#' # Add model fit criteria (e.g., WAIC). For illustration purposes, we compare 
-#' # model with itself
+#' # For illustration purposes, we compare model with itself
+#' # In the example below, compare_models() should indicate no difference 
+#' # between model_1 and model_2 as both these models are exactly identical
+#' 
+#' # Add model fit criteria (e.g., WAIC). 
 #' model_1 <- add_model_criterion(model, criterion = c("waic"))
 #' model_2 <- add_model_criterion(model, criterion = c("waic"))
 #' 
 #' # compare models model_1 and model_2
-#' compare_model_12 <- compare_model(model_1, model_2, criterion = c("waic"))
+#' compare_model_12 <- compare_models(model_1, model_2, criterion = c("waic"))
 #' }
 #' 
-compare_model.bgmfit <- function(model, 
+compare_models.bgmfit <- function(model, 
                                  ..., 
                                  criterion = "loo", 
                                  model_names = NULL,
@@ -83,7 +86,6 @@ compare_model.bgmfit <- function(model,
     if (is.list(value)) {
       out <- vector("list", length(value))
       nm <- names(value)
-      
       for (i in seq_along(value)) {
         child_expr <- if (!is.null(nm) && nzchar(nm[i])) {
           as.name(nm[i])
@@ -116,7 +118,6 @@ compare_model.bgmfit <- function(model,
     stop("Need at least two models for loo_compare().")
   }
   
-  
   if(!check_criterion) {
     models <- lapply(models, function(fit) {
       if (!has_criterion(fit, criterion)) {
@@ -128,7 +129,6 @@ compare_model.bgmfit <- function(model,
       }
     })
   } 
-  
   
   if(check_criterion) {
     models <- lapply(models, function(fit) {
@@ -157,9 +157,7 @@ compare_model.bgmfit <- function(model,
     })
   }
   
-  
   if (length(model_names) != length(models)) {
-    # model_names <- paste0("model", seq_along(models))
     nnames <- length(model_names)
     model_names_all <- paste0("model", seq_along(models)-length(model_names))
     model_names_all[1:nnames] <- model_names
@@ -176,19 +174,19 @@ compare_model.bgmfit <- function(model,
 
 
 
-#' @rdname compare_model
+#' @rdname compare_models
 #' @export
-compare_model <- function(model, ...) {
-  UseMethod("compare_model")
+compare_models <- function(model, ...) {
+  UseMethod("compare_models")
 }
 
 
-#' An alias of 'compare_model()'
-#' @rdname compare_model
+#' An alias of 'compare_models()'
+#' @rdname compare_models
 #' @export
 #' 
-compare_models <- function(model, ...) {
-  UseMethod("compare_model")
+compare_model <- function(model, ...) {
+  UseMethod("compare_models")
 }
 
 
