@@ -492,7 +492,6 @@ hypothesis_test.bgmfit <- function(model,
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', probtitles)
   
-  
   if(!is.null(estimate_center)) {
     ec_ <- getOption("marginaleffects_posterior_center")
     options("marginaleffects_posterior_center" = estimate_center)
@@ -507,8 +506,6 @@ hypothesis_test.bgmfit <- function(model,
   ei_agg <- getOption("marginaleffects_posterior_interval")
   if(is.null(ec_agg)) ec_agg <- "mean"
   if(is.null(ei_agg)) ei_agg <- "eti"
-  
-  ##########################################
   
   allowed_engine <- c('brms', 'marginaleffects', 'bayestestR', 'mbcombo')
   if(!is.null(engine)) {
@@ -525,7 +522,7 @@ hypothesis_test.bgmfit <- function(model,
     } else if(!engine %in% allowed_engine) {
       stop("Argument engine must be one of the following: ",
            collapse_comma(allowed_engine))
-    } # else if(!engine %in% allowed_engine) {
+    } 
   } 
   
   obj_model <- obj_df <- obj_mfx <- obj_mfx_matrix <- obj_model_pseudo <- FALSE
@@ -568,7 +565,6 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
  
-  ##############################################################################
   if(!is.null(parameter)) {
     allowed_parms      <- c('apgv', 'pgv', 'atgv', 'tgv', 'acgv', 'cgv')
     allowed_parms_size <- c('spgv', 'stgv', 'scgv')
@@ -579,7 +575,6 @@ hypothesis_test.bgmfit <- function(model,
                                          setpreparms = FALSE,
                                          plot = plot,
                                          verbose = FALSE)
-    
     eout_check_set_parm_out <- list2env(check_set_parm_out)
     for (eoutii in names(eout_check_set_parm_out)) {
       if(!is.null(eout_check_set_parm_out[[eoutii]])) {
@@ -604,17 +599,12 @@ hypothesis_test.bgmfit <- function(model,
   } else if(is.null(parameter)) {
     parms_sat_elements <- NULL
   }
-  
-  
-  ##############################################################################
-  
-  # Override if user sets range null not as equivalence_test and p_direction
-  # lists but as open arguments
+
   if(!is.null(parameter)) {
     if(is.null(equivalence_test)) {
       if(!is.null(range))  {
         if(is.character(range)) {
-          # if(range != "default") equivalence_test <- list(range = range)
+          # 
         } else {
           equivalence_test <- list(range = range)
         }
@@ -624,12 +614,7 @@ hypothesis_test.bgmfit <- function(model,
       if(!is.null(null))  p_direction <- list(null = null)
     }
   }
-  
-  # Note:
-  # The missing arguments for equivalence_test will be later updated from the
-  # hypothesis_test() arguments via bayestestR_equivalence_test_df_args - 1301
-  # The missing arguments for p_direction will be later updated from the
-  # hypothesis_test() arguments via bayestestR_p_direction_df_args - 1301
+
   if(is.null(rope_test)) {
     if(!is.null(equivalence_test)) {
       if(is.logical(equivalence_test)) {
@@ -665,7 +650,6 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
-  
   if(is.null(rope_test)) {
     rope_test <- FALSE 
   }
@@ -673,7 +657,6 @@ hypothesis_test.bgmfit <- function(model,
     pd_test <- FALSE 
   }
   
-
   if(pd_test) {
     if(is.null(p_direction)) {
       if(is.null(null)) {
@@ -702,7 +685,6 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
-  # Extract draws from the obj_marginaleffects
   if(obj_marginaleffects) {
     if(verbose) {
       message2c("draws extrcated from the obj_marginaleffects")
@@ -712,7 +694,7 @@ hypothesis_test.bgmfit <- function(model,
       if(!engine %in% allowed_engine_obj_marginaleffects) {
         stop("Argument engine must be one of the following: ",
              collapse_comma(allowed_engine))
-      } # if(!engine %in% allowed_engine) {
+      } 
       if(engine == 'brms') {
         model <- marginaleffects::get_draws(model, shape = "DxP")
         obj_mfx_matrix <- TRUE
@@ -723,7 +705,7 @@ hypothesis_test.bgmfit <- function(model,
         obj_mfx <- TRUE
         obj_model <- obj_df <- obj_mfx_matrix <- obj_model_pseudo <- FALSE
         obj_marginaleffects <- FALSE
-      } # if(engine == 'brms') { else if(engine == 'marginaleffects' |
+      } 
     } else if(is.null(engine)) {
       model <- marginaleffects::get_draws(model, shape = "long")
       obj_mfx <- TRUE
@@ -735,7 +717,7 @@ hypothesis_test.bgmfit <- function(model,
         engine <- 'mbcombo' 
       }
     }
-  } # if(obj_marginaleffects) {
+  } 
   
   check_messages_1 <- 
     paste0(
@@ -752,14 +734,11 @@ hypothesis_test.bgmfit <- function(model,
        parameter such as apgv and pgv  (see ?get_growthparameters for
       details)")
   
-  # Set default
-  # This when everything NULL, and default setting up the hypothesis
   if(is.null(parameters) & is.null(parameter) & is.null(hypothesis_str)) {
     if(obj_model) {
       parameter <- c('apgv', 'pgv')
       engine <- 'marginaleffects'
       if(is.null(hypothesis)) {
-        # if(!is.null(by)) hypothesis <- ~ pairwise
         if(!is.null(by)) hypothesis <- as.formula(~ pairwise)
       }
       if(is.null(rope_test)) rope_test <- FALSE
@@ -785,7 +764,7 @@ hypothesis_test.bgmfit <- function(model,
         hypothesis_str <- NULL
         parameters <- NULL
       }
-    } # if(is.null(engine)) { else if(!is.null(engine)) {
+    } 
   } else if(!is.null(parameters) & !is.null(parameter) &
             is.null(hypothesis_str)) {
     if(is.null(engine)) {
@@ -798,7 +777,7 @@ hypothesis_test.bgmfit <- function(model,
         parameter <- NULL
         parameters <- NULL
       } 
-    } # if(is.null(engine)) { else if(!is.null(engine)) {
+    } 
   } else if(!is.null(parameters) & is.null(parameter) & 
             !is.null(hypothesis_str)) {
     if(is.null(engine)) {
@@ -810,7 +789,7 @@ hypothesis_test.bgmfit <- function(model,
         hypothesis_str <- NULL
         parameters <- NULL
       } 
-    } # if(is.null(engine)) { else if(!is.null(engine)) {
+    } 
   } else if(is.null(parameters) & !is.null(parameter) & 
             !is.null(hypothesis_str)) {
     if(is.null(engine)) {
@@ -826,7 +805,7 @@ hypothesis_test.bgmfit <- function(model,
         hypothesis_str <- NULL
         parameter <- NULL
       } 
-    } # if(is.null(engine)) { else if(!is.null(engine)) {
+    } 
   }
   
   if(!is.null(engine)) {
@@ -869,7 +848,7 @@ hypothesis_test.bgmfit <- function(model,
     } else if(!grepl("^obj_", i)) {
       get_engine_obj_args_print_c <- c(get_engine_obj_args_print_c, zzz)
     }
-  } # for (i in get_engine_obj_args) {
+  } 
   
   get_engine_obj_args_all <- paste(get_engine_obj_args_all_c,
                                    collapse = "; ")
@@ -878,7 +857,6 @@ hypothesis_test.bgmfit <- function(model,
   get_engine_obj_args_print <- paste(get_engine_obj_args_print_c,
                                      collapse = "; ")
   
-  
   if(!is.logical(verbose)) {
     if(verbose == 1) {
       print('Arguments to build objects')
@@ -886,8 +864,6 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
-  
-  # obj_model -> Check and set up engine and hypothesis_str/parameters/parameter
   obj_model_brms <- obj_model_bayestestR <- FALSE
   obj_model_marginaleffects <- obj_model_mbcombo <- FALSE
   if(obj_model) {
@@ -921,7 +897,7 @@ hypothesis_test.bgmfit <- function(model,
       if(!engine %in% allowed_engine_obj_model) {
         stop("Argument engine must be one of the following: ",
              collapse_comma(allowed_engine))
-      } # if(!engine %in% allowed_engine) {
+      } 
       if(engine == 'brms') {
         if(is.null(hypothesis_str)) {
           stop2c("For engine = 'brms', 'hypothesis_str' must be specified")
@@ -949,14 +925,10 @@ hypothesis_test.bgmfit <- function(model,
         } else if(rope_test | pd_test) {
           obj_model_mbcombo <- TRUE
         }
-      } # else if(engine == 'marginaleffects' | engine == 'mbcombo') {
-    } # if(is.null(engine)) { else if(!is.null(engine)) {
-  } # if(obj_df) {
+      } 
+    } 
+  } 
   
- 
-  
-  # obj_df & obj_mfx_matrix
-  # -> Check and set up engine and hypothesis_str / parameters / parameter
   obj_df_brms <- obj_df_bayestestR <- FALSE
   if(obj_df | obj_mfx_matrix) {
     allowed_engine_obj_df <- c('brms', 'bayestestR')
@@ -979,7 +951,7 @@ hypothesis_test.bgmfit <- function(model,
       if(!engine %in% allowed_engine_obj_df) {
         stop("Argument engine must be one of the following: ",
              collapse_comma(allowed_engine))
-      } # if(!engine %in% allowed_engine) {
+      } 
       if(engine == 'brms') {
         if(is.null(hypothesis_str)) {
           stop2c("For engine = 'brms', 'hypothesis_str' must be specified")
@@ -996,12 +968,9 @@ hypothesis_test.bgmfit <- function(model,
         hypothesis_str <- NULL
         obj_df_bayestestR <- TRUE
       }
-    } # if(is.null(engine)) { else if(!is.null(engine)) {
-  } # if(obj_df) {
+    } 
+  } 
   
-  
-  
-  # obj_mfx -> Check and set up engine and hypothesis_str/parameters/parameter
   obj_mfx_bayestestR <- FALSE
   obj_mfx_marginaleffects <- obj_mfx_mbcombo <- FALSE
   if(obj_mfx) {
@@ -1038,11 +1007,10 @@ hypothesis_test.bgmfit <- function(model,
         } else if(rope_test | pd_test) {
           obj_mfx_mbcombo <- TRUE
         }
-      } # else if(engine == 'marginaleffects' | engine == 'mbcombo') {
-    } # if(is.null(engine)) { else if(!is.null(engine)) {
-  } # if(obj_mfx) {
+      } 
+    } 
+  } 
   
-  # Available choices and executions
   set_engine_obj_args_names  <- expression(obj_model_brms,
                                            obj_model_bayestestR,
                                            obj_model_marginaleffects,
@@ -1054,7 +1022,6 @@ hypothesis_test.bgmfit <- function(model,
                                            obj_mfx_mbcombo)
   
   set_engine_obj_args_names <- as.character(set_engine_obj_args_names)
-  
   set_engine_obj_args_all_c      <- c()
   set_engine_obj_args_internal_c <- c()
   set_engine_obj_args_print_c    <- c()
@@ -1073,19 +1040,13 @@ hypothesis_test.bgmfit <- function(model,
   set_engine_obj_args_print <- paste(set_engine_obj_args_print_c,
                                      collapse = "; ")
   
-  
   if(!is.logical(verbose)) {
     if(verbose == 1) {
       print('Objects created')
       print(set_engine_obj_args_print)
     }
   }
-  
-  
-  ##############################################################################
-  # Get and collect arguments
-  ##############################################################################
-  
+
   if(obj_model | obj_model_pseudo ) {
     if(!is.null(model$xcall)) {
       if(grepl("get_growthparameters", model$xcall)) {
@@ -1097,7 +1058,7 @@ hypothesis_test.bgmfit <- function(model,
       rlang_trace_back <- rlang::trace_back()
       check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
       if(all(!check_trace_back.bgmfit)) {
-        # nothing
+        # 
       } else {
         rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
         rlang_trace_back.bgmfit <- 
@@ -1107,18 +1068,14 @@ hypothesis_test.bgmfit <- function(model,
       }
     }
     
-    # Imp - when model_marginaleffects, xcall must be 'get_growthparameters
     if(obj_model_marginaleffects | obj_model_mbcombo ) {
       xcall <- 'get_growthparameters'
     }
     
-    
     check_if_package_installed(model, xcall = xcall)
-    # model$xcall <- xcall
     arguments <- get_args_(as.list(match.call())[-1], xcall)
     arguments$model <- model
     arguments$usesavedfuns <- usesavedfuns
-    # CustomDoCall 
     arguments <- sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                             arguments = arguments, 
                                             check_formalArgs = NULL,
@@ -1126,91 +1083,66 @@ hypothesis_test.bgmfit <- function(model,
                                             envir = parent.frame())
     
     get.cores_ <- get.cores(arguments$cores)
-    # 28.09.2024
     if(is.null(get.cores_[['max.cores']])) {
       if(is.null(arguments$cores)) 
         get.cores_[['max.cores']] <- future::availableCores() - 1
     }
     arguments$cores <- setincores <-  get.cores_[['max.cores']]
     .cores_ps <- get.cores_[['.cores_ps']]
-    
     arguments[['ci']] <- ci
     arguments[['conf_level']] <- conf_level
     arguments[['alpha']] <- alpha
-    
     arguments[['estimate_center']] <- estimate_center
     arguments[['estimate_interval']] <- estimate_interval
     arguments[['ec_agg']] <- ec_agg
     arguments[['ei_agg']] <- ei_agg
     arguments[['nthreads']] <- arguments$cores 
-    
     if(is.null(arguments$pd_test)) {
       arguments$pd_test <- pd_test
     }
     if(is.null(arguments$rope_test)) {
       arguments$rope_test <- rope_test
     }
-    
-    
     if(is.null(arguments$p_direction)) {
       arguments$p_direction <- p_direction
     }
     if(is.null(arguments$equivalence_test)) {
       arguments$equivalence_test <- equivalence_test
     }
-    
     if(NullFALSE(arguments$p_direction)) {
       if(is.list(arguments$p_direction)) {
         arguments$null <- arguments$p_direction$null
       }
     }
-    
     if(NullFALSE(arguments$equivalence_test)) {
       if(is.list(arguments$equivalence_test)) {
         arguments$range <- arguments$equivalence_test$range
       }
     }
-    
     arguments$parms_sat_elements <- parms_sat_elements
-    
     if(obj_model_pseudo) {
       attr(model, 'class') <- model_attr_orig
     }
-    
-  } # if(obj_model | obj_model_pseudo) {
-  
-  
-  
-  ##############################################################################
-  # Build arguments
-  ##############################################################################
-  
+  } 
+
   full.arguments <-  arguments
-  
   brms_hypothesis_args_df_names <- 
     c('x', 'hypothesis_str', 'class', 'group', 'scope', 'alpha',
       'robust', 'seed')
   
   brms_hypothesis_args_model_names <- 
     c('x', 'hypothesis_str', 'alpha', 'robust')
-  
   bayestestR_equivalence_test_df_names <- 
     c('x', 'range', 'ci', 'rvar_col', 'verbose')
-  
   bayestestR_equivalence_test_model_names <- 
     c('x', 'range', 'ci', 'effects', 'component', 'parameters', 'verbose')
-  
   bayestestR_p_direction_df_names <- 
     c('x', 'method', 'null', 'as_p', 'remove_na', 'rvar_col')
-  
   bayestestR_p_direction_model_names <- 
     c('x', 'method', 'null', 'effects', 'component', 'parameters', 
       'as_p', 'remove_na')
-  
   bayestestR_p_direction_model_get_predicted_names <- 
     c('x', 'method', 'null', 'as_p', 'remove_na', 'use_iterations', 'verbose')
-  
-  
   eqpd_df<-c('format', 'get_form', 'get_value', 'digits', 
              'as_percent', 'inline')
   
@@ -1271,11 +1203,7 @@ hypothesis_test.bgmfit <- function(model,
       bayestestR_p_direction_model_get_predicted_args[[i]]<- full.arguments[[i]]
     }
   }
-  
-  
-  
-  
-  
+
   if(!rope_test) {
     bayestestR_equivalence_test_df_args <- NULL
   }
@@ -1283,12 +1211,7 @@ hypothesis_test.bgmfit <- function(model,
   if(!pd_test) {
     bayestestR_p_direction_df_args <- NULL
   }
-  
-  
-  ##############################################################################
-  ##############################################################################
-  
-  # This when everything NULL, and default setting up the hypothesis
+
   obj_model_marginaleffects_direct_only <- FALSE
   if(obj_model_marginaleffects &
      !obj_model_mbcombo & 
@@ -1297,14 +1220,7 @@ hypothesis_test.bgmfit <- function(model,
      !obj_mfx_mbcombo) {
     obj_model_marginaleffects_direct_only <- TRUE
   }
-  
-  ##############################################################################
-  # Call marginal_* for obj_model_marginaleffects & obj_model_mbcombo
-  # Evaluate all marginal_* mbcombo_*
-  ##############################################################################
-  
-  # If there is no need for *_mbcombo but user requests evaluate_comparison
-  # Then pass on to the get_comparison_hypothesis()
+
   if(!rope_test & !pd_test) {
     if(!is.null(hypothesis)) {
       if(NullFALSE(evaluate_comparison)) {
@@ -1328,7 +1244,6 @@ hypothesis_test.bgmfit <- function(model,
     
     get_growthparameters_bgmfit_args_in <- 
       get_growthparameters_bgmfit_args
-    
     get_growthparameters_bgmfit_args[['method']] <- method_call
     get_growthparameters_bgmfit_args[['equivalence_test']] <- NULL
     get_growthparameters_bgmfit_args[['p_direction']] <- NULL
@@ -1338,12 +1253,9 @@ hypothesis_test.bgmfit <- function(model,
       get_growthparameters_bgmfit_args[['hypothesis']] <- hypothesis
     } else if(!obj_model_marginaleffects_direct_only & obj_model_mbcombo) {
       get_growthparameters_bgmfit_args[['pdrawsp']] <- TRUE
-      # get_growthparameters_bgmfit_args_in <- 
-      #   get_growthparameters_bgmfit_args[['hypothesis']]
       get_growthparameters_bgmfit_args[['hypothesis']] <- NULL
     } 
-    
-    
+
     for (i in get_growthparameters_bgmfit_names) {
       assign(i, get_growthparameters_bgmfit_args[[i]])
     }
@@ -1369,13 +1281,9 @@ hypothesis_test.bgmfit <- function(model,
     get_growthparameters_bgmfit_args$model <- model
     get_growthparameters_bgmfit_args$usesavedfuns <- TRUE
     get_growthparameters_bgmfit_args$verbose <- FALSE
-    
     data_draws <- CustomDoCall(get_growthparameters, 
                                get_growthparameters_bgmfit_args)
-    
-    if(obj_model_marginaleffects_direct_only) {
-    } 
-    
+
     if(obj_model_marginaleffects_direct_only & !obj_model_mbcombo) {
       return(data_draws)
     } else if(!obj_model_marginaleffects_direct_only & obj_model_mbcombo) {
@@ -1389,16 +1297,10 @@ hypothesis_test.bgmfit <- function(model,
     if (!("draw" %in% names(data_draws)) && ("estimate" %in% names(data_draws))) {
       data_draws <- data.table::setnames(data_draws, "estimate", "draw")
     }
-    # Convert character columns to factors (skip if already factor)
+   
     char_cols <- names(data_draws)[sapply(data_draws, is.character)]
     data_draws[, (char_cols) := lapply(.SD, as.factor), .SDcols = char_cols]
-    # return(data_draws)
-  } # if(obj_model_marginaleffects | obj_model_mbcombo) {
-  
-  
-  ##############################################################################
-  # Evaluate all marginal_* mbcombo_*
-  ##############################################################################
+  } 
   
   if(obj_mfx_marginaleffects | obj_mfx_bayestestR | obj_mfx_mbcombo |
      obj_model_marginaleffects | obj_model_mbcombo) {
@@ -1413,13 +1315,10 @@ hypothesis_test.bgmfit <- function(model,
     full.args[['equivalence_test']] <- bayestestR_equivalence_test_df_args
     full.args[['p_direction']]      <- bayestestR_p_direction_df_args
     
-    # This call need only for marginal_* when deciding inline or not
     eqpdargs <- set_up_equivalence_test_p_direction_args(
       inbound_arguments = full.args, checking_inline = FALSE, 
       xcall = xcall, verbose = FALSE)
-    
-    
-    
+
     full.args <- eqpdargs[['inbound_arguments']]
     check_equivalence_test_full.args <- 
       eqpdargs[['check_equivalence_test_full.args']]
@@ -1437,7 +1336,6 @@ hypothesis_test.bgmfit <- function(model,
       rope_test <- rope_test
     }
     
-    
     if(is.null(p_direction)) {
       pd_test <- eqpdargs[['pd_test']]
     } else {
@@ -1454,7 +1352,6 @@ hypothesis_test.bgmfit <- function(model,
       format <- eqpdargs[['format']]
     }
     
-    
     if(is.null(evaluate_hypothesis)) {
       if(exists('get_growthparameters_bgmfit_args')) {
         hypothesis <- get_growthparameters_bgmfit_args[['hypothesis']]
@@ -1465,13 +1362,7 @@ hypothesis_test.bgmfit <- function(model,
         evaluate_hypothesis <- TRUE
       }
     }
-    
-    
-    # Note get_comparison_hypothesis() computes both 'comparisons' and 
-    # 'hypothesis' but here we return only one, either 'comparisons' or
-    # 'hypothesis'. Can make it genera;lize later by adding and argument later
-    # that controls this behavior. Now this is done via arg evaluate_comparison
-    
+
     if(is.null(evaluate_comparison)) {
       if(evaluate_hypothesis) {
         evaluate_comparison <- FALSE
@@ -1483,7 +1374,6 @@ hypothesis_test.bgmfit <- function(model,
     full.args[['evaluate_hypothesis']] <- evaluate_hypothesis
     full.args[['evaluate_comparison']] <- evaluate_comparison
     
-    
     get_comparison_hypothesis_args <- list()
     get_comparison_hypothesis_args[['data']] <- data_draws
     get_comparison_hypothesis_args[['full.args']] <- full.args
@@ -1492,15 +1382,12 @@ hypothesis_test.bgmfit <- function(model,
       evaluate_comparison
     get_comparison_hypothesis_args[['evaluate_hypothesis']] <- 
       evaluate_hypothesis
-    
     get_comparison_hypothesis_args[['rope_test']] <- rope_test
     get_comparison_hypothesis_args[['pd_test']] <- pd_test
-    
     get_comparison_hypothesis_args[['get_range_null_form']] <- 
       get_range_null_form
     get_comparison_hypothesis_args[['get_range_null_value']] <- 
       get_range_null_value
-    
     get_comparison_hypothesis_args[['comparison_by']] <- 
       comparison_by
     get_comparison_hypothesis_args[['comparison_range_null']] <- 
@@ -1521,18 +1408,13 @@ hypothesis_test.bgmfit <- function(model,
       rope_as_percent
     get_comparison_hypothesis_args[['pd_as_percent']] <- 
       pd_as_percent
-    
     get_comparison_hypothesis_args[['format']] <- format
     get_comparison_hypothesis_args[['verbose']] <- verbose
-    
     get_comparison_hypothesis_args[['parms_sat_elements']] <- parms_sat_elements
-    
-    
     out <- CustomDoCall(get_comparison_hypothesis, 
                         get_comparison_hypothesis_args)
     
     out <- DT_to_data_frames(out)
-    
     if(is.null(reformat)) {
       out <- marginalstyle_reformat(out = out, 
                                     set_names_= set_names_)
@@ -1540,15 +1422,8 @@ hypothesis_test.bgmfit <- function(model,
       if(reformat) out <- marginalstyle_reformat(out = out, 
                                                  set_names_= set_names_)
     }
-    
-    
-  } # if(obj_mfx_marginaleffects | obj_mfx_bayestestR | obj_mfx_mbcombo) {
-  
-  
-  ##############################################################################
-  # Evaluate obj_model_brms
-  ##############################################################################
-  
+  } 
+
   if(obj_model_brms) {
     brms_hypothesis_args_model_args[['x']] <- model
     brms_hypothesis_args_model_args[['hypothesis']] <- 
@@ -1556,11 +1431,7 @@ hypothesis_test.bgmfit <- function(model,
     brms_hypothesis_args_model_args[['hypothesis_str']] <- NULL
     out <- do.call(brms::hypothesis, brms_hypothesis_args_model_args)
   }
-  
-  ##############################################################################
-  # Evaluate obj_df_brms
-  ##############################################################################
-  
+
   if(obj_df_brms) {
     brms_hypothesis_args_df_args[['x']] <- model
     brms_hypothesis_args_df_args[['hypothesis']] <- 
@@ -1568,18 +1439,12 @@ hypothesis_test.bgmfit <- function(model,
     brms_hypothesis_args_df_args[['hypothesis_str']] <- NULL
     out <- do.call(brms::hypothesis, brms_hypothesis_args_df_args)
   }
-  
-  
-  ##############################################################################
-  # Evaluate obj_model_bayestestR
-  ##############################################################################
-  
+
   param_names_bayestestR <- NULL
   effects_names_bayestestR <- NULL
   if(obj_model_bayestestR) {
     bayestestR_equivalence_test_model_args[['x']] <- model
     bayestestR_p_direction_model_args[['x']]      <- model
-    
     if(rope_test & pd_test) {
       stop2("For engine = 'bayestestR', specify either 
             'rope_test' or 'pd_test', not both")
@@ -1597,14 +1462,11 @@ hypothesis_test.bgmfit <- function(model,
       out <- do.call(bayestestR::p_direction, 
                      bayestestR_p_direction_model_args)
     } 
-    
-    # For nonlinear brms models, somehow parameters and effects are not filtered
     if(bayestestR_p_direction_model_args$effects == "fixed") {
       out <- out %>% 
         dplyr::filter(Parameter %in% param_names_bayestestR) %>% 
         dplyr::filter(Effects %in% effects_names_bayestestR)
     }
-    
     param_names_bayestestR_cd_msg <- 
       paste0("The bayestestR output for the specified parameters %s is NULL. 
            Parameters must use full names with 'b_' prefix for fixed effects 
@@ -1622,14 +1484,9 @@ hypothesis_test.bgmfit <- function(model,
       warning2c(sprintf(param_names_bayestestR_cd_msg, 
                         param_names_bayestestR_cd))
     }
-    # This "object_name" is must for plot
     attr(out, "object_name") <- 'model'
-  } # if(obj_model_bayestestR) {
-  
-  ##############################################################################
-  # Evaluate obj_df_bayestestR
-  ##############################################################################
-  
+  } 
+
   if(obj_df_bayestestR) {
     if(plot) {
       stop2c("For engine = 'bayestestR', 
@@ -1637,7 +1494,6 @@ hypothesis_test.bgmfit <- function(model,
     }
     bayestestR_equivalence_test_df_args[['x']] <- model
     bayestestR_p_direction_df_args[['x']]      <- model
-    
     if(rope_test & pd_test) {
       stop2("For engine = 'bayestestR', specify either 
             'rope_test' or 'pd_test', not both")
@@ -1651,17 +1507,8 @@ hypothesis_test.bgmfit <- function(model,
       out <- do.call(bayestestR::p_direction, 
                      bayestestR_p_direction_df_args)
     } 
-  } # if(obj_df_bayestestR) {
-  
-  
-  ##############################################################################
-  # plot - supported for model based brms and bayestestR
-  ##############################################################################
-  
-  # patchwork::wrap_plots(plots, ncol = 2)  
-  # cowplot::plot_grid(plotlist = plots, ncol = 2)
-  # do.call(gridExtra::grid.arrange, c(plots, ncol = 2))
-  
+  } 
+
   if(isTRUE(plot) | plot == "return") {
     if(!is.null(param_names_bayestestR)) {
       nplots <- length(param_names_bayestestR)
@@ -1671,8 +1518,6 @@ hypothesis_test.bgmfit <- function(model,
           plot_out_list[[i]] <- out %>% dplyr::filter(Parameter == i) %>% 
             plot() 
         }
-        # plot_out <- do.call(gridExtra::grid.arrange, 
-        #                     c(plot_out_list, nrow = nplots))
         plot_out <- patchwork::wrap_plots(plot_out_list, nrow = nplots) +
           patchwork::plot_layout(guides = "keep")
       }
@@ -1683,15 +1528,13 @@ hypothesis_test.bgmfit <- function(model,
     stop2c("The plot should be either logical TRUE/FALSE, or a string 'return'")
   }
   
-  
   if(isTRUE(plot)) {
     invisible(suppressMessages(print(plot_out)))
     # grid::grid.draw(plot_out)
   } else {
     if(plot == 'return') return(plot_out)
   }
-  
-  
+
   if(is.null(drop_probtitles)) {
     if('HDI_range' %in% names(out)) set_drop_probtitles <- TRUE
   } else if(!is.null(drop_probtitles)) {
@@ -1702,7 +1545,6 @@ hypothesis_test.bgmfit <- function(model,
   
   if(!exists('set_drop_probtitles')) set_drop_probtitles <- FALSE
   
-  
   if(set_drop_probtitles) {
     rm_ci <- c("CI", "Ci", "ci")
     out <- out %>% 
@@ -1710,7 +1552,6 @@ hypothesis_test.bgmfit <- function(model,
       dplyr::select(-dplyr::any_of(rm_ci)) %>% 
       dplyr::select(-dplyr::any_of(probtitles))
   }
-  
   return(out)
 }
 

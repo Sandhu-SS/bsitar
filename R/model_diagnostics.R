@@ -361,7 +361,6 @@ model_diagnostics.bgmfit <- function(
                          deriv = NULL, 
                          verbose = verbose)
   
-  
   if(is.null(model$test_mode)) {
     model$test_mode <- FALSE
   }
@@ -391,7 +390,7 @@ model_diagnostics.bgmfit <- function(
         usesavedfuns <- FALSE
       }
     }
-  } else { # if(!is.null(usesavedfuns)) {
+  } else { 
     if(!usesavedfuns) {
       if(expose_function) {
         model <- expose_model_functions(model, envir = envir)
@@ -480,17 +479,14 @@ model_diagnostics.bgmfit <- function(
   `.` <- NULL;
   drawid <- NULL;
   
-  
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
-  # set_names_  <- c('Estimate', 'Est.Error', probtitles)
   set_names_  <- c('Estimate', probtitles)
   
   expose_method_set <- model$model_info[['expose_method']]
-  
-  model$model_info[['expose_method']] <- 'NA' # Over ride 'R'
+  model$model_info[['expose_method']] <- 'NA' 
   
   setxcall_                                 <- match.call()
   post_processing_checks_args <- list()
@@ -504,13 +500,9 @@ model_diagnostics.bgmfit <- function(
   post_processing_checks_args[['check_d0']] <- FALSE
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
-  
   post_processing_checks_args[['deriv']] <- 0
-  
   if(is.null(model_deriv)) model_deriv <- TRUE
-
   o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
-  
   post_processing_checks_args[['all']]      <- TRUE
   oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   post_processing_checks_args[['all']]      <- FALSE
@@ -602,7 +594,6 @@ model_diagnostics.bgmfit <- function(
     clean_msg_sigma_model_no_xvar <- trimws(gsub("\\s+", " ",
                                                  msg_sigma_model_no_xvar))
     
-    
     if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
       if(is.null(xvar)) {
         if(verbose) {
@@ -623,7 +614,6 @@ model_diagnostics.bgmfit <- function(
     } 
   } 
   
-  
   if(!is.null(transform)) {
     if(!is.function(transform)) {
       if(is.logical(transform)) {
@@ -637,7 +627,6 @@ model_diagnostics.bgmfit <- function(
   
   assign_function_to_environment(transform_draws, 'transform_draws',
                                  envir = NULL)
-  
   model$model_info[['transform_draws']] <- transform_draws
   
   if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
@@ -659,7 +648,7 @@ model_diagnostics.bgmfit <- function(
     if(deriv.org > 0) {
       if(!is.null(o[['sigma_model']])) {
         if(o[['sigma_model']] == "ls") {
-          # nothing
+          # 
         } else if(o[['sigma_model']] != "ls") {
           if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
             if(!o[['sigma_model_is_ba_set_d0_as_d1']]) {
@@ -707,7 +696,7 @@ model_diagnostics.bgmfit <- function(
     if(deriv.org > 0) {
       if(!is.null(o[['sigma_model']])) {
         if(o[['sigma_model']] == "ls") {
-          # nothing
+          # 
         } else if(o[['sigma_model']] != "ls") {
           force_condition_and_by_switch_plot <- TRUE
           if(is.null(difx)) {
@@ -750,7 +739,6 @@ model_diagnostics.bgmfit <- function(
     }
   }
   
-  
   if(!is.null(model$xcall)) {
     if(grepl("model_diagnostics", model$xcall)) {
       xcall <- "model_diagnostics"
@@ -763,7 +751,7 @@ model_diagnostics.bgmfit <- function(
     rlang_trace_back <- rlang::trace_back()
     check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
     if(all(!check_trace_back.bgmfit)) {
-      # nothing
+      # 
     } else {
       rlang_trace_back.bgmfit_i <- 
         min(which(check_trace_back.bgmfit == TRUE))
@@ -777,9 +765,7 @@ model_diagnostics.bgmfit <- function(
   
   
   check_if_package_installed(model, xcall = xcall)
-  
   model$xcall <- xcall
-  
   call_from_modelbased_growthparameters <- FALSE
   call_from_modelbased_growthparameters_nonS3 <- FALSE
   if(xcall == "modelbased_growthparameters.bgmfit" |
@@ -788,7 +774,6 @@ model_diagnostics.bgmfit <- function(
   }
   
   scallstatus <- sys.status()
-
   if(xcall == "modelbased_growthparameters_nonS3" |
      xcall == "CustomDoCall") {
     arguments <- get_args_(as.list(match.call())[-1], xcall, xclass = "", 
@@ -801,7 +786,6 @@ model_diagnostics.bgmfit <- function(
   
   arguments$model        <- model
   arguments$usesavedfuns <- usesavedfuns
-  
   get.cores_             <- get.cores(arguments$cores)
 
   if(is.null(get.cores_[['max.cores']])) {
@@ -840,11 +824,7 @@ model_diagnostics.bgmfit <- function(
       on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
               add = TRUE)
     }
-  } else {
-    
-  } # if(!is.null(get_future_args)) { else {
-  
-  
+  } 
   
   draw_ids_org <- draw_ids
   draw_ids_exe <- FALSE
@@ -854,7 +834,6 @@ model_diagnostics.bgmfit <- function(
     draw_ids     <- draw_ids
   }
   
-
   future_splits_exe <- FALSE
   if(!is.null(future_splits)) {
     future_splits_exe <- TRUE
@@ -879,10 +858,8 @@ model_diagnostics.bgmfit <- function(
         future_splits_exe <- FALSE
         future_splits <- future_splits
       }
-      
     } else if(is.list(future_splits)) {
       future_splits_at <- future_splits
-      
     } else if(is.vector(future_splits)) {
       if(!is.numeric(future_splits)) {
         stop("future_splits must be a numeric vector of lenghth 2")
@@ -930,7 +907,6 @@ model_diagnostics.bgmfit <- function(
     }
   }
   
-  
   if(future_splits_exe) {
     if(plot) {
       future_splits_exe <- FALSE
@@ -940,7 +916,7 @@ model_diagnostics.bgmfit <- function(
         message2c("future_splits can not be used when plot = TRUE. 
                   future_splits set as FALSE")
       }
-    } # if(plot) {
+    } 
     if(method == 'pkg') {
       future_splits_exe <- FALSE
       future_splits     <- NULL
@@ -949,7 +925,7 @@ model_diagnostics.bgmfit <- function(
         message2c("future_splits can not be used when method = 'pkg'.
                future_splits set as FALSE")
       }
-    } # if(method == 'pkg') {
+    } 
   }
 
   if(!future_splits_exe) {
@@ -973,7 +949,6 @@ model_diagnostics.bgmfit <- function(
                  deparse(model$model_info$exefuns[[1]])))) {
       need_future_re_expose_cpp <- TRUE
     }
-
     if(is.null(future_re_expose)) {
       if(setplanis == "multisession") {
         if(need_future_re_expose_cpp) {
@@ -994,20 +969,18 @@ model_diagnostics.bgmfit <- function(
         re_expose <- TRUE
       } else if(!future_re_expose) {
         if(!need_future_re_expose_cpp) {
-          # if(expose_method_set == "R") {
           if(verbose) {
             message2c("To speed up the calulations, it is advised to 
                         set 'future_re_expose' = TRUE")
           }
         } 
         if(need_future_re_expose_cpp & setplanis == "multisession") {
-          # if(expose_method_set != "R") {
           stop2c("For plan multisession, the functions need to be 
                    re_exposed by setting 'future_re_expose' = TRUE")
         }
       }
     }
-  } # if (future) {
+  } 
 
   if (!future) {
     future_splits_at <- NULL
@@ -1041,19 +1014,16 @@ model_diagnostics.bgmfit <- function(
   
   
   full.args$dpar    <- dpar
-  
   get.newdata_args <- list()
   for (i in methods::formalArgs(get.newdata)) {
     get.newdata_args[[i]] <- full.args[[i]]
   }
-  
 
   get.newdata_args$ipts <- full.args$ipts <- ipts <- 
     set_for_check_ipts(ipts = ipts, nipts = 50, dpar = dpar, verbose = verbose)
   
   full.args$newdata <- newdata <- CustomDoCall(get.newdata, 
                                                get.newdata_args)
-
   if(!exists('check_fun')) check_fun <- FALSE
   if(!exists('available_d1')) available_d1 <- FALSE
   full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
@@ -1070,23 +1040,17 @@ model_diagnostics.bgmfit <- function(
   full.args$newdata <- newdata
   full.args[["..."]] <- NULL
   
-  
   if(!is.null(full.args[['transform_draws']])) {
     full.args[['transform']] <- transform <- full.args[['transform_draws']]
     if(verbose) message("'transform' set based on 'transform_draws'")
   } else if(!is.null(transform_draws)) {
     full.args[['transform']] <- transform <- transform_draws
     if(verbose) message("'transform' set based on 'transform_draws'")
-  } else {
-    #####
-  }
-  full.args[['transform']] <- transform <- transform_draws
+  } 
   
+  full.args[['transform']] <- transform <- transform_draws
   full.args$model_deriv <- model_deriv
 
-  ########################################################################
-
-  
   allowed_set_draws <- c("epred", "linpred", "prediction")
   if (length(set_draws) != 1 || !set_draws %in% allowed_set_draws) {
     stop("`set_draws` must be one of: ", 
@@ -1106,10 +1070,8 @@ model_diagnostics.bgmfit <- function(
   if (needs_tidybayes && !requireNamespace("tidybayes", quietly = TRUE)) {
     stop("Please install `tidybayes` for residual-based plots.")
   }
-  
-  
+
   plots <- unique(plots)
-  
   valid_plots <- c(
     "rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "trace", "dens_overlay",
     "rhat", "neff", "ppc_dens_overlay", "ppc_hist",
@@ -1120,35 +1082,26 @@ model_diagnostics.bgmfit <- function(
   if (length(bad) > 0) {
     stop("Unknown plot type(s): ", paste(bad, collapse = ", "))
   }
-  
-  
+
   if ("qq" %in% plots) {
     plots <- gsub("^qq$", "qqp", plots, fixed = F)
     plots <- unique(plots)
   }
-  
-  
+
   out <- list()
   
   if (any(c("rvf", "rvp", "qqn", "qqp") %in% plots)) {
-    
     draw_fun <- switch(
       set_draws,
       epred = tidybayes::add_epred_draws,
       linpred = tidybayes::add_linpred_draws,
       prediction = tidybayes::add_predicted_draws
     )
-    
     resi_fun <- tidybayes::add_residual_draws
-    
     draw_col <- paste0(".", set_draws)
-    
     full.args[['newdata']] <- full.args[['newdata']] %>% 
       dplyr::mutate(.row = dplyr::row_number())
-    
-    
     full.args[['object']] <- full.args[['model']]
-    
     draw_fun_args <- resi_fun_args <- list()
     resi_fun_args_names <- c('object', 'newdata', 'resp', 'ndraws',
                              'draw_ids', 'seed', 're_formula', 'category')
@@ -1161,17 +1114,13 @@ model_diagnostics.bgmfit <- function(
     for (resi_fun_args_namesi in resi_fun_args_names) {
       resi_fun_args[[resi_fun_args_namesi]] <- full.args[[resi_fun_args_namesi]] 
     }
-    
     resi_fun_args[['value']]   <- ".residual"
     draw_fun_args[['value']] <- draw_col
-    
     fitted_df <- CustomDoCall(draw_fun, draw_fun_args) %>% 
       dplyr::ungroup() %>% 
       dplyr::select(.row, .draw, dplyr::all_of(draw_col)) %>%
       dplyr::rename(.fitted_value = dplyr::all_of(draw_col))
-    
     resid_df <- CustomDoCall(resi_fun, resi_fun_args) 
-    
     plot_df <- dplyr::left_join(
       resid_df,
       fitted_df,
@@ -1185,7 +1134,6 @@ model_diagnostics.bgmfit <- function(
         linpred = "Linear predicted values",
         prediction = "Posterior predicted values"
       )
-      
       out$rvf <- plot_df %>%
         ggplot2::ggplot(ggplot2::aes(x = .fitted_value, y = .residual)) +
         ggplot2::geom_point(alpha = point_alpha, color = "gray40") +
@@ -1207,15 +1155,12 @@ model_diagnostics.bgmfit <- function(
     if ("qqn" %in% plots) {
       qq_df <- plot_df %>%
         tidybayes::median_qi(.residual)
-      
       out$qqn <- qq_df %>%
         ggplot2::ggplot(ggplot2::aes(sample = .residual)) +
         ggplot2::geom_qq() +
         ggplot2::geom_qq_line() +
         ggplot2::theme_minimal() +
-        # ggplot2::labs(title = "Normal Q-Q Plot of Residuals") +
         ggplot2::labs(title = "Q-Q Plot of Residuals") +
-        # ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
         ggplot2::labs(x = "Theoretical Quantiles", y = "Residuals")
     }
     
@@ -1225,9 +1170,7 @@ model_diagnostics.bgmfit <- function(
       qq_plot_args[['resid_draws']]  <- resid_df
       out$qqp <- do.call(qq_plot_pearson, qq_plot_args)
     }
-    
-  } # if (any(c("rvf", "rvp", "qqn", "qqp") %in% plots)) {
-  
+  } 
   
   if (any(c( "rvp") %in% plots)) {
     resid_df_mean <- resid_df %>% 
@@ -1238,9 +1181,7 @@ model_diagnostics.bgmfit <- function(
       ) %>%
       dplyr::bind_cols(full.args[['newdata']] %>% 
                          dplyr::select(dplyr::all_of(xvar))) 
-    
     resid_df_mean[[xvar]] <- ifunx_(resid_df_mean[[xvar]])
-    
     
     out$rvp <- resid_df_mean %>% 
       ggplot2::ggplot(ggplot2::aes(x = .data[['age']], y = mean_residual)) +
@@ -1260,9 +1201,7 @@ model_diagnostics.bgmfit <- function(
       ggplot2::theme_minimal()
   }
   
-  # theme(plot.margin = margin(35, 10, 35, 10)) # Top, Right, Bottom, Left
-  
-  # No divergences to plot.
+
   suppressMessages({
     if ("trace" %in% plots) {
       out$trace <- brms::mcmc_plot(
@@ -1272,8 +1211,7 @@ model_diagnostics.bgmfit <- function(
       ggplot2::labs(title = "Trace plot") 
     }
   })
-  
-  
+
   if ("dens_overlay" %in% plots) {
     out$dens_overlay <- brms::mcmc_plot(
       model, type = "dens_overlay", variable = pars, regex = regex 
@@ -1281,12 +1219,7 @@ model_diagnostics.bgmfit <- function(
     out$dens_overlay <- out$dens_overlay + 
       ggplot2::labs(title = "Density overlay plot") 
   }
-  
-  
-  # brms_pairs_brmsfit <- NULL
-  # getfrom_ <- c('brms_pairs_brmsfit')
-  # for (i in getfrom_) assign(i, utils::getFromNamespace(i, 'brms'))
-  
+
   if ("pairs" %in% plots) {
     insight::check_if_installed('ggpubr')
     brms_pairs_brmsfit <- utils::getFromNamespace('pairs.brmsfit', 'brms')
@@ -1328,7 +1261,6 @@ model_diagnostics.bgmfit <- function(
       ) + 
       ggplot2::labs(title = "Posterior Predictive Check: Density Overlay")
   }
-  
 
   if ("ppc_hist" %in% plots) {
     out$ppc_hist <- brms::pp_check(
@@ -1344,7 +1276,6 @@ model_diagnostics.bgmfit <- function(
       ggplot2::labs(title = "Posterior Predictive Check: Scatter Average")
   }
   
-  
   suppressMessages({
     if ("ppc_stat" %in% plots) {
       out$ppc_stat <- brms::pp_check(
@@ -1353,15 +1284,12 @@ model_diagnostics.bgmfit <- function(
         ggplot2::labs(title = paste("Posterior Predictive Check:", ppc_stat))
     }
   })
-  
-  
- 
+
   for (namespi in names(out)) {
     out[[namespi]] <-  out[[namespi]] +
       ggplot2::theme(plot.title = ggplot2::element_text(size = title_size))
   }
-  
-  
+
   if(!wrap_title) {
     for (namespi in names(out)) {
       out[[namespi]] <-  out[[namespi]] +
@@ -1379,23 +1307,17 @@ model_diagnostics.bgmfit <- function(
                            margin = ggplot2::margin(b = 10),
                            halign = 0.5,
                            valign = 0.5))"
-        ) # ept
+        ) 
     }
   }
-  
-  
-  
-  
 
   if (isTRUE(rank_overlay) && requireNamespace("bayesplot", quietly = TRUE)) {
     bayesplot::color_scheme_set("blue")
   }
   
   if (!combine || length(out) <= 1) {
-    # return(out)
     if(length(out) == 1) return(out[[1]]) else return(out) 
   }
-  
 
   is_patchable <- vapply(
     out,
@@ -1412,9 +1334,7 @@ model_diagnostics.bgmfit <- function(
   if (is.null(ncol)) {
     ncol <- if (length(patchable_plots) <= 2) length(patchable_plots) else 2
   }
-  
 
-  # sort plots by order specified by user
   patchable_plots <- patchable_plots[plots]
   
   if(is.null(patch_plot.margin)) {
@@ -1423,10 +1343,6 @@ model_diagnostics.bgmfit <- function(
     combined <- patchwork::wrap_plots(patchable_plots, ncol = ncol) &
       ggplot2::theme(plot.margin = patch_plot.margin) 
   }
-  
-
-  
-  ####
   
   assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
   
@@ -1465,7 +1381,6 @@ model_diagnostics.bgmfit <- function(
       }
     })
   }
-  
   
   out <- list(combined = combined, plots = out)
   if(add_plot_df) {

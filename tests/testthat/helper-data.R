@@ -59,7 +59,6 @@
   # to run tests on local and GitHub 
   
   skip_test_local_rcmd_check <- FALSE
-  
  
   
   set.seed(113)

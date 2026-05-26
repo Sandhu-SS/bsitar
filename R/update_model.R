@@ -81,13 +81,11 @@ update_model.bgmfit <-
       envir <- envir
     }
     
-
     if(check_newargs) {
       call_o <- match.call()
       call_o_args <- as.list(call_o)[-1]
       
       args_o <- as.list(model$model_info$call.full.bgmfit)[-1]
-      
       args_o_dots_ <- list(...)
       if (length(args_o_dots_) > 0) {
         for (i in names(args_o_dots_)) {
@@ -106,10 +104,8 @@ update_model.bgmfit <-
       
       args_o_new <- args_o_dots_
       args_o_new[['expose_function']] <- expose_function
-      
       calling    <- model$model_info$call.full.bgmfit
       calling[['verbose']] <- NULL
-      
       args_o_org <- calling
       args_o_new$data <- NULL
       args_o_org$data <- NULL
@@ -148,19 +144,13 @@ update_model.bgmfit <-
         }
       }
       return(model)
-    } # if(check_newargs) {
-    
-    
-    
+    } 
     
     check_if_package_installed(model, xcall = NULL)
-    
     formula. <- NULL
     args <- methods::formalArgs(bsitar)
     args <- args[!args == "..."]
-    
     call_ <- model$model_info$call.full.bgmfit[-1] %>% as.list()
-    
     call_$data <- NULL
     mcall_ <- list(...)
     
@@ -177,13 +167,11 @@ update_model.bgmfit <-
         }
       }
     }
-    
-    
+
     dot_and_call_intersect <-
       intersect(names(list(...)), names(call_))
     
     exclude_args_names <- c(model$model_info[['brms_arguments_list']])
-    
     exclude_args_names <-
       c(exclude_args_names, dot_and_call_intersect)
     
@@ -196,17 +184,13 @@ update_model.bgmfit <-
       new_init_r_arg <- TRUE
     else
       new_init_r_arg <- FALSE
-    
-   
-    
+
     for (ix in  exclude_args_names) {
       call_[[ix]] <- NULL
     }
     
     dots <- list(...)
     dots$data <- NULL
-    
-    
     as_one_logical <- is_equal <- NULL
     needs_recompilation <- substitute_name <- NULL
     
@@ -240,8 +224,6 @@ update_model.bgmfit <-
       utils::getFromNamespace(".validate_prior", "brms")
     get_element            <-
       utils::getFromNamespace("get_element", "brms")
-    # tidy_ranef             <-
-    #   utils::getFromNamespace("tidy_ranef", "brms")
     getframe_re      <-
       utils::getFromNamespace("frame_re", "brms")
     validate_stanvars      <-
@@ -269,10 +251,8 @@ update_model.bgmfit <-
     stop2                  <- utils::getFromNamespace("stop2", "brms")
     
     validate_silent        <- utils::getFromNamespace("validate_silent", "brms")
-    
-    getbrmsframe        <- utils::getFromNamespace("brmsframe", "brms")
-    
-    
+    getbrmsframe           <- utils::getFromNamespace("brmsframe", "brms")
+
     testmode <- isTRUE(dots[["testmode"]])
     dots$testmode <- NULL
     if ("silent" %in% names(dots)) {
@@ -282,9 +262,7 @@ update_model.bgmfit <-
     }
     silent <- dots$silent
     model <- brms::restructure(model)
-    
     model$file <- NULL
-    
     if ("data" %in% names(dots)) {
       stop2("Please use argument 'newdata' to update the data.")
     }
@@ -296,10 +274,7 @@ update_model.bgmfit <-
       data_name <- get_data_name(model$data)
     }
     
-    # Don't validate data because prepare_data2 is called with the bsitar()
     should_validate_data <- FALSE
-    
-   
     if (missing(formula.) || is.null(formula.)) {
       dots$formula <- model$formula
       if (!is.null(dots[["family"]])) {
@@ -327,7 +302,7 @@ update_model.bgmfit <-
            autocor = autocor,
            nl = nl)
       if (is_nonlinear(model)) {
-        
+        #
       } else {
         mvars <- all.vars(dots$formula$formula)
         mvars <- setdiff(mvars, c(names(model$data), "."))
@@ -343,14 +318,12 @@ update_model.bgmfit <-
     }
     
     dots$formula <- validate_formula(dots$formula, data = dots$data)
-    
     if (is.null(dots$prior)) {
       dots$prior <- model$prior
     } else {
       if (!is.brmsprior(dots$prior)) {
         stop2("Argument 'prior' needs to be a 'brmsprior' model.")
       }
-     
     }
     attr(dots$prior, "allow_invalid_prior") <- TRUE
     if (!"sample_prior" %in% names(dots)) {
@@ -390,7 +363,6 @@ update_model.bgmfit <-
     if (!"normalize" %in% names(dots)) {
       dots$normalize <- is_normalized(model$model)
     }
-    
     if (is.null(dots$iter)) {
       dots$warmup <- first_not_null(dots$warmup, model$fit@sim$warmup)
     }
@@ -408,9 +380,7 @@ update_model.bgmfit <-
       dots[names_old_stan_args] <-
         model$stan_args[names_old_stan_args]
     }
-    
-    
-    
+
     if (is.null(recompile)) {
       dots_for_scode              <- dots
       dots_for_scode$prior        <- NULL
@@ -439,11 +409,8 @@ update_model.bgmfit <-
         dots_for_recompile$formula  <- NULL
         if (!new_init_arg)   dots_for_recompile$init <- NULL
         if (!new_init_r_arg) dots_for_recompile$init_r <- NULL
-        # if (!new_init_arg)
-        #   dots_for_recompile$init     <- NULL
         dots_for_recompile          <- c(dots_for_recompile, call_)
         model <- do.call(bsitar, dots_for_recompile)
-        # model <- CustomDoCall(bsitar, dots_for_recompile)
       }
     } else {
       if (!is.null(dots$formula)) {
@@ -481,11 +448,9 @@ update_model.bgmfit <-
         save_mevars = dots$save_mevars,
         save_all_pars = dots$save_all_pars
       )
-      # model$basis <- standata_basis(bterms, data = model$data)
       model$basis <- getframe_basis(bframe, data = model$data)
       algorithm <- match.arg(dots$algorithm, algorithm_choices())
       dots$algorithm <- model$algorithm <- algorithm
-      # can only avoid recompilation when using the old backend
       dots$backend <- model$backend
       if (!testmode) {
         dots$fit <- model
@@ -499,11 +464,11 @@ update_model.bgmfit <-
           dots_for_norecompile$init_r   <- NULL
           dots_for_norecompile          <- c(dots_for_norecompile, call_)
           model <- do.call(bsitar, dots_for_norecompile)
-        } # if(!new_init_arg) {
+        } 
         if (new_init_arg) {
-          # TODO
-        } # if(new_init_arg) {
-      } # if (!testmode) {
+          # 
+        } 
+      }
     }
     if(expose_function) model <- expose_model_functions(model, envir = envir)
     attr(model$data, "data_name") <- data_name
