@@ -101,10 +101,7 @@ qq_plot_pearson <- function(model,
   if(is.null(ndraws))          ndraws <- brms::ndraws(model)
   if(is.null(draw_ids))        draw_ids <- NULL
   if(is.null(data))            data <- model$data
-  
   summary <- match.arg(summary)
-  
-  # pearson_sigma_residuals()
   pearson_sigma_residuals <- function(model, 
                                       data, 
                                       ndraws, 
@@ -121,15 +118,11 @@ qq_plot_pearson <- function(model,
                                       category) {
     .draw <- NULL;
     .sigma <- NULL;
-    
     draws_df <- posterior::as_draws_df(model)
-    
     sigma_fixed_cols <- grep("^b_sigma", colnames(draws_df), value = TRUE)
     sigma_re_cols <- grep("(^r_.*sigma)|(^sd_.*sigma)|(^cor_.*sigma)", 
                           colnames(draws_df), value = TRUE)
-    
     sigma_cols <- c(sigma_fixed_cols, sigma_re_cols)
-    
     sigma_draws <- draws_df  %>% 
       dplyr::select(dplyr::any_of(c(".chain", ".iteration", ".draw", 
                                     sigma_cols)))
@@ -169,7 +162,6 @@ qq_plot_pearson <- function(model,
       exp(eta_sigma)
     )
     
-   
     sigma_long <- as.data.frame(sigma_mat) %>% 
       tibble::as_tibble() %>% 
       dplyr::mutate(.draw = dplyr::row_number()) %>% 
@@ -178,12 +170,9 @@ qq_plot_pearson <- function(model,
         names_to = ".row",
         values_to = ".sigma"
       ) %>% 
-      # dplyr::mutate(.row = readr::parse_number(.row))
       dplyr::mutate(.row = as.numeric(sub(".*?([+-]?\\d+\\.?\\d*).*", "\\1",
                                           .row)))
-    
-    # check << readr
-    
+
     resid_col <- intersect(c(".residual", "residual", 
                              ".epred_residual", ".value"), 
                            colnames(resid_draws))[1]
@@ -200,10 +189,7 @@ qq_plot_pearson <- function(model,
       sigma_draws = sigma_draws
     )
   }
-  
-  
-  
-  # qq_pearson_sigma()
+
   qq_pearson_sigma <- function(model, 
                                data, 
                                ndraws, 
@@ -239,13 +225,11 @@ qq_plot_pearson <- function(model,
       ggplot2::labs(
         x = "Theoretical Quantiles",
         y = "Pearson Residuals",
-        # title = "QQ plot of Pearson residuals"
         title = "Q-Q Plot of Residuals",
       ) +
       ggplot2::theme_bw()
   }
   
-  # qq_pearson_avg_sigma()
   qq_pearson_avg_sigma <- function(model,
                                    data,
                                    ndraws,
@@ -314,9 +298,7 @@ qq_plot_pearson <- function(model,
           pearson_median
         } else if (summary == "robust") {
           pearson_median
-        } else {
-          #
-        }
+        } 
       )
     
     p <- ggplot2::ggplot(summary_data, ggplot2::aes(sample = pearson_plot)) +
@@ -324,16 +306,7 @@ qq_plot_pearson <- function(model,
       ggplot2::stat_qq_line(distribution = stats::qnorm) +
       ggplot2::labs(
         title = "Q-Q Plot of Residuals",
-        # title = paste0(
-        #   "QQ plot of ",
-        #   switch(summary,
-        #          mean = "posterior mean",
-        #          median = "posterior median",
-        #          robust = "posterior median (robust)")
-        # ),
-        # subtitle = paste0("Based on ", length(draw_ids), " posterior draws"),
         x = "Theoretical Quantiles",
-        # y = "Summarized Pearson residuals"
         y = "Pearson Residuals"
       ) +
       ggplot2::theme_bw()
@@ -345,9 +318,7 @@ qq_plot_pearson <- function(model,
       summary = summary
     )
   }
-  
-  
-  
+
   if(qq_type == 'data') {
     out <- pearson_sigma_residuals(
       model = model,
@@ -364,7 +335,6 @@ qq_plot_pearson <- function(model,
       value = value,
       seed = seed,
       category = category)
-    # head(res$data)
   } else if(qq_type == 'qq') {
     out <- qq_pearson_sigma(
       model = model,
@@ -400,64 +370,4 @@ qq_plot_pearson <- function(model,
 
 
 
-# qq_plot_pearson(model = model,
-#             data = model$data,
-#             # ndraws = 10,
-#             draw_ids = 1:10,
-#             # draw_ids = NULL,
-#             draw_ids_select = 1,
-#             summary = "robust",
-#             qq_type = 'qq_avg')
 
-
-
-
-#' 
-#' 
-#' 
-#' #' Adpapted from DHARMa.helpers
-#' #' @noRd
-#' DHARMa_brms <- function (model, 
-#'                          resp = NULL, 
-#'                          integer = FALSE, 
-#'                          plot = TRUE, 
-#'                          ndraws = 10, 
-#'                          ntrys = 5, 
-#'                          ...) {
-#'   
-#'   mdata <- brms::standata(model)
-#'   if (!is.null(resp)) {
-#'     respo <- paste0("Y_", resp)
-#'   }
-#'   else {
-#'     respo <- "Y"
-#'   }
-#'   if (!respo %in% names(mdata)) {
-#'     stop("Cannot extract the required information from this brms model")
-#'   }
-#'   dharma.obj <- 
-#'     DHARMa::createDHARMa(simulatedResponse = 
-#'                            t(brms::posterior_predict(model, 
-#'                                                      resp = resp,
-#'                                                      ndraws = ndraws,
-#'                                                      ntrys = ntrys)), 
-#'                          observedResponse = mdata[[respo]], 
-#'                          fittedPredictedResponse = 
-#'                            apply(t(brms::posterior_epred(model, 
-#'                                                          resp = resp, 
-#'                                                          ndraws = ndraws, 
-#'                                                          re.form = NA)), 1, 
-#'                                  mean), 
-#'                          integerResponse = integer)
-#'   if (isTRUE(plot)) {
-#'     plot(dharma.obj, ...)
-#'   }
-#'   invisible(dharma.obj)
-#' }
-#' 
-
-# DHARMa::plotQQunif
-
-# DHARMa::plotResiduals
-
-# DHARMa_brms(model)

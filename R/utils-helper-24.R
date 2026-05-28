@@ -1,27 +1,16 @@
 
 
-#############################################################
-############### GS_gps_parms_stan_str_get ##################
-#############################################################
 
 GS_gps_parms_stan_str_get <- function() {
-  
   GS_gps_parms_stan_str <- "
-  /////////////////////////////////////////////////////////////////////////
-  // sequence_stan_base
-  /////////////////////////////////////////////////////////////////////////
   array[] int sequence_stan_base(int start, int end) {
         array[end - start + 1] int seq;
         for (n in 1:num_elements(seq)) {
           seq[n] = (n + start - 1)  ;
         }
         return seq;
-      }
-
-
-  /////////////////////////////////////////////////////////////////////////
-  // factorial_stan
-  /////////////////////////////////////////////////////////////////////////
+  }
+      
   real factorial_stan(int n) {
   real factorial = 1;
       for(i in 1:n) {
@@ -30,9 +19,6 @@ GS_gps_parms_stan_str_get <- function() {
     return factorial;
   }
   
-  /////////////////////////////////////////////////////////////////////////
-  // seq_fun_stan - seq.int(from, to, length.out)
-  /////////////////////////////////////////////////////////////////////////
   vector seq_fun_stan(real start, real end, int N_by) {  
      real h;
      vector[N_by]  out;
@@ -42,10 +28,7 @@ GS_gps_parms_stan_str_get <- function() {
      }
     return(out);
   }
-  
-  /////////////////////////////////////////////////////////////////////////
-  // vector_non_nan
-  /////////////////////////////////////////////////////////////////////////
+
   vector vector_non_nan(vector x) {
     vector[size(x)] y;
     int pos = 1;
@@ -57,10 +40,7 @@ GS_gps_parms_stan_str_get <- function() {
     }
     return y;
   }
-  
-  /////////////////////////////////////////////////////////////////////////
-  // size_non_nan
-  /////////////////////////////////////////////////////////////////////////
+
   int size_non_nan(vector x) {
     int n = 0;
     for (i in 1:rows(x)) {
@@ -70,10 +50,7 @@ GS_gps_parms_stan_str_get <- function() {
     }
     return n;
   }
-  
-  /////////////////////////////////////////////////////////////////////////
-  // index_non_nan
-  /////////////////////////////////////////////////////////////////////////
+
   array[] int index_non_nan(vector x) {
     array[size_non_nan(x)] int match_positions;
     int pos = 1;
@@ -85,11 +62,7 @@ GS_gps_parms_stan_str_get <- function() {
     }
     return match_positions;
   }
-  
-  
-  /////////////////////////////////////////////////////////////////////////
-  // size_nan
-  /////////////////////////////////////////////////////////////////////////
+
   int size_nan(vector x) {
     int n = 0;
     for (i in 1:rows(x)) {
@@ -99,11 +72,7 @@ GS_gps_parms_stan_str_get <- function() {
     }
     return n;
   }
-  
-  
-  /////////////////////////////////////////////////////////////////////////
-  // index_nan
-  /////////////////////////////////////////////////////////////////////////
+
   array[] int index_nan(vector x) {
     array[size_nan(x)] int match_positions;
     int pos = 1;
@@ -116,9 +85,6 @@ GS_gps_parms_stan_str_get <- function() {
     return match_positions;
   }
 
-  /////////////////////////////////////////////////////////////////////////
-  // GS_gps_parms_stan
-  /////////////////////////////////////////////////////////////////////////
    array[]  matrix  GS_gps_parms_stan(
                    vector nlp_a,
                    vector nlp_b,
@@ -137,32 +103,24 @@ GS_gps_parms_stan_str_get <- function() {
                    int return_indicator,
                    int drawni
                    ) {
-
     int pieces_dim = num_elements(xknots) - 1;
     int degree_dim = degree + 1;
     int deriv_root = 2;
     real solvex = 0;
     int mark_peak = 1;
-
     array[2] int parm_deriv_vec = {0,1};
     array[3] int curve_deriv_vec = {0,1,2};
-    
     int n_parm_deriv  = num_elements(parm_deriv_vec);
     int n_curve_deriv = num_elements(curve_deriv_vec);
-    
     int array_dim = num_elements(nlp_a);
     int array_mat_dim_1;
     int array_mat_dim_2;
-    
     int n_piece_id = 0; 
-    
     int parm_mat_dim;
     int mark_peak_dim;
     int deriv_mat_dim_1;
     int deriv_mat_dim;
-    
     int degree_dim_set_spread = degree_dim * set_spread;
-    
     if(drawni == 0) {
       parm_mat_dim = 6;
       mark_peak_dim = 6;
@@ -174,25 +132,14 @@ GS_gps_parms_stan_str_get <- function() {
       deriv_mat_dim_1 = pieces_dim * degree_dim_set_spread;
       deriv_mat_dim   = n_curve_deriv + 1+1+1+1;
     }
-    
-    
     array[array_dim] matrix[degree_dim, pieces_dim] coef_array;
     array[array_dim] matrix[pieces_dim, parm_mat_dim] parm_array;
     array[array_dim] matrix[deriv_mat_dim_1, deriv_mat_dim] deriv_array;
-    
-
     matrix[1, pieces_dim] rrootsmat;
     matrix[degree_dim, pieces_dim] PiecePolyCoef;
-    
     matrix[pieces_dim, parm_mat_dim] parm_mat_local;
- 
     matrix[degree_dim_set_spread, deriv_mat_dim] deriv_mat_local;
-    
-
     vector[cols(SParMat)] smat;
-    
-    
-    // This for retun out
      if(return_indicator == 1) {
          array_mat_dim_1 = pieces_dim;
          array_mat_dim_2 = parm_mat_dim;
@@ -201,25 +148,19 @@ GS_gps_parms_stan_str_get <- function() {
          array_mat_dim_1 = pieces_dim*degree_dim_set_spread;
          array_mat_dim_2 = deriv_mat_dim;
      }
-    
     vector[degree_dim] xg;
     vector[degree_dim] yg;
     matrix[degree_dim, degree_dim] Xg;
     matrix[degree_dim, degree_dim] A;
     vector[degree_dim] b;
     matrix[degree_dim, degree_dim] U;
-    
-    ///////////////////////////////////////////////////////////////////
-    // Start elements for GS_nsp_call_stan
-    ///////////////////////////////////////////////////////////////////
-    
+
     int calcderiv = 0;
     int intercept = 0;
     int derivs = 0; 
     real centerval = 0; 
     int normalize = 1;
     int preH = 0;
-    
     vector[num_elements(xknots)] fullknots;
     vector[num_elements(fullknots)-2] knots;
     vector[2] bknots;
@@ -231,15 +172,9 @@ GS_gps_parms_stan_str_get <- function() {
     int ord     = degree + 1;
     int Nk      = Nintk + 2;
     int df      = Nintk + 1 + intercept;
-    
     int ncolselect = Nk+intercept-1; 
     matrix[degree_dim, ncolselect] spline_eval;
-    
-    
-    ///////////////////////////////////////////////////////////////////
-    // End elements for GS_nsp_call_stan
-    ///////////////////////////////////////////////////////////////////
-    
+
     int rowni_i = 0;
     for (rowni in 1:array_dim) {
       if (spline_subset_indicator == 1) {
@@ -251,11 +186,8 @@ GS_gps_parms_stan_str_get <- function() {
       real par_b = nlp_b[rowni];
       real par_c = nlp_c[rowni];
       real par_d = nlp_d[rowni];
-
       for (i in 1:pieces_dim) {
       rowni_i = rowni_i + 1;
-        
-        
         if(spline_precomputed_indicator == 0) {
           for(j in 1:(degree + 1)){
             xg[j] = xknots[i] + (xknots[i+1] - xknots[i]) * (j-1.0)/degree;
@@ -263,20 +195,12 @@ GS_gps_parms_stan_str_get <- function() {
         } else if(spline_precomputed_indicator == 1) {
            xg = xg_array[i];
         }
-        
-        
         if(spline_precomputed_indicator == 0) {
           spline_eval = GS_nsp_call_stan(xg, knots, bknots, 
                       intercept, derivs, centerval, normalize, preH);
         } else if(spline_precomputed_indicator == 1) {
           spline_eval = spline_eval_array[i];
         }
-        
-         // print(\"xg: \", xg);
-         // print(\"xg_array: \", xg_array[i]);
-         // print(\"spline_eval: \", spline_eval);
-         // print(\"spline_eval_array: \", spline_eval_array[i]);
-        
         yg = spline_eval * smat;
         for(j in 1:(degree + 1)){
         real temp_o = ((xg[j]/exp(par_c)) + par_b);
@@ -309,57 +233,21 @@ GS_gps_parms_stan_str_get <- function() {
         real xi_lower = (xknots[i] / exp(par_c)) + par_b;
         real xi_upper = (xknots[i + 1] / exp(par_c)) + par_b;
         real get_rroots;
-        
-        
-        
-        
         if (rroots >= xi_lower && rroots <= xi_upper) {
           get_rroots = rroots;
         } else {
           get_rroots = positive_infinity();
         }
-        
-        
-        // Also replace first and last piece to NA, boundary
-        // Seems no need here, later Also replace is sufficient
-        if(rowni == 1) {
-        //  get_rroots = positive_infinity();
-        }
-        
-        if(rowni == array_dim) {
-        //  get_rroots = positive_infinity();
-        }
-        
-        
-        // Set to NA for rounded upto 6 decimal places - to match R behaviour
         real xi_lower_round = round(xi_lower * pow(10, 6)) / pow(10, 6);
         real xi_upper_round = round(xi_upper * pow(10, 6)) / pow(10, 6);
         real rroots_round   = round(rroots   * pow(10, 6)) / pow(10, 6);
         if (rroots_round == xi_lower_round || rroots == xi_upper_round) {
-         // get_rroots = positive_infinity();
         }
-        
-   /*
-        if(rowni == 12 || rowni == 12) {
-         print(\"xi_lower: \", xi_lower);
-         print(\"xi_upper: \", xi_upper);
-         print(\"rroots: \", rroots);
-         print(\"get_rroots: \", get_rroots);
-        }
-    */    
-    
-        
         rrootsmat[1, i] = get_rroots;
       }
-
-
       if (return_indicator == 0) {
         coef_array[rowni] = PiecePolyCoef;
       }
-
-
-
-
       if (return_indicator == 1) {
          vector[pieces_dim] newx_all = rrootsmat[1,]';
          vector[pieces_dim] set_piece_id_all;
@@ -408,7 +296,6 @@ GS_gps_parms_stan_str_get <- function() {
                 }
               }
               collectd_matx = xg_pow_dxi * pc_i;
-              
               if (dxi == 0) {
                 collectd_matx = collectd_matx + par_a;
               }
@@ -416,14 +303,12 @@ GS_gps_parms_stan_str_get <- function() {
               for(ij in 1:size(collectd_matx)) {
                parm_mat_local[ii, ij+1+dxi] = collectd_matx[ij];
               }
-              // placeholder for peak/trough
-              // other wise previous column value carried to 2+0
               parm_mat_local[i, n_parm_deriv + 2+0] = positive_infinity(); 
               parm_mat_local[i, n_parm_deriv + 2+1] = i;
               parm_mat_local[i, n_parm_deriv + 3+1] = rowni;
               collectd_mat_i = collectd_mat_i + 1;
-            } // for (dxi in parm_deriv_vec) {
-          } // for (i in 1:n_unique_piece_id) {
+            } 
+          } 
           
            vector[pieces_dim] ya_sitar_all = parm_mat_local[, n_parm_deriv + 1];
            vector[pieces_dim] ya_sitar;
@@ -437,47 +322,28 @@ GS_gps_parms_stan_str_get <- function() {
             } else {
               ya_sitar[mark_peaki] = ya_sitar_all[mark_peaki];
             }
-           } // for (mark_peaki in 1:pieces_dim) {
+           } 
            int lag = 1;
            vector[pieces_dim-1] d2_test; // diff(ya_sitar);
            d2_test = ya_sitar[(1+lag):pieces_dim] - ya_sitar[1:(pieces_dim-lag)];
-           
            array[num_matches(d2_test, 0, -1)] int peak_id  = which_equal(d2_test, 0, -1); 
            array[num_matches(d2_test, 0,  1)] int trough_id  = which_equal(d2_test, 0,  1); 
-
           for(peak_idi in peak_id) {
            parm_mat_local[peak_idi,   n_parm_deriv + 2+0] = 1;
           }
           for(trough_idi in trough_id) {
            parm_mat_local[trough_idi, n_parm_deriv + 2+0] = 0;
           }
-          
-          // Also replace first and last piece to NA, boundary
           int nrowsmat = rows(parm_mat_local);
           parm_mat_local[1,        n_parm_deriv + 2+0] = positive_infinity();
           parm_mat_local[nrowsmat, n_parm_deriv + 2+0] = positive_infinity();
-           
-          
          if (drawni > 0) {
            for (mark_peaki in 1:pieces_dim) {
              parm_mat_local[mark_peaki, n_parm_deriv + 3+1+1] = drawni;
            }
           }
         parm_array[rowni] = parm_mat_local;
-      } // end if (return_indicator == 1) {
-      
-      
-      
-      
-    //  print(\"ya_sitar_all: \", peak_id);
-    //  print(\"ya_sitar: \", trough_id);
-    //  print(\"d2_test: \", parm_mat_local);
-          
-    // print(\"parm_mat_local: \", parm_mat_local);
-    //  print(\"rrootsmat: \", rrootsmat);
-    //  print(\"xknots[i]: \", xknots[i]);
-      
-      
+      } 
       
       if (return_indicator == 2) {
       vector[degree_dim_set_spread] xg_curve; 
@@ -529,17 +395,10 @@ GS_gps_parms_stan_str_get <- function() {
                                                 degree_dim_set_spread+degree_dim_set_spread*(i-1));
               deriv_array[rowni, seq, ] = deriv_mat_local;
               collectd_mat_i = collectd_mat_i + 1;
-            } // end  for (dxi in curve_deriv_vec) {
-        } // end for (i in 1:pieces_dim) {
-      } // end if (return_indicator == 2) {
-      
-   
-    
+            } 
+        } 
+      } 
   } // end rowni
-  
-  
-  
-   // print(\"deriv_array: \", deriv_array);
 
    array[array_dim] matrix[array_mat_dim_1, array_mat_dim_2] out;
    if (return_indicator == 0) {
@@ -549,15 +408,11 @@ GS_gps_parms_stan_str_get <- function() {
     } else if (return_indicator == 2) {
       out = deriv_array; 
     }
-    
   return(out);
-} // end GS_gps_parms_stan
-
+} 
 "
-  
   return(GS_gps_parms_stan_str)
-} # GS_gps_parms_stan_str_get
-
+} 
 
 
 
@@ -565,11 +420,7 @@ GS_gps_parms_stan_str_get <- function() {
 
 
 support_GS_gps_parms_stan_str_get <- function() {
-  
   support_GS_gps_parms_stan_str <- "
-  /////////////////////////////////////////////////////////////////////////
-  // Function to calculate H matrix (as defined in GS_ns_getH_stan)
-  /////////////////////////////////////////////////////////////////////////
   matrix GS_ns_getH_stan(vector knots, int normalize) {
     int Nintk = num_elements(knots) - 8;
     real C11 = 6 / ((knots[5] - knots[2]) * (knots[5] - knots[3]));
@@ -589,7 +440,7 @@ support_GS_gps_parms_stan_str_get <- function() {
             H[i, ] = H[i, ] / sumH[i];
           }
         }
-      } // if (normalize) 
+      } 
       return transpose(H);
     } else if (Nintk == 1) {
       matrix[3, 5] H;
@@ -605,7 +456,7 @@ support_GS_gps_parms_stan_str_get <- function() {
             H[i, ] = H[i, ] / sumH[i];
           }
         }
-      } // if (normalize) 
+      } 
       return transpose(H);
     } else if (Nintk == 2) {
       matrix[Nintk + 2, 3] H1;
@@ -637,7 +488,7 @@ support_GS_gps_parms_stan_str_get <- function() {
             H[i, ] = H[i, ] / sumH[i];
           }
         }
-      } // if (normalize) 
+      } 
       return transpose(H);
     } else if (Nintk > 2) {
       matrix[Nintk + 2, 3] H1;
@@ -676,14 +527,12 @@ support_GS_gps_parms_stan_str_get <- function() {
             H[i, ] = H[i, ] / sumH[i];
           }
         }
-      } // if (normalize) 
+      } 
       return transpose(H);
     } 
     return dH;
-  } // end matrix GS_ns_getH_stan
-/////////////////////////////////////////////////////////////////////////
-  // Find elements in vector x that equal/below/above real number y
- /////////////////////////////////////////////////////////////////////////
+  } 
+  
   int num_matches(vector x, real y, real z) {
     int n = 0;
     for (i in 1:rows(x))
@@ -696,9 +545,7 @@ support_GS_gps_parms_stan_str_get <- function() {
       }
     return n;
   }
-  /////////////////////////////////////////////////////////////////////////    
-  // Find the indexes of the elements in the vector x that equal real number y
-  /////////////////////////////////////////////////////////////////////////
+  
   array[] int which_equal(vector x, real y, real z) {
     array[num_matches(x, y, z)] int match_positions;
     int pos = 1;
@@ -722,13 +569,10 @@ support_GS_gps_parms_stan_str_get <- function() {
     }
     return match_positions;
   }
-  /////////////////////////////////////////////////////////////////////////
-  // Repeating input vector K times
-  /////////////////////////////////////////////////////////////////////////
+  
   vector repeat_vector(vector input, int K) {
     int N = rows(input);
-    vector[N*K] repvec; // stack N-vector K times
-    // assign i-th value of input to i+(k-1)*N -th value of repvec
+    vector[N*K] repvec; 
     for (k in 1:K) {
       for (i in 1:N) {
         repvec[i+(k-1)*N] = input[i]; 
@@ -736,14 +580,11 @@ support_GS_gps_parms_stan_str_get <- function() {
     }
     return repvec;
   }
-  /////////////////////////////////////////////////////////////////////////
-  // Repeating input matrix K times
-  /////////////////////////////////////////////////////////////////////////
+  
   matrix repeat_matrix(matrix input, int K) {
     int N = rows(input);
     int M = cols(input);
     matrix[N*K,M] repmat; // stack N*M matrix K times
-    // assign i-th row of input to i+(k-1)*N -th row of repmat
     for (k in 1:K) {
       for (i in 1:N) {
         repmat[i+(k-1)*N] = input[i]; 
@@ -751,9 +592,7 @@ support_GS_gps_parms_stan_str_get <- function() {
     }
     return repmat;
   }  
-  /////////////////////////////////////////////////////////////////////////  
-  // Function to compute B-splines and their derivatives
-  ///////////////////////////////////////////////////////////////////////// 
+  
   matrix GS_bs_stan(vector x, vector knots, vector bknots, 
                     vector fullknots, vector allknots, 
                     int N, int degree, int ord, 
@@ -804,10 +643,8 @@ support_GS_gps_parms_stan_str_get <- function() {
     } else {
       return M2;
     }
-  } // end matrix GS_bs_stan  
-  /////////////////////////////////////////////////////////////////////////
-  // Main function for B-splines and their derivatives
-  /////////////////////////////////////////////////////////////////////////
+  } 
+  
   matrix GS_ns_stan(vector x, vector knots, vector bknots, 
                     vector fullknots, vector allknots, 
                     int N, int degree, int ord, 
@@ -872,7 +709,7 @@ support_GS_gps_parms_stan_str_get <- function() {
             bsderiv[i, 1: Nintervals - degree] = (bsderiv_bknots[1,]);
           }
         }
-      } // if (size_x_below_boundary > 0)      
+      }      
       if (size_x_above_boundary > 0) {
         array[size_x_above_boundary] int xselect = x_above_boundary;
         int Nxselect = size_x_above_boundary; 
@@ -894,25 +731,10 @@ support_GS_gps_parms_stan_str_get <- function() {
               bsderiv[i,1: Nintervals - degree ] = (bsderiv_bknots[2,]);
            }         
         }
-      } // if (size_x_above_boundary > 0)    
-    } // if (size_x_below_boundary > 0 || size_x_above_boundary > 0) {
+      }  
+    } 
     matrix[Nk+2, Nk] H;
-    
-    
-    
-    
-    /*
-    if(preH) {
-     H = GS_ns_getH_pre(Nk+2, Nk);
-    } else {
-     H = GS_ns_getH_stan(allknots, normalize);
-    }
-    */
-    
-    
-    
     H = GS_ns_getH_stan(allknots, normalize);
-    
     matrix[num_elements(x), Nk] out;
     int ncolselect = Nk+intercept-1;
     matrix[num_elements(x), ncolselect] result;
@@ -932,10 +754,8 @@ support_GS_gps_parms_stan_str_get <- function() {
       }
     }
     return result;
-  } // end matrix GS_ns_stan  
-  /////////////////////////////////////////////////////////////////////////
-  // call GS_nsp_call_stan
-  /////////////////////////////////////////////////////////////////////////
+  } 
+  
   matrix GS_nsp_call_stan(vector x, vector knotsx, vector bknotsx, 
                         int intercept, int derivs, real centerval, int normalize,
                         int preH) {
@@ -993,11 +813,12 @@ support_GS_gps_parms_stan_str_get <- function() {
           }
         }
       } 
-    } // if (centerval != 0) {
+    } 
   return(out);
-  } // end matrix GS_nsp_call_stan
+  } 
   "
-  
   return(support_GS_gps_parms_stan_str)
 }
+
+
 

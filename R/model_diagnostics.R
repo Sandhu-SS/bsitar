@@ -39,11 +39,11 @@
 #'     [brms::mcmc_plot()] with \code{type = "rhat"}.}
 #'     \item{`"neff"`}{Effective sample size diagnostics via
 #'     [brms::mcmc_plot()] with \code{type = "neff"}.}
-#'     \item{`"ppc_dens_overlay"`}{Posterior predictive density overlay via
+#'     \item{`"ppc_overlay"`}{Posterior predictive density overlay via
 #'     [brms::pp_check()] with \code{type = "dens_overlay"}.}
 #'     \item{`"ppc_hist"`}{Posterior predictive histogram via
 #'     [brms::pp_check()] with \code{type = "hist"}.}
-#'     \item{`"ppc_scatter_avg"`}{Posterior predictive observed-versus-replicated
+#'     \item{`"ppc_scatter"`}{Posterior predictive observed-versus-replicated
 #'     average scatter plot via [brms::pp_check()] with \code{type =
 #'     "scatter_avg"}.}
 #'     \item{`"ppc_stat"`}{Posterior predictive check for a summary statistic 
@@ -121,6 +121,10 @@
 #'   to wrap plot title.
 #'   
 #' @param title_size Text size of plot title.
+#' 
+#' @param each Optional logical (default \code{FALSE}) indicating whether to
+#'   return each plot object (combined and individual plots) or only combined
+#'   when more than one plot requested.
 #' 
 #' @param qq_plot_args A named list of arguments passed on to the
 #'   \code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
@@ -234,12 +238,12 @@
 #' 
 #' model <- getNsObject(berkeley_exfit)
 #' 
-#' # Residual diagnostics only
+#' # Residual vs Fitted plot
 #' res1 <- model_diagnostics(
 #'   model = model,
-#'   plots = c("rvf", "qq")
+#'   plots = c("rvf")
 #' )
-#' res1$combined
+#' 
 #'
 #' # MCMC diagnostics for selected parameters
 #' res2 <- model_diagnostics(
@@ -252,7 +256,7 @@
 #' # Posterior predictive checks
 #' res3 <- model_diagnostics(
 #'   model = model,
-#'   plots = c("ppc_dens_overlay", "ppc_hist", "ppc_stat"),
+#'   plots = c("ppc_overlay", "ppc_hist", "ppc_stat"),
 #'   ndraws = 10,
 #'   ppc_stat = "sd"
 #' )
@@ -281,9 +285,9 @@ model_diagnostics.bgmfit <- function(
       "dens_overlay",
       "rhat",
       "neff",
-      "ppc_dens_overlay",
+      "ppc_overlay",
       "ppc_hist",
-      "ppc_scatter_avg",
+      "ppc_scatter",
       "ppc_stat"
     ),
     set_draws = "epred",
@@ -310,6 +314,7 @@ model_diagnostics.bgmfit <- function(
     category = ".category",
     wrap_title = FALSE,
     title_size = 12,
+    each = FALSE,
     qq_plot_args = list(draw_ids = 1:10, 
                         draw_ids_select = 1, 
                         summary = "robust", 
@@ -1074,8 +1079,8 @@ model_diagnostics.bgmfit <- function(
   plots <- unique(plots)
   valid_plots <- c(
     "rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "trace", "dens_overlay",
-    "rhat", "neff", "ppc_dens_overlay", "ppc_hist",
-    "ppc_scatter_avg", "ppc_stat"
+    "rhat", "neff", "ppc_overlay", "ppc_hist",
+    "ppc_scatter", "ppc_stat"
   )
   
   bad <- setdiff(plots, valid_plots)
@@ -1251,8 +1256,8 @@ model_diagnostics.bgmfit <- function(
       ggplot2::labs(title = "Effective sample size plot") 
   }
   
-  if ("ppc_dens_overlay" %in% plots) {
-    out$ppc_dens_overlay <- brms::pp_check(
+  if ("ppc_overlay" %in% plots) {
+    out$ppc_overlay <- brms::pp_check(
       model, type = "dens_overlay", ndraws = ndraws, size = 2,  alpha = 4
     ) +
       ggplot2::theme(
@@ -1269,8 +1274,8 @@ model_diagnostics.bgmfit <- function(
       ggplot2::labs(title = "Posterior Predictive Check: Histogram")
   }
   
-  if ("ppc_scatter_avg" %in% plots) {
-    out$ppc_scatter_avg <- brms::pp_check(
+  if ("ppc_scatter" %in% plots) {
+    out$ppc_scatter <- brms::pp_check(
       model, type = "scatter_avg", ndraws = ndraws, size = 1
     ) +
       ggplot2::labs(title = "Posterior Predictive Check: Scatter Average")
@@ -1382,11 +1387,17 @@ model_diagnostics.bgmfit <- function(
     })
   }
   
-  out <- list(combined = combined, plots = out)
+  out_all <- list(combined = combined, plots = out)
   if(add_plot_df) {
-    out[['plot_df']] = if (exists("plot_df")) plot_df else NULL
+    out_all[['plot_df']] = if (exists("plot_df")) plot_df else NULL
   }
-  return(out)
+  
+  if(each) {
+    return(out_all)
+  } else {
+    if(is.null(combined)) return(out) else return(combined)
+  }
+  
 }
 
 

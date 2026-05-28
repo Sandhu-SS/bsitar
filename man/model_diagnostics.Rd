@@ -9,7 +9,7 @@
   model,
   newdata = NULL,
   plots = c("rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "trace", "dens_overlay",
-    "rhat", "neff", "ppc_dens_overlay", "ppc_hist", "ppc_scatter_avg", "ppc_stat"),
+    "rhat", "neff", "ppc_overlay", "ppc_hist", "ppc_scatter", "ppc_stat"),
   set_draws = "epred",
   resp = NULL,
   ndraws = 10,
@@ -34,6 +34,7 @@
   category = ".category",
   wrap_title = FALSE,
   title_size = 12,
+  each = FALSE,
   qq_plot_args = list(draw_ids = 1:10, draw_ids_select = 1, summary = "robust", qq_type =
     "qq", seed = 123),
   patch_plot.margin = ggplot2::margin(10, 0, 10, 0),
@@ -96,11 +97,11 @@ residuals.}
 \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "rhat"}.}
 \item{\code{"neff"}}{Effective sample size diagnostics via
 \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "neff"}.}
-\item{\code{"ppc_dens_overlay"}}{Posterior predictive density overlay via
+\item{\code{"ppc_overlay"}}{Posterior predictive density overlay via
 \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "dens_overlay"}.}
 \item{\code{"ppc_hist"}}{Posterior predictive histogram via
 \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "hist"}.}
-\item{\code{"ppc_scatter_avg"}}{Posterior predictive observed-versus-replicated
+\item{\code{"ppc_scatter"}}{Posterior predictive observed-versus-replicated
 average scatter plot via \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type =
     "scatter_avg"}.}
 \item{\code{"ppc_stat"}}{Posterior predictive check for a summary statistic
@@ -224,6 +225,10 @@ from ordinal models using both approaches.}
 to wrap plot title.}
 
 \item{title_size}{Text size of plot title.}
+
+\item{each}{Optional logical (default \code{FALSE}) indicating whether to
+return each plot object (combined and individual plots) or only combined
+when more than one plot requested.}
 
 \item{qq_plot_args}{A named list of arguments passed on to the
 \code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
@@ -361,12 +366,12 @@ posterior predictive draws.
 
 model <- getNsObject(berkeley_exfit)
 
-# Residual diagnostics only
+# Residual vs Fitted plot
 res1 <- model_diagnostics(
   model = model,
-  plots = c("rvf", "qq")
+  plots = c("rvf")
 )
-res1$combined
+
 
 # MCMC diagnostics for selected parameters
 res2 <- model_diagnostics(
@@ -379,7 +384,7 @@ res2$combined
 # Posterior predictive checks
 res3 <- model_diagnostics(
   model = model,
-  plots = c("ppc_dens_overlay", "ppc_hist", "ppc_stat"),
+  plots = c("ppc_overlay", "ppc_hist", "ppc_stat"),
   ndraws = 10,
   ppc_stat = "sd"
 )

@@ -106,8 +106,7 @@ summary_table <-
     notes = getOption("modelsummary_notes", default = NULL),
     title = getOption("modelsummary_title", default = NULL),
     escape = getOption("modelsummary_escape", default = TRUE),
-    # parameters::model_parameters
-    # model,
+   
     centrality = "median",
     dispersion = FALSE,
     ci = 0.95,
@@ -125,14 +124,12 @@ summary_table <-
     keep = NULL,
     drop = NULL,
     verbose = TRUE,
-    # extra_arg
     add_component = FALSE,
     sigma_exp = NULL,
     sort_gr_by = TRUE,
     gsub_fixed = " x ",
     gsub_random = list(it = c("::", ":"), 
                        by = c(" = ", " x ")),
-    # pull_bsigma = FALSE,
     add_diagnostic = TRUE,
     add_pd = TRUE,
     add_section = TRUE,
@@ -140,10 +137,6 @@ summary_table <-
     custom_rename = TRUE,
     custom_rename_map = NULL,
     ...) {
-    
-    
-    ###########################################################################
-    
     custom_model_parameters.brmsfit <- function (model, 
                                                  centrality = "median",
                                                  dispersion = FALSE, 
@@ -164,7 +157,6 @@ summary_table <-
                                                  drop = NULL, 
                                                  verbose = TRUE, 
                                                  ...) {
-      
       extra_arg <- list(...)
       sigma_exp          <- extra_arg[['sigma_exp']]
       sort_gr_by         <- extra_arg[['sort_gr_by']]
@@ -184,10 +176,6 @@ summary_table <-
         if(model_link_sigma == "log") sigma_exp <- TRUE
       }
       
-      
-      ###########################################################################
-      # sort_random_rows
-      ###########################################################################
       sort_random_rows <- function(data, 
                                    select_col = 'Parameter',
                                    by_order = NULL,
@@ -211,11 +199,7 @@ summary_table <-
         out[c("row_id", "is_cor", "sex_group")] <- NULL
         return(out)
       }
-      
-      ###########################################################################
-      # .add_pretty_names2
-      ###########################################################################
-      
+
       .add_pretty_names2 <- function (params, model) {
         .safe <- NULL;
         getfrom_ <- c('.safe')
@@ -232,47 +216,32 @@ summary_table <-
         
         if (!is.null(clean_params$Group) && any(nzchar(clean_params$Group, 
                                                        keepNA = TRUE))) {
-          # params$Group <- .safe(gsub("(.*): (.*)", "\\2", clean_params$Group))
         }
         attr(params, "cleaned_parameters") <- named_clean_params
         attr(params, "pretty_names") <- named_clean_params
         return(params)
-      } # .add_pretty_names2
+      } 
       
-      
-      ##########################################################################
-      # transform_names
-      ##########################################################################
       transform_names <- function(x, 
                                   prefix = c("id", "study"), 
                                   corsub = 'vs') {
-        
         prefix_pattern <- paste(prefix, collapse = "|")
         search_pattern <- paste0(prefix_pattern, "__")
-        
         matches <- grepl(search_pattern, x)
-        
         x[matches] <- sub(
           paste0("(\\w+\\s+)?\\b(", prefix_pattern, ")__(.*)"),
           "\\1\\3 (\\2)",
-          x[matches]
-        )
-        
+          x[matches])
         if(!is.null(corsub)) {
           x <- gsub(
             paste0("Cor (.*?)__(.*?) \\((", prefix_pattern, ")\\)"),
             paste0("Cor \\1", corsub, "\\2 (\\3)"),
             x)
-        } # if(!is.null(corsub)) {
-        
+        } 
         return(x)
       }
       
-      
-      ###########################################################################
       # by_order
-      ###########################################################################
-      
       if(!is_emptyx(model$ranef$by)) {
         gr_by       <- model$ranef$by
         gr_bylevels <- model$ranef$bylevels
@@ -286,15 +255,9 @@ summary_table <-
         sort_gr_bylevels <- NULL
         if(is.null(sort_gr_by)) sort_gr_by  <- FALSE
       }
-      
-      
-      
+
       fixed_covs <- model$model_info$covs
-      
-      ###########################################################################
-      
-      ###########################################################################
-      
+
       replace_terms_base <- function(df, 
                                      gsub_it, 
                                      gsub_by, 
@@ -304,7 +267,6 @@ summary_table <-
                                      fixed = FALSE, 
                                      call_custom = FALSE,
                                      add_suffix = F) {
-        
         if(!call_custom) {
           for (i in seq_along(gsub_it)) {
             name_it <- df[[select_col]]
@@ -314,10 +276,8 @@ summary_table <-
                                      gsub_byi,
                                      df[[select_col]],
                                      fixed = fixed)
-          } # for (i in seq_along(gsub_it)) {
-        } # if(!call_custom) {
-        
-        
+          } 
+        } 
         if(call_custom & !add_suffix) {
           for (i in seq_along(gsub_it)) {
             name_it <- df[[select_col]]
@@ -331,9 +291,8 @@ summary_table <-
                                                     exclude_start = F,
                                                     exclude_end = F)
             df[[select_col]] <- name_by
-          } # for (i in seq_along(gsub_it)) {
-        } # if(call_custom) {
-        
+          } 
+        } 
         if(!is.null(group)) {
           df[[select_col]] <- transform_names(x = df[[select_col]], 
                                               prefix = group,
@@ -341,11 +300,6 @@ summary_table <-
         }
         return(df)
       }
-      
-      
-      ###########################################################################
-      
-      ###########################################################################
       
       extract_sex <- function(x, by) {
         out <- rep(NA_character_, length(x))
@@ -355,12 +309,7 @@ summary_table <-
         }
         return(out)
       }
-      
-      
-      ###########################################################################
-      
-      ###########################################################################
-      
+
       .extract_parameters_bayesian <- .add_pretty_names <- NULL;
       .add_model_parameters_attributes <- .get_cleaned_parameters <- NULL;
       .exponentiate_parameters <- NULL;
@@ -429,7 +378,6 @@ summary_table <-
         Component <- NULL;
         Parameter <- NULL;
         tempxx_ <- NULL;
-        
         params <- .add_pretty_names2(params, model)
         params <- .exponentiate_parameters(params, model, exponentiate)
         params <- .add_model_parameters_attributes(params, model, 
@@ -448,11 +396,9 @@ summary_table <-
                                   "see_parameters_model", 
                                   class(params)))
       }
-      
-      
 
       if(add_section) {
-        ########## Residual ########## 
+        # Residual
         Residual <- params %>% dplyr::filter(grepl("^Sigma", Component) | 
                                                grepl("^sigma", Component)) %>%
           dplyr::mutate(section = "Residual")
@@ -464,10 +410,9 @@ summary_table <-
               Residual[[exp_thesei]] <- exp(Residual[[exp_thesei]])
             }
           }
-        } # if(sigma_exp) {
+        } 
         
-        
-        # ########## Non_Residual ##########
+        # Non_Residual
         Non_Residual <- params %>% dplyr::filter(!grepl("^Sigma", Component) &
                                                    !grepl("^sigma", Component)) %>%
           dplyr::mutate(section = "Non_Residual")
@@ -478,13 +423,10 @@ summary_table <-
                                                   grepl("^b_", Parameter)) %>%
           dplyr::mutate(section = "Fixed")
         
-       
-        
-        # ########## Random ##########
+        # Random
         Random <- Non_Residual %>% dplyr::filter(grepl("^sd_", Parameter) | 
                                                    grepl("^cor_", Parameter)) %>%
           dplyr::mutate(section = "Random")
-        
         Random <- sort_random_rows(Random, by_order = by_order)
         
         if(sort_gr_by) {
@@ -507,7 +449,7 @@ summary_table <-
           }
         }
         
-        # ########## all_section ##########
+        # all_section
         all_section <- list()
         if(!  is_emptyx(Fixed)) all_section[['Fixed']] <- Fixed
         if(!  is_emptyx(Random)) all_section[['Random']] <- Random
@@ -515,10 +457,9 @@ summary_table <-
         params <- do.call(rbind, all_section)
       }
       
-      # ########## b_ sd_ cor_ ##########
+      # b_ sd_ cor_
       custom_rename_map[[1]] <- c("^b_", "^sd_", "^cor_")
       custom_rename_map[[2]] <- c("", "SD ", "Cor ")
-      
       params <- replace_terms_base(df = params,
                                    gsub_it = custom_rename_map[[1]],
                                    gsub_by = custom_rename_map[[2]],
@@ -529,16 +470,12 @@ summary_table <-
                                    call_custom = FALSE,
                                    add_suffix = F)
       
-      # ########## a_ b_ c_ d_ ##########
-      # "a_" replaces sigma with sigmsize when sigma by group such as Male
+      #a_ b_ c_ d_
       custom_rename_map[[1]] <- c("a_",    "b_",      "c_",         " d_",
                                   "_Intercept", "sigmsize", "sigmSize")
       custom_rename_map[[2]] <- c("Size_", "Timing_", "Intensity_", " Rate_",
                                   "",           'Sigma', "Sigma")
-      
-
       re_group <- model$ranef$group %>% unique()
-      
       params <- replace_terms_base(df = params,
                                    gsub_it = custom_rename_map[[1]],
                                    gsub_by = custom_rename_map[[2]],
@@ -549,12 +486,9 @@ summary_table <-
                                    call_custom = T,
                                    add_suffix = F)
       
-      
-      
-      # ########## fixed_covs ########## 
+      # fixed_covs
       custom_rename_map[[1]] <- paste0("_", fixed_covs)
       custom_rename_map[[2]] <- c(" ")
-      
       if(!is.null(gsub_fixed)) custom_rename_map[[2]] <- gsub_fixed
       
       params <- replace_terms_base(df = params,
@@ -568,11 +502,9 @@ summary_table <-
                                    add_suffix = F)
       
       
-      # ########## residual : ########## 
+      # residual:
       custom_rename_map[[1]] <- paste0("", ":")
       custom_rename_map[[2]] <- c(" x ")
-      
-      # if(!is.null(gsub_fixed)) custom_rename_map[[2]] <- gsub_fixed
       
       params <- replace_terms_base(df = params,
                                    gsub_it = custom_rename_map[[1]],
@@ -583,10 +515,6 @@ summary_table <-
                                    fixed = FALSE,
                                    call_custom = FALSE,
                                    add_suffix = F)
-      
-      
-      
-      # ########## gr_by ##########  
       custom_rename_map[[1]] <- paste0("", gr_by)
       custom_rename_map[[2]] <- c("")
       params <- replace_terms_base(df = params,
@@ -599,7 +527,7 @@ summary_table <-
                                    call_custom = FALSE,
                                    add_suffix = F)
       
-      # ########## add_diagnostic ########## 
+      # add_diagnostic
       if(add_section) custom_add <- c('section') else custom_add <- c()
       if(add_diagnostic) {
         if(!is.null(diagnostic)) {
@@ -608,24 +536,16 @@ summary_table <-
               diagnostic <- c("ESS", "Rhat", "MCSE")
             }
           }
-        } # if(!is.null(diagnostic)) {
+        } 
         custom_add <- c(custom_add, diagnostic)
-      } # if(add_diagnostic) {
+      } 
       
       if(add_pd) {
         custom_add <- c(custom_add, 'pd')
       }
-      
       attr(params, "custom_add") <- custom_add
-      
-      # ########## add_diagnostic ########## 
       return(params)
-    } # custom_model_parameters.brmsfit
-    
-    
-    ###########################################################################
-    
-    ###########################################################################
+    } 
     
     custom_get_gof <- function (model, 
                                 gof_function = NULL, 
@@ -639,7 +559,6 @@ summary_table <-
       modelsummary_rbind <- NULL;
       settings_init <- NULL;
       sanitize_output <- NULL;
-      
 
       getfrom_ <- c('get_gof_broom', 
                     "get_gof_parameters",
@@ -743,14 +662,13 @@ summary_table <-
             set_metrics <- "LOGLOSS"
           }
           gof_map_c <- c(gof_map_c, set_metrics)
-        } # for (i in gof_map) {
+        } 
         set_metrics <- gof_map_c
-      } # if (length(gof_map) == 1) { else if (length(gof_map) > 1) {
+      } 
 
       if(!is.null(set_metrics)) {
         set_metrics   <- unique(set_metrics)
         gof_custom_df <- glance_custom(model, metrics = set_metrics)
-        # gof_custom_dfx <<- gof_custom_df
         return(gof_custom_df)
       } else {
         return(NULL)
@@ -806,186 +724,6 @@ summary_table <-
             yourself:\n\nhttps://modelsummary.com/vignettes/modelsummary.html", 
                       class(model)[1]), call. = FALSE)
     }
-    
-    
-    ###########################################################################
-    
-    ###########################################################################
-    
-    # custom_clean_brms_params <- function (x, out, is_mv, ...) {
-    #   
-    #   get_family <- NULL;
-    #   find_auxiliary <- NULL;
-    #   is_empty_object <- NULL;
-    #   getfrom_ <- c('get_family', 
-    #                 "find_auxiliary",
-    #                 "is_empty_object",
-    #                 "get_family")
-    #   for (i in getfrom_) {
-    #     assign(i, utils::getFromNamespace(i, 'insight'))
-    #   }
-    #   
-    #   dots <- list(...)
-    #   out$Cleaned_Parameter <- out$Parameter
-    #   if (is_mv) {
-    #     resp <- unique(out$Response)
-    #     resp_pattern <- sprintf("_%s_(.*)", resp)
-    #     for (i in resp_pattern) {
-    #       out$Cleaned_Parameter <- gsub(pattern = i, "_\\1", 
-    #                                     out$Cleaned_Parameter)
-    #     }
-    #     resp_pattern <- sprintf("__%s(.*)", resp)
-    #     for (i in resp_pattern) {
-    #       out$Cleaned_Parameter <- gsub(pattern = i, "\\1", 
-    #                                     out$Cleaned_Parameter)
-    #     }
-    #     resp_pattern <- sprintf("__zi_%s(.*)", resp)
-    #     for (i in resp_pattern) {
-    #       out$Cleaned_Parameter <- gsub(pattern = i, "\\1", 
-    #                                     out$Cleaned_Parameter)
-    #     }
-    #     resp_pattern <- sprintf("(sigma)(_%s)", resp)
-    #     for (i in resp_pattern) {
-    #       out$Cleaned_Parameter <- gsub(pattern = i, "\\1", 
-    #                                     out$Cleaned_Parameter)
-    #     }
-    #   }
-    #   model_fam <- get_family(x)
-    #   if (inherits(model_fam, "brmsfamily") && model_fam$family == 
-    #       "mixture") {
-    #     class_params <- grepl("^b_mu\\d+_(.*)", out$Parameter)
-    #     if (any(class_params)) {
-    #       out$Group[class_params] <- paste("Class", gsub("^b_mu(\\d+)_(.*)", 
-    #                                                      "\\1", out$Parameter[class_params]))
-    #     }
-    #   }
-    #   else {
-    #     class_params <- NULL
-    #   }
-    #   
-    #  
-    #   dpars <- find_auxiliary(x)
-    #   zaa <<- out
-    #   
-    #   for (i in dpars) {
-    #     aux_params <- startsWith(out$Cleaned_Parameter, paste0("b_", 
-    #                                                            i, "_"))
-    #     out$Component[aux_params & out$Component == "conditional"] <- i
-    #   }
-    #   smooth_function <- grepl(pattern = "(bs_|bs_zi_)", out$Cleaned_Parameter)
-    #   if (any(smooth_function)) {
-    #     out$Function[smooth_function] <- "smooth"
-    #   }
-    #   out$Cleaned_Parameter <- gsub(pattern = paste0("^(", paste0("b_", 
-    #                                                               dpars, "_", collapse = "|"), ")"), "", out$Cleaned_Parameter)
-    #   out$Cleaned_Parameter <- gsub(pattern = "^b_(?!zi_)(.*)\\.(\\d)\\.$", 
-    #                                 "\\1[\\2]", out$Cleaned_Parameter, perl = TRUE)
-    #   out$Cleaned_Parameter <- gsub(pattern = "^b_zi_(.*)\\.(\\d)\\.$", 
-    #                                 "\\1[\\2]", out$Cleaned_Parameter)
-    #   out$Cleaned_Parameter <- gsub(pattern = "^(b_|bs_|bsp_|bcs_)(?!zi_)(.*)", 
-    #                                 "\\2", out$Cleaned_Parameter, perl = TRUE)
-    #   out$Cleaned_Parameter <- gsub(pattern = "^(b_zi_|bs_zi_|bsp_zi_|bcs_zi_)(.*)", 
-    #                                 "\\2", out$Cleaned_Parameter)
-    #   if (!is.null(class_params)) {
-    #     out$Cleaned_Parameter[class_params] <- gsub("^mu(\\d+)_(.*)", 
-    #                                                 "\\2", out$Cleaned_Parameter[class_params])
-    #   }
-    #   cor_sd <- grepl("(sd_|cor_)(.*)", out$Cleaned_Parameter)
-    #   if (any(cor_sd)) {
-    #     out$Cleaned_Parameter[cor_sd] <- gsub("^(sd_|cor_)(.*?)__(.*)", 
-    #                                           "\\3", out$Parameter[cor_sd])
-    #     out$Group[cor_sd] <- paste("SD/Cor:", gsub("^(sd_|cor_)(.*?)__(.*)", 
-    #                                                "\\2", out$Parameter[cor_sd]))
-    #     cor_only <- startsWith(out$Parameter[cor_sd], "cor_")
-    #     if (any(cor_only)) {
-    #       out$Cleaned_Parameter[which(cor_sd)[cor_only]] <- sub("__", 
-    #                                                             " ~ ", out$Cleaned_Parameter[which(cor_sd)[cor_only]], 
-    #                                                             fixed = TRUE)
-    #     }
-    #   }
-    #   rand_eff <- grepl("^r_(.*)\\[(.*)\\]", out$Cleaned_Parameter)
-    #   if (any(rand_eff)) {
-    #     r_pars <- gsub("^r_(.*)\\[(.*),(.*)\\]", "\\1.\\2", out$Cleaned_Parameter[rand_eff])
-    #     if (identical(dots$version, 2)) {
-    #       out$Level <- ""
-    #       r_levels <- gsub("^r_(.*)\\[(.*),(.*)\\]", "\\2", 
-    #                        out$Cleaned_Parameter[rand_eff])
-    #       r_grps <- gsub("^r_(.*)\\[(.*),(.*)\\]", "\\1", out$Cleaned_Parameter[rand_eff])
-    #       r_levels <- gsub("__zi", "", r_levels, fixed = TRUE)
-    #       for (i in dpars) {
-    #         r_levels <- gsub(paste0("__", i), "", r_levels, 
-    #                          fixed = TRUE)
-    #       }
-    #       out$Level[rand_eff] <- r_levels
-    #       sd_cor <- grepl("SD/Cor:", out$Group, fixed = TRUE)
-    #       if (any(sd_cor)) {
-    #         out$Group[sd_cor] <- gsub("SD/Cor: (.*)", "\\1", 
-    #                                   out$Group[sd_cor])
-    #       }
-    #     }
-    #     else {
-    #       r_grps <- gsub("^r_(.*)\\[(.*),(.*)\\]", "\\3: \\1", 
-    #                      out$Cleaned_Parameter[rand_eff])
-    #     }
-    #     r_pars <- gsub("__zi", "", r_pars, fixed = TRUE)
-    #     r_grps <- gsub("__zi", "", r_grps, fixed = TRUE)
-    #     for (i in dpars) {
-    #       r_pars <- gsub(paste0("__", i), "", r_pars, fixed = TRUE)
-    #       r_grps <- gsub(paste0("__", i), "", r_grps, fixed = TRUE)
-    #     }
-    #     out$Cleaned_Parameter[rand_eff] <- r_pars
-    #     out$Group[rand_eff] <- r_grps
-    #   }
-    #   sigma_params <- startsWith(out$Cleaned_Parameter, "sigma_")
-    #   if (length(sigma_params)) {
-    #     out$Cleaned_Parameter <- gsub("^sigma_(.*)", "\\1", out$Cleaned_Parameter)
-    #     out$Cleaned_Parameter <- gsub("sigma_", "", out$Cleaned_Parameter, 
-    #                                   fixed = TRUE)
-    #     out$Component[sigma_params] <- "sigma"
-    #   }
-    #   priors <- startsWith(out$Cleaned_Parameter, "prior_")
-    #   if (length(priors)) {
-    #     out$Cleaned_Parameter <- gsub("^prior_", "", out$Cleaned_Parameter)
-    #     out$Component[priors] <- "priors"
-    #   }
-    #   simplex <- startsWith(out$Cleaned_Parameter, "simo_")
-    #   if (length(simplex)) {
-    #     out$Cleaned_Parameter[simplex] <- gsub("^(simo_|simo_mo)(.*)\\[(\\d)\\]$", 
-    #                                            "\\2[\\3]", out$Cleaned_Parameter[simplex])
-    #     out$Component[simplex] <- "simplex"
-    #   }
-    #   smooth_parameters <- startsWith(out$Cleaned_Parameter, "sds_")
-    #   if (length(smooth_parameters)) {
-    #     out$Cleaned_Parameter <- gsub("^sds_", "", out$Cleaned_Parameter)
-    #     out$Component[smooth_parameters] <- "smooth_sd"
-    #     out$Function[smooth_parameters] <- "smooth"
-    #   }
-    #   intercepts <- which(out$Cleaned_Parameter %in% c("Intercept", 
-    #                                                    "zi_Intercept") | endsWith(out$Cleaned_Parameter, "_Intercept"))
-    #   if (!is_empty_object(intercepts)) {
-    #     out$Cleaned_Parameter[intercepts] <- "(Intercept)"
-    #   }
-    #   interaction_terms <- grep(".", out$Cleaned_Parameter[out$Effects != 
-    #                                                          "random"], fixed = TRUE)
-    #   if (length(interaction_terms)) {
-    #     for (i in interaction_terms) {
-    #       i_terms <- strsplit(out$Cleaned_Parameter[i], ".", 
-    #                           fixed = TRUE)
-    #       find_i_terms <- sapply(i_terms, function(j) j %in% 
-    #                                out$Cleaned_Parameter)
-    #       if (all(find_i_terms)) {
-    #         out$Cleaned_Parameter[i] <- gsub(".", ":", out$Cleaned_Parameter[i], 
-    #                                          fixed = TRUE)
-    #       }
-    #     }
-    #   }
-    #   out
-    # } # end custom_clean_brms_params
-    # 
-    
-    ###########################################################################
-    
-    ###########################################################################
     
     custom_modelsummary <- function (
     models, 
@@ -1072,7 +810,6 @@ summary_table <-
       for (i in getfrom_) {
         assign(i, utils::getFromNamespace(i, 'modelsummary'))
       }
-      
       checkmate::assert(checkmate::check_formula(shape), 
                         checkmate::check_choice(shape, 
                                                 c("cbind", 
@@ -1110,8 +847,6 @@ summary_table <-
       
       extra_arg <- list(...)
       add_component          <- extra_arg[['add_component']]
-      
-      
       dots <- list(...)
       if (!settings_equal("function_called", "modelsummary_rbind")) {
         settings_init(settings = list(function_called = "modelsummary"))
@@ -1184,196 +919,6 @@ summary_table <-
         model_names <- paste0("&nbsp;", model_names)
       }
       
-      ##########################################################################
-      ##########################################################################
-      
-      # get_list_of_modelsummary_listsX <-  
-      # function (models, conf_level, vcov, gof_map, gof_function, shape, 
-      #           coef_rename, output_format, ...) {
-      #   
-      #   check_dependency <- NULL;
-      #   get_gof <- NULL;
-      #   get_estimates <- NULL;
-      #   getfrom_ <- c('check_dependency', 
-      #                 "get_estimates",
-      #                 "get_gof")
-      #   for (i in getfrom_) {
-      #     assign(i, utils::getFromNamespace(i, 'modelsummary'))
-      #   }
-      #   
-      #   ##########################################################################
-      #   get_estimatesx <- function (model, conf_level = 0.95, vcov = NULL, 
-      #                               shape = NULL, coef_rename = FALSE, ...) {
-      #     
-      #     get_vcov <- NULL;
-      #     get_estimates_parameters <- NULL;
-      #     get_estimates_broom <- NULL;
-      #     
-      #     getfrom_ <- c('get_vcov', 
-      #                   "get_estimates_parameters",
-      #                   "get_estimates_broom",
-      #                   "get_vcov")
-      #     for (i in getfrom_) {
-      #       assign(i, utils::getFromNamespace(i, 'modelsummary'))
-      #     }
-      #     
-      #       if (is.null(conf_level)) {
-      #         conf_int <- FALSE
-      #       }
-      #       else {
-      #         conf_int <- TRUE
-      #       }
-      #       if (inherits(model, "modelsummary_list") && "tidy" %in% names(model)) {
-      #         return(model[["tidy"]])
-      #       }
-      #       if (isTRUE(checkmate::check_string(vcov)) || isTRUE(checkmate::check_formula(vcov))) {
-      #         vcov <- sanitize_vcov(list(vcov), list(model), ...)[[1]]
-      #       }
-      #       args <- append(list(model, vcov = vcov), list(...))
-      #       vcov <- do.call("get_vcov", args)
-      #       if (inherits(model, c("comparisons", "slopes", "predictions", 
-      #                             "hypotheses"))) {
-      #         funs <- list(broom = get_estimates_broom)
-      #       }
-      #       else {
-      #         get_priority <- getOption("modelsummary_get", default = "easystats")
-      #         checkmate::assert_choice(get_priority, choices = c("broom", 
-      #                                                            "easystats", "parameters", "performance", "all"))
-      #         if (get_priority %in% c("easystats", "parameters", "performance")) {
-      #           funs <- list(parameters = get_estimates_parameters, 
-      #                        broom = get_estimates_broom)
-      #         }
-      #         else {
-      #           funs <- list(broom = get_estimates_broom, parameters = get_estimates_parameters)
-      #         }
-      #       }
-      #       
-      #       funs <- list(parameters = get_estimates_parameters, 
-      #                    broom = get_estimates_broom)
-      #       
-      #       warning_msg <- NULL
-      #       out <- NULL
-      #       for (f in names(funs)) {
-      #         if (!inherits(out, "data.frame") || nrow(out) == 0) {
-      #           if (is.matrix(vcov)) {
-      #             V <- vcov
-      #           }
-      #           else {
-      #             V <- NULL
-      #           }
-      #           out <- funs[[f]](model, conf_int = conf_int, conf_level = conf_level, 
-      #                            vcov = V, coef_rename = coef_rename, ...)
-      #           attr(out, "backend") <- f
-      #           if (is.character(out)) {
-      #             warning_msg <- c(warning_msg, out)
-      #           }
-      #         }
-      #       }
-      #       
-      #       if (!inherits(out, "data.frame")) {
-      #         msg <- c(sprintf("`modelsummary could not extract the required information from a model of class \"%s\". The package tried a sequence of 2 helper functions to extract estimates:", 
-      #                          class(model)[1]), "", "parameters::parameters(model)", 
-      #                  "broom::tidy(model)", "", "To draw a table, one of these commands must return a `data.frame` with a column named \"term\". The `modelsummary` website explains how to summarize unsupported models or add support for new models yourself: https://modelsummary.com/vignettes/modelsummary.html", 
-      #                  "", "These errors messages were generated during extraction:", 
-      #                  "", "")
-      #         msg <- insight::format_message(msg)
-      #         msg <- paste0(msg, paste(warning_msg, collapse = "\n"))
-      #         stop(msg, call. = FALSE)
-      #       }
-      #       override <- function(old, new, columns) {
-      #         columns <- setdiff(columns, c("term", shape$group_name))
-      #         if (!inherits(new, "data.frame") || nrow(new) == 0 || 
-      #             !"term" %in% colnames(new)) {
-      #           return(old)
-      #         }
-      #         if (is.null(shape$group_name)) {
-      #           def <- old[["term"]]
-      #           cus <- new[["term"]]
-      #         }
-      #         else {
-      #           def <- do.call("paste", as.list(old[, c("term", shape$group_name)]))
-      #           cus <- do.call("paste", as.list(new[, c("term", shape$group_name)]))
-      #         }
-      #         idx <- match(def, cus)
-      #         if (all(is.na(idx))) {
-      #           warning(insight::format_message("Term name mismatch. Make sure all `tidy_custom` method returns a data frame with proper and matching term names."), 
-      #                   call. = FALSE)
-      #           return(old)
-      #         }
-      #         for (n in columns) {
-      #           old[[n]] <- ifelse(is.na(idx), old[[n]], new[[n]][idx])
-      #         }
-      #         return(old)
-      #       }
-      #       
-      #       out <- override(old = out, new = vcov, columns = "std.error")
-      #       out_custom <- tidy_custom_internal(model)
-      #       out <- override(old = out, new = out_custom, columns = colnames(out_custom))
-      #       out_custom <- tidy_custom(model)
-      #       out <- override(old = out, new = out_custom, columns = colnames(out_custom))
-      #       for (x in shape$combine) {
-      #         vars <- strsplit(x, ":")[[1]]
-      #         out[[vars[1]]] <- paste(out[[vars[1]]], out[[vars[2]]])
-      #       }
-      #       out$term <- as.character(out$term)
-      #       for (col in c("estimate", "std.error", "statistic", "p.value", 
-      #                     "conf.low", "conf.high")) {
-      #         if (!col %in% colnames(out)) {
-      #           out[[col]] <- NA_real_
-      #         }
-      #       }
-      #       if (inherits(out, "data.frame")) {
-      #         return(out)
-      #       }
-      #     } # end get_estimatesx
-      #   
-      #   ##########################################################################
-      #   
-      #   
-      #   number_of_models <- max(length(models), length(vcov))
-      #   inner_loop <- function(i) {
-      #     j <- ifelse(length(models) == 1, 1, i)
-      #     if (inherits(models[[j]], "modelsummary_list")) {
-      #       out <- list(tidy = models[[j]][["tidy"]], glance = models[[j]][["glance"]])
-      #       attr(out, "backend") <- attr(models[[j]], "backend")
-      #       return(out)
-      #     }
-      #     gla <- get_gof(models[[j]], vcov_type = names(vcov)[i], 
-      #                    gof_map = gof_map, gof_function = gof_function, ...)
-      #     tid <- get_estimates(models[[j]], conf_level = conf_level, 
-      #                          vcov = vcov[[i]], shape = shape, 
-      #                          coef_rename = coef_rename, 
-      #                          ...)
-      #     out <- list(tidy = tid, glance = gla)
-      #     class(out) <- "modelsummary_list"
-      #     attr(out, "backend") <- list(est = attr(tid, "backend"), 
-      #                                  gof = attr(gla, "backend"))
-      #     return(out)
-      #   }
-      #   dots <- list(...)
-      #   if ("mc.cores" %in% names(dots)) {
-      #     out <- parallel::mclapply(seq_len(number_of_models), 
-      #                               inner_loop, mc.cores = dots[["mc.cores"]])
-      #   }
-      #   else if (isTRUE(check_dependency("future.apply")) && future::nbrOfWorkers() > 
-      #            1 && number_of_models > 1 && isTRUE(getOption("modelsummary_future", 
-      #                                                          default = TRUE))) {
-      #     out <- try(future.apply::future_lapply(seq_len(number_of_models), 
-      #                                            inner_loop, future.seed = TRUE), silent = TRUE)
-      #     if (inherits(out, "try-error")) {
-      #       out <- lapply(seq_len(number_of_models), inner_loop)
-      #     }
-      #   }
-      #   else {
-      #     out <- lapply(seq_len(number_of_models), inner_loop)
-      #   }
-      #   return(out)
-      # } # end get_list_of_modelsummary_listsX
-      # 
-      
-      ##########################################################################
-      ##########################################################################   
-      
       msl <- get_list_of_modelsummary_lists(models = models, 
                                             conf_level = conf_level, 
                                             vcov = vcov, 
@@ -1398,9 +943,7 @@ summary_table <-
           return(msl)
         }
       }
-      
-      
-      
+
       est <- list()
       for (i in seq_along(msl)) {
         tmp <- format_estimates(est = msl[[i]]$tidy, fmt = fmt, 
@@ -1414,18 +957,11 @@ summary_table <-
                                 group_name = shape$group_name, 
                                 exponentiate = exponentiate[[i]], ...)
         
-        # tmp$component <- msl[[i]]$tidy$component
-        
-        # mslx <<- msl
-        # tmpx <<- tmp
-        
         if(add_component) {
           tmp$component <- msl[[i]]$tidy$component
           tmp <- tmp %>% dplyr::relocate(component, .after = 'term')
         }
-        
-        
-        # Add for_custom_est from 
+
         tmp_custom_est <- list()
         for_custom_est <- msl[[i]]$tidy
         if(!is.null(attr(for_custom_est, "custom_add"))) {
@@ -1443,9 +979,8 @@ summary_table <-
               tmp_custom_est[[for_custom_esti]] <- 
                 fmt(msl[[i]]$tidy[[for_custom_esti_lc]])
             }
-          } # for (for_custom_esti in attr(for_custom_est, "custom_add")) {
-        } # if(!is.null(attr(for_custom_est, "custom_add"))) {
-        
+          } 
+        } 
         
         tmp <- c(tmp, tmp_custom_est)
         tmp <- as.data.frame(tmp)
@@ -1488,14 +1023,14 @@ summary_table <-
                                                           "df.error", 
                                                           "p.value"))
           msg <- c("There are duplicate term names in the table.", 
-                   "The `shape` argument of the `modelsummary` function can be used 
-to print related terms together. The `group_map` argument can be used 
-to reorder, subset, and rename group identifiers. See `?modelsummary` 
-for details.", 
-                   "You can find the group identifier to use in the `
-shape` argument by 
-calling `get_estimates()` on one of your models. Candidates include:", 
-                   paste(candidate_groups, collapse = ", "))
+          "The `shape` argument of the `modelsummary` function can be used 
+          to print related terms together. The `group_map` argument can be used 
+          to reorder, subset, and rename group identifiers. See `?modelsummary` 
+          for details.", 
+          "You can find the group identifier to use in the `
+          shape` argument by 
+          calling `get_estimates()` on one of your models. Candidates include:", 
+          paste(candidate_groups, collapse = ", "))
           
           insight::format_warning(msg)
         }
@@ -1537,7 +1072,7 @@ calling `get_estimates()` on one of your models. Candidates include:",
         if (!"term" %in% shape$lhs) {
           msg <- "`term` must be on the left-hand side of 
           the `shape` formula 
-when `coef_omit` is a numeric vector."
+          when `coef_omit` is a numeric vector."
           insight::format_error(msg)
         }
         term_idx <- paste(est$group, est$term)
@@ -1598,7 +1133,6 @@ when `coef_omit` is a numeric vector."
       if (is.null(coef_map) && isFALSE(coef_rename) && "term" %in% 
           colnames(tab) && !identical(output_format, "rtf")) {
         idx <- tab$part != "gof"
-        
         # tab$term <- ifelse(idx, gsub("::", " = ", tab$term), 
         #                    tab$term)
         # tab$term <- ifelse(idx, gsub(":", " × ", tab$term), 
@@ -1756,10 +1290,6 @@ when `coef_omit` is a numeric vector."
                      output_file = output_file, ...)
       attr(out, "backend") <- attr(msl, "backend")
       out <- set_span_cbind(out, span_cbind)
-      
-      # Here I can move nobs etc from term to section if add_section
-      # outx <<- out
-      
       if (settings_equal("function_called", "modelsummary_rbind")) {
         return(out)
       }
@@ -1773,13 +1303,7 @@ when `coef_omit` is a numeric vector."
         settings_rm()
         return(out)
       }
-    } # custom_modelsummary
-    
-    
-    
-    ###########################################################################
-    
-    ###########################################################################
+    } 
     
     allow_unlock_replace_bind <- FALSE
     if(!inherits(models[[1]], "bgmfit")) {
@@ -1788,17 +1312,15 @@ when `coef_omit` is a numeric vector."
       } else if(!models$test_mode) {
         allow_unlock_replace_bind <- TRUE
       }
-    } else { # if(!is.list(models)) {
+    } else { 
       test_mode_c <- c()
       for (modelsi in 1:length(models)) {
         test_mode_c <- c(test_mode_c, models[[modelsi]]$test_mode)
       }
       if(is.null(test_mode_c)) test_mode_c <- FALSE
       if(all(!test_mode_c)) allow_unlock_replace_bind <- TRUE
-    } # if(!is.list(models)) {
-    
-    # sapply(list(T, F), isTRUE) 
-    
+    }
+
     if(allow_unlock_replace_bind) {
       unlock_replace_bind(package = "parameters", what = "parameters",
                           replacement = custom_model_parameters.brmsfit,
@@ -1811,18 +1333,7 @@ when `coef_omit` is a numeric vector."
       unlock_replace_bind(package = "modelsummary", what = "get_gof",
                           replacement = custom_get_gof,
                           ept_str = T)
-
-      # unlock_replace_bind(package = "insight", what = ".clean_brms_params",
-      #                     replacement = custom_clean_brms_params,
-      #                     ept_str = T)
-    } # allow_unlock_replace_bind
-    
-    
-    
-    
-    ###########################################################################
-    
-    ###########################################################################
+    } 
     
     modelsummary::modelsummary(models, 
                                effects = effects, 
@@ -1883,11 +1394,6 @@ when `coef_omit` is a numeric vector."
                                custom_rename_map = custom_rename_map,
                                envir = environment(),
                                ...)
-    
-    ###########################################################################
-    
-    ###########################################################################
-    
-  } # modelsummary_my
+  } # End 
 
 
