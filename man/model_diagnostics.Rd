@@ -8,8 +8,9 @@
 \method{model_diagnostics}{bgmfit}(
   model,
   newdata = NULL,
-  plots = c("rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "trace", "dens_overlay",
-    "rhat", "neff", "ppc_overlay", "ppc_hist", "ppc_scatter", "ppc_stat"),
+  plots = c("rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "acfp", "acfr", "trace",
+    "dens_overlay", "rhat", "rhat_hist", "neff", "ppc_overlay", "ppc_hist",
+    "ppc_scatter", "ppc_stat"),
   set_draws = "epred",
   resp = NULL,
   ndraws = 10,
@@ -52,6 +53,7 @@
   xvar = NULL,
   difx = NULL,
   idvar = NULL,
+  levels_id = NULL,
   conf_level = 0.95,
   deriv = 0,
   plot = FALSE,
@@ -87,14 +89,19 @@ residuals.}
 \item{\code{"qq"}}{Same as \code{"qqp"}.}
 \item{\code{"pairs"}}{Pair plots for MCMC draws via
 \code{\link[bayesplot:MCMC-scatterplots]{bayesplot::mcmc_pairs()}}.}
-\item{\code{"acf"}}{Autocorrelation plots for MCMC draws via
+\item{\code{"acfp"}}{Autocorrelation plots of parameters for MCMC draws via
 \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "acf"}.}
+\item{\code{"acfr"}}{Autocorrelation plots of residuals via
+custom acf_residuals_custom function.}
+\item{\code{"acf"}}{Same as \code{"acfr"}.}
 \item{\code{"trace"}}{Trace plots for selected parameters via
 \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "trace"}.}
 \item{\code{"dens_overlay"}}{Density overlays for selected parameters via
 \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "dens_overlay"}.}
 \item{\code{"rhat"}}{Potential scale reduction diagnostics via
 \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "rhat"}.}
+\item{\code{"rhat_hist"}}{Potential scale reduction diagnostics via
+\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "rhat_hist"}.}
 \item{\code{"neff"}}{Effective sample size diagnostics via
 \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "neff"}.}
 \item{\code{"ppc_overlay"}}{Posterior predictive density overlay via
@@ -266,6 +273,17 @@ implemented in future updates.}
 \item{difx}{Currently ignored and serves as a placeholder.}
 
 \item{idvar}{Currently ignored and serves as a placeholder.}
+
+\item{levels_id}{An optional argument to specify the \code{ids} for the
+hierarchical model (default \code{NULL}). It is used only when the model is
+applied to data with three or more levels of hierarchy. For a two-level
+model, \code{levels_id} is automatically inferred from the model fit. For
+models with three or more levels, \code{levels_id} is inferred from the
+model fit under the assumption that hierarchy is specified from the lowest
+to the uppermost level, i.e., \code{id} followed by \code{study}, where
+\code{id} is nested within \code{study}. However, it is not guaranteed that
+\code{levels_id} is sorted correctly, so it is better to set it manually
+when fitting a model with three or more levels of hierarchy.}
 
 \item{conf_level}{Currently ignored and serves as a placeholder.}
 

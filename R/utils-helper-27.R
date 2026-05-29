@@ -1568,6 +1568,9 @@ get_print_return_obj <- function(knots = NULL,
   } else {
     setsubtitle <- NULL
   }
+  if(knots_selection_what == "none") {
+    return(knots_new)
+  }
   if(is.null(model_new)) {
     knots_selection_what_choices <- c('knots', 
                                       'plot1', 

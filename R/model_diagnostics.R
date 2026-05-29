@@ -29,14 +29,19 @@
 #'     \item{`"qq"`}{Same as \code{"qqp"}.}
 #'     \item{`"pairs"`}{Pair plots for MCMC draws via
 #'     [bayesplot::mcmc_pairs()].}
-#'     \item{`"acf"`}{Autocorrelation plots for MCMC draws via
+#'     \item{`"acfp"`}{Autocorrelation plots of parameters for MCMC draws via
 #'     [brms::mcmc_plot()] with \code{type = "acf"}.}
+#'     \item{`"acfr"`}{Autocorrelation plots of residuals via
+#'     custom acf_residuals_custom function.}
+#'     \item{`"acf"`}{Same as \code{"acfr"}.}
 #'     \item{`"trace"`}{Trace plots for selected parameters via
 #'     [brms::mcmc_plot()] with \code{type = "trace"}.}
 #'     \item{`"dens_overlay"`}{Density overlays for selected parameters via
 #'     [brms::mcmc_plot()] with \code{type = "dens_overlay"}.}
 #'     \item{`"rhat"`}{Potential scale reduction diagnostics via
 #'     [brms::mcmc_plot()] with \code{type = "rhat"}.}
+#'     \item{`"rhat_hist"`}{Potential scale reduction diagnostics via
+#'     [brms::mcmc_plot()] with \code{type = "rhat_hist"}.}
 #'     \item{`"neff"`}{Effective sample size diagnostics via
 #'     [brms::mcmc_plot()] with \code{type = "neff"}.}
 #'     \item{`"ppc_overlay"`}{Posterior predictive density overlay via
@@ -278,9 +283,12 @@ model_diagnostics.bgmfit <- function(
       "qqp",
       "pairs",
       "acf",
+      "acfp",
+      "acfr",
       "trace",
       "dens_overlay",
       "rhat",
+      "rhat_hist",
       "neff",
       "ppc_overlay",
       "ppc_hist",
@@ -332,6 +340,7 @@ model_diagnostics.bgmfit <- function(
     xvar = NULL,
     difx = NULL,
     idvar = NULL,
+    levels_id = NULL,
     conf_level = 0.95,
     deriv = 0,
     plot = FALSE,
@@ -424,7 +433,8 @@ model_diagnostics.bgmfit <- function(
   cov_       <- paste0('cov', resp_rev_)
   sigmacov_  <- paste0('sigma', cov_)
   uvarby     <- model$model_info$univariate_by$by
-  
+  yvar_      <- paste0('yvar', resp_rev_)
+  yvar       <- model$model_info[[xvar_]]
   if(dpar == "mu") {
     if(is.null(xvar)) {
       xvar   <- model$model_info[[xvar_]]
@@ -438,6 +448,20 @@ model_diagnostics.bgmfit <- function(
       xvar   <- model$model_info[[xvar_]]
     }
     cov    <- model$model_info[[sigmacov_]]
+  }
+  groupvar_     <- paste0('groupvar', resp_rev_)
+  yvar_         <- paste0('yvar', resp_rev_)
+  yvar          <- model$model_info[[yvar_]]
+  hierarchical_ <- paste0('hierarchical', resp_rev_)
+  if(is.null(levels_id) & is.null(idvar)) {
+    idvar <- model$model_info[[groupvar_]]
+    if (!is.null(model$model_info[[hierarchical_]])) {
+      idvar <- model$model_info[[hierarchical_]]
+    }
+  } else if (!is.null(levels_id)) {
+    idvar <- levels_id
+  } else if (!is.null(idvar)) {
+    idvar <- idvar
   }
   
   check_set_fun <- check_set_fun_transform(model = model, 
@@ -1075,8 +1099,8 @@ model_diagnostics.bgmfit <- function(
 
   plots <- unique(plots)
   valid_plots <- c(
-    "rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "trace", "dens_overlay",
-    "rhat", "neff", "ppc_overlay", "ppc_hist",
+    "rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "acfp", "acfr", "trace", 
+    "dens_overlay", "rhat", "rhat_hist", "neff", "ppc_overlay", "ppc_hist",
     "ppc_scatter", "ppc_stat"
   )
   
@@ -1087,6 +1111,11 @@ model_diagnostics.bgmfit <- function(
 
   if ("qq" %in% plots) {
     plots <- gsub("^qq$", "qqp", plots, fixed = F)
+    plots <- unique(plots)
+  }
+  
+  if ("acf" %in% plots) {
+    plots <- gsub("^acf$", "acfr", plots, fixed = F)
     plots <- unique(plots)
   }
 
@@ -1244,17 +1273,45 @@ model_diagnostics.bgmfit <- function(
       ggplot2::labs(title = "Pairs plot")
   }
 
-  if ("acf" %in% plots) {
-    out$acf <- brms::mcmc_plot(
+  if ("acfp" %in% plots) {
+    out$acfp <- brms::mcmc_plot(
       model, type = "acf", variable = pars, regex = regex 
     )
-    out$acf <- out$acf + 
+    out$acfp <- out$acfp + 
       ggplot2::labs(title = "Autocorrelation plot") 
   }
+  
+  if ("acfr" %in% plots) {
+    out$acfr <- acf_residuals_custom(model,
+                                     residual_type = c("raw", "standardized"),
+                                     summary = c("mean", "median"),
+                                     re_formula = NULL,
+                                     ndraws = ndraws,
+                                     draw_ids = draw_ids,
+                                     idvar = idvar,
+                                     xvar = xvar,
+                                     sort_residuals = TRUE,
+                                     lag_max = NULL,
+                                     plot_type = c("ggplot", "base", "none"),
+                                     ci_level = NULL,
+                                     acf_cutoffs = NULL,
+                                     acf_cutoffs_pm = FALSE,
+                                     print = FALSE,
+                                     main_title = "ACF of Residuals")
+    out$acfr <- out$acfr + 
+      ggplot2::labs(title = "Autocorrelation of Residuals") 
+  }
+  
   
   if ("rhat" %in% plots) {
     out$rhat <- brms::mcmc_plot(model, type = "rhat")
     out$rhat <- out$rhat + 
+      ggplot2::labs(title = "Rhat plot") 
+  }
+  
+  if ("rhat_hist" %in% plots) {
+    out$rhat_hist <- brms::mcmc_plot(model, type = "rhat_hist")
+    out$rhat_hist <- out$rhat_hist + 
       ggplot2::labs(title = "Rhat plot") 
   }
   

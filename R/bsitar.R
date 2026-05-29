@@ -1274,7 +1274,8 @@
 #'  Note that the scale parameter for above \code{s_prior_beta = normal(lm, lm)}
 #'  (which is same as \code{s_prior_beta = normal(lm,lm1)}) is derived from the
 #'  standard deviation of the outcome and the spline design matrix as \cr
-#'  \code{sd(y)/sd(X)} where \code{y} is the outcome and \code{X} design matrix. The other variants of scale parameters are: \cr \code{s_prior_beta =
+#'  \code{sd(y)/sd(X)} where \code{y} is the outcome and \code{X} design matrix.
+#'  The other variants of scale parameters are: \cr \code{s_prior_beta =
 #'  normal(lm,lm2)}) for which the scale parameter is defined as:
 #'  \code{lm_se/sd(X)} where \code{lm_se} is the vector of standard error
 #'  obtained from the linear model fit and \code{X} is the design matrix. \cr
@@ -4144,8 +4145,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <- (spline_type_list[['what']])
-    smat_when         <- (spline_type_list[['when']])
+    smat_what         <- spline_type_list[['what']]
+    smat_when         <- spline_type_list[['when']]
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']])
@@ -4162,8 +4163,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <-  (spline_type_list[['what']])
-    smat_when         <-  (spline_type_list[['when']])
+    smat_what         <- spline_type_list[['what']]
+    smat_when         <- spline_type_list[['when']]
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
@@ -4183,8 +4184,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <- (spline_type_list[['what']])
-    smat_when         <- (spline_type_list[['when']])
+    smat_what         <- spline_type_list[['what']]
+    smat_when         <- spline_type_list[['when']]
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
@@ -4201,8 +4202,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <- (spline_type_list[['what']])
-    smat_when         <- (spline_type_list[['when']])
+    smat_what         <- spline_type_list[['what']]
+    smat_when         <- spline_type_list[['when']]
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
@@ -7350,7 +7351,7 @@ bsitar <- function(x,
     }
     
     knots_from_gkn <- knots
-
+    
     if(!is.null(mcall[['knots_selection']])) {
       knots_selection_bkrange    <- mcall[['knots_selection']][['bkrange']]
       knots_selection_fix_bknots <- mcall[['knots_selection']][['fix_bknots']]
@@ -7363,7 +7364,6 @@ bsitar <- function(x,
       knots_selection_fix_bknots <- knots_selection_fix_bknots %>% as.logical()
       knots_selection_return     <- knots_selection_return %>% as.logical()
       knots_selection_print      <- knots_selection_print %>% as.logical()
-      knots_selection_what       <- knots_selection_what
       knots_selection_when       <- knots_selection_when
       knots_selection_method     <- knots_selection_method
       smat_bkrange               <- knots_selection_bkrange
@@ -7422,7 +7422,6 @@ bsitar <- function(x,
     knots_maxdp          <- max(get_decimal_places(knots_from_gkn))
     knots_from_gkn       <- round(knots_from_gkn, knots_maxdp)
     knots_from_new_funs  <- round(knots_from_new_funs, knots_maxdp)
-
     knots_from_new_funs_msg <- 
       paste0("knots changed from earlier version: ", 
              "\n  ",
@@ -7495,6 +7494,11 @@ bsitar <- function(x,
       knots_selection_arg[['sfirst']]    <-  smat_sfirst
       knots_selection_arg[['sparse']]    <-  smat_sparse
       knots_selection_arg[['verbose']]   <-  verbose
+      if(!is.logical(knots_selection_arg[['return']])) {
+        if(exists('knots_selection_return')) {
+          knots_selection_arg[['return']] <- knots_selection_return
+        }
+      }
       if(knots_selection_arg[['select']] == 'df') {
         if(!knots_selection_arg[['return']]) {
           stop2c("please use return = TRUE when select = 'df'")
