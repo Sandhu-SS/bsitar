@@ -69,6 +69,7 @@
   show_vel_takeoff = FALSE,
   show_vel_peak = FALSE,
   show_vel_cessation = FALSE,
+  each_object = FALSE,
   print = TRUE,
   returndata = FALSE,
   returndata_add_parms = FALSE,
@@ -470,6 +471,10 @@ whether to display the PGV line(s) on the plot.}
 
 \item{show_vel_cessation}{A logical value (default \code{FALSE}) to indicate
 whether to display the CGV line(s) on the plot.}
+
+\item{each_object}{Optional logical (default \code{FALSE}) indicating whether
+to return each plot object (combined and individual plots) or only the
+combined when multiple plots are requested.}
 
 \item{print}{A logical value (default \code{TRUE}) to indicate whether
 to print the plot object before returning it.}

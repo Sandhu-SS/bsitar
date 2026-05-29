@@ -122,10 +122,6 @@
 #'   
 #' @param title_size Text size of plot title.
 #' 
-#' @param each Optional logical (default \code{FALSE}) indicating whether to
-#'   return each plot object (combined and individual plots) or only combined
-#'   when more than one plot requested.
-#' 
 #' @param qq_plot_args A named list of arguments passed on to the
 #'   \code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
 #'   \code{plots = `"qq"`}. Note that \code{plots = `"qq"`} is internally
@@ -157,6 +153,7 @@
 #' @param ipts Currently ignored and serves as a placeholder.
 #' @param newdata_fixed Currently ignored and serves as a placeholder.
 #'   
+#' @inheritParams plot_curves
 #' @inheritParams add_model_criterion
 #' @inheritParams get_predictions
 #' @inheritParams brms::mcmc_plot
@@ -314,10 +311,10 @@ model_diagnostics.bgmfit <- function(
     category = ".category",
     wrap_title = FALSE,
     title_size = 12,
-    each = FALSE,
+    each_object = FALSE,
     qq_plot_args = list(draw_ids = 1:10, 
                         draw_ids_select = 1, 
-                        summary = "robust", 
+                        summary = "mean", 
                         qq_type = 'qq',
                         seed = 123),
     patch_plot.margin = ggplot2::margin(10, 0, 10, 0),# Top, Right, Bottom, Left
@@ -1170,9 +1167,20 @@ model_diagnostics.bgmfit <- function(
     }
     
     if ("qqp" %in% plots) {
+      if(!is.list(qq_plot_args)) qq_plot_args <- list()
       qq_plot_args[['model']]        <- model
       qq_plot_args[['data']]         <- full.args[['newdata']]
       qq_plot_args[['resid_draws']]  <- resid_df
+      if(is.null(qq_plot_args[['draw_ids']])) 
+        qq_plot_args[['draw_ids']] <- 1:10
+      if(is.null(qq_plot_args[['draw_ids_select']])) 
+        qq_plot_args[['draw_ids_select']] <- 1
+      if(is.null(qq_plot_args[['summary']])) 
+        qq_plot_args[['summary']] <- 'mean'
+      if(is.null(qq_plot_args[['qq_type']])) 
+        qq_plot_args[['qq_type']] <- 'qq'
+      if(is.null(qq_plot_args[['seed']])) 
+        qq_plot_args[['seed']] <- 123
       out$qqp <- do.call(qq_plot_pearson, qq_plot_args)
     }
   } 
@@ -1392,7 +1400,7 @@ model_diagnostics.bgmfit <- function(
     out_all[['plot_df']] = if (exists("plot_df")) plot_df else NULL
   }
   
-  if(each) {
+  if(each_object) {
     return(out_all)
   } else {
     if(is.null(combined)) return(out) else return(combined)

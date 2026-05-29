@@ -161,6 +161,10 @@
 #'
 #' @param show_vel_cessation A logical value (default \code{FALSE}) to indicate
 #'   whether to display the CGV line(s) on the plot.
+#'
+#' @param each_object Optional logical (default \code{FALSE}) indicating whether
+#'   to return each plot object (combined and individual plots) or only the
+#'   combined when multiple plots are requested.
 #'   
 #' @param print A logical value (default \code{TRUE}) to indicate whether
 #'   to print the plot object before returning it.
@@ -314,6 +318,7 @@ plot_curves.bgmfit <- function(model,
                                show_vel_takeoff = FALSE,
                                show_vel_peak = FALSE,
                                show_vel_cessation = FALSE,
+                               each_object = FALSE,
                                print = TRUE,
                                returndata = FALSE,
                                returndata_add_parms = FALSE,
@@ -2262,7 +2267,21 @@ plot_curves.bgmfit <- function(model,
     if(!is.null(p.as.d.out_attr)) {
       plot.o[['growthparameters']] <- p.as.d.out_attr
     }
-    return(plot.o)
+    if(each_object) {
+      out_all <- list(combined = plot.o, plots = plot.list)
+      return(out_all)
+    } else {
+      if(is.list(plot.o) & length(plot.o) == 1) {
+        combined <- NULL
+        out <- plot.o[[1]]
+      }
+      if(!is.list(plot.o)) {
+        combined <- NULL
+        out <- plot.o
+      }
+      if(is.null(combined)) return(out) else return(plot.o)
+    }
+    # return(plot.o)
   } else if (returndata) {
     attr(d.out, 'growthparameters') <- p.as.d.out_attr
     if(returndata_add_parms) {

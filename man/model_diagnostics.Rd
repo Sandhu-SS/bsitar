@@ -34,8 +34,8 @@
   category = ".category",
   wrap_title = FALSE,
   title_size = 12,
-  each = FALSE,
-  qq_plot_args = list(draw_ids = 1:10, draw_ids_select = 1, summary = "robust", qq_type =
+  each_object = FALSE,
+  qq_plot_args = list(draw_ids = 1:10, draw_ids_select = 1, summary = "mean", qq_type =
     "qq", seed = 123),
   patch_plot.margin = ggplot2::margin(10, 0, 10, 0),
   funlist = NULL,
@@ -226,9 +226,9 @@ to wrap plot title.}
 
 \item{title_size}{Text size of plot title.}
 
-\item{each}{Optional logical (default \code{FALSE}) indicating whether to
-return each plot object (combined and individual plots) or only combined
-when more than one plot requested.}
+\item{each_object}{Optional logical (default \code{FALSE}) indicating whether
+to return each plot object (combined and individual plots) or only the
+combined when multiple plots are requested.}
 
 \item{qq_plot_args}{A named list of arguments passed on to the
 \code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
@@ -290,7 +290,8 @@ most post-processing functions rely on \pkg{brms}, it is recommended to set
 \code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
 derivatives like velocity curves.}
 
-\item{...}{Further arguments passed on to the functions from the \pkg{brms}}
+\item{...}{Additional arguments passed to the \code{brms::fitted.brmsfit()}
+and \code{brms::predict()} functions.}
 }
 \value{
 A list. The returned structure depends on \code{combine} and the number of
