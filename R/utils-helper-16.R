@@ -1268,6 +1268,13 @@ loop_opt_bands <- function(opti,
   }
   opt <- opti
   bands <- tolower(bandsi)
+  
+  opt.org <- opt
+  # if (grepl("O", opt, ignore.case = T) |
+  #     grepl("O", opt, ignore.case = T)) {
+  #   arguments$opt <- opt <- 'D'
+  # }
+  
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
   } else {
@@ -1678,6 +1685,70 @@ loop_opt_bands <- function(opti,
   scale_x_continuous_str <- build_scale_x_continuous_str(x_minimum, 
                                                          x_maximum, 
                                                          by = 1, xaxis_bk_call)
+  # # d.x <<- d.
+  # # stop()
+  # print(opt)
+  # ##
+  
+  
+  if (grepl("O", opt.org, ignore.case = T) |
+      grepl("O", opt.org, ignore.case = T)) {
+    groupby_str_d.o <- idvar
+    curves <- 'xxxxx' 
+    if (length(curves) == 1) {
+      layout <- 'facet'
+    } else {
+      layout <- layout
+    }
+    d.o <- model[['data']]
+    if (layout == 'facet')
+      color.d <- color.v <- color_single
+    if (grepl("O", opt.org, ignore.case = T)) {
+      d.o <- d.o
+      index_opt <- gregexpr("O", opt.org, ignore.case = T)[[1]]
+      dist.. <- substr(opt.org, index_opt, index_opt)
+      if (grepl("^[[:upper:]]+$", dist..)) {
+        d.o <-
+          d.o %>%
+          dplyr::mutate(
+            groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_d.o)))
+          )
+      } else if (!grepl("^[[:upper:]]+$", dist..)) {
+        if (is.null(groupby_str_d.o))
+          d.o <- d.o %>% dplyr::mutate(groupby = NA)
+        if (!is.null(groupby_str_d.o))
+          d.o <-
+            d.o %>%
+            dplyr::mutate(
+              groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_d.o)))
+            )
+      }
+      if(is.na(d.o[['groupby']][1])) {
+        d.o$groupby_line  <- 'solid'
+        d.o$groupby_color <- 'black'
+      } else {
+        d.o$groupby_line  <- d.o$groupby
+        d.o$groupby_color <- d.o$groupby
+      }
+      d.o[[Xx]] <- ifunx_(d.o[[Xx]])
+      plot.o.O <- d.o %>% 
+        ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
+        ggplot2::geom_line(
+          ggplot2::aes(
+            y = .data[[Yy]],
+            group = groupby,
+            linetype = line_color_key(.data, linetype.groupby),
+            color = line_color_key(.data, color.groupby)
+          ),
+          linewidth = linewidth.main
+        ) +
+        ept(scale_x_continuous_str) +
+        ggplot2::labs(x = "", y = "", title = "Observed") +
+        jtools::theme_apa(legend.pos = legendpos) +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+    }
+  }
+  ##
   if (grepl("d", opt, ignore.case = T) |
       grepl("v", opt, ignore.case = T)) {
     curves <- unique(d.$curve)
@@ -2728,6 +2799,7 @@ loop_opt_bands <- function(opti,
   if(opt == 'v' | opt == 'V') return(plot.o.v)
   if(opt == 'a' | opt == 'a') return(plot.o.a)
   if(opt == 'u' | opt == 'u') return(plot.o.u)
+  if(opt.org == 'o' | opt.org == 'O') return(plot.o.O)
 } 
 
 

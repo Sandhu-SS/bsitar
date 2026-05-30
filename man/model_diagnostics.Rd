@@ -33,7 +33,7 @@
   usesavedfuns = NULL,
   clearenvfuns = NULL,
   category = ".category",
-  wrap_title = FALSE,
+  wrap_title = NULL,
   title_size = 12,
   each_object = FALSE,
   qq_plot_args = list(draw_ids = 1:10, draw_ids_select = 1, summary = "mean", qq_type =
@@ -228,8 +228,9 @@ the output from different modeling functions differs on this point.
 See \code{vignette("tidy-brms")} and \code{vignette("tidy-rstanarm")} for examples of dealing with output
 from ordinal models using both approaches.}
 
-\item{wrap_title}{Optional logical (default \code{TRUE}) indicating whether
-to wrap plot title.}
+\item{wrap_title}{Optional logical indicating whether to wrap plot title. If
+\code{NULL} (default), then \code{wrap_title} is internally set as
+\code{TRUE} when three or more plots are requested.}
 
 \item{title_size}{Text size of plot title.}
 
@@ -388,14 +389,14 @@ model <- getNsObject(berkeley_exfit)
 # Residual vs Fitted plot
 res1 <- model_diagnostics(
   model = model,
-  plots = c("rvf")
+  plots = "rvf"
 )
 
 
 # MCMC diagnostics for selected parameters
 res2 <- model_diagnostics(
   model = model,
-  plots = c("trace", "acf", "dens_overlay", "rhat", "neff"),
+  plots = c("trace", "dens_overlay"),
   pars = c("b_a_Intercept", "b_b_Intercept")
 )
 res2$combined
@@ -403,7 +404,7 @@ res2$combined
 # Posterior predictive checks
 res3 <- model_diagnostics(
   model = model,
-  plots = c("ppc_overlay", "ppc_hist", "ppc_stat"),
+  plots = c("ppc_overlay", "ppc_scatter"),
   ndraws = 10,
   ppc_stat = "sd"
 )

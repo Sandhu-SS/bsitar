@@ -507,6 +507,7 @@ plot_curves.bgmfit <- function(model,
   loop_opt_bands_no  <- check_unique_cap_opt(opt)
   opt_old       <- opt
   bands_old     <- bands
+  if (nchar(opt) == 1 & opt == "O") loop_opt_bands_no <- FALSE
   plot.list.DV <- NULL
   if(!loop_opt_bands_no) {
     opt_bands_old <- get_opt_bands(opt, bands, upper = FALSE)
@@ -538,7 +539,7 @@ plot_curves.bgmfit <- function(model,
   opt           <- paste0(opt_old, collapse = "")
   bands         <- paste0(bands_old, collapse = "")
   arguments$opt <- opt
-
+  
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
   } else {
@@ -1133,6 +1134,7 @@ plot_curves.bgmfit <- function(model,
         d.out <- d.
       }
     }
+    
     if (!grepl("d", opt, ignore.case = T)) {
       plot.o.d <- NULL
     }
@@ -1722,16 +1724,16 @@ plot_curves.bgmfit <- function(model,
         }
       }
       if(set_get_dv) {
-        return(out_a_)
+        if(loop_opt_bands_no) return(out_a_)
       }
       if(!is.null(dots$xadj_tmt)) {
         if(dots$xadj_tmt) {
-          return(out_a_)
+          if(loop_opt_bands_no) return(out_a_)
         }
       }
       if(!is.null(dots$xadj_tmf)) {
         if(dots$xadj_tmf) {
-          return(out_a_)
+          if(loop_opt_bands_no) return(out_a_)
         }
       }
       
@@ -2177,7 +2179,12 @@ plot_curves.bgmfit <- function(model,
     }
   }
 
-  if (nchar(opt) > 2) {
+  if(loop_opt_bands_no) {
+    how_opt <- 2
+  } else {
+    how_opt <- -1
+  }
+  if (nchar(opt) > how_opt) { # > 2
     if (!exists('plot.o.d'))
       plot.o.d <- NULL
     if (!exists('plot.o.v'))
@@ -2205,27 +2212,29 @@ plot_curves.bgmfit <- function(model,
           ggplot2::theme(axis.title.x = ggplot2::element_blank())
       }
     })
-
+    
     plot.list <- list(d = plot.o.d, v = plot.o.v, a = plot.o.a, u = plot.o.u)
     plot.list <- plot.list[lengths(plot.list) != 0]
-
+    
     if(!loop_opt_bands_no) {
       plot.o.D <- plot.list.DV[['D']]
       plot.o.V <- plot.list.DV[['V']]
+      plot.o.O <- plot.list.DV[['O']]
       if(!is.null(plot.o.D)) plot.o.D + 
         ggplot2::theme(axis.title.x = ggplot2::element_blank())
       if(!is.null(plot.o.V)) plot.o.V + 
         ggplot2::theme(axis.title.x = ggplot2::element_blank())
       plot.list [['D']] <- plot.o.D
       plot.list [['V']] <- plot.o.V
+      plot.list [['O']] <- plot.o.O
       plot.list <- plot.list[lengths(plot.list) != 0]
     }
-    
     plot.list <- plot.list[strsplit(unique_opt_sort, "")[[1]]]
     for (nai in names(plot.list)) {
       if(nai == "d") add_suffix <- " (Population)"
       if(nai == "v") add_suffix <- " (Population)"
       if(nai == "D") add_suffix <- " (Individual)"
+      if(nai == "O") add_suffix <- " (Individual)"
       if(nai == "V") add_suffix <- " (Individual)"
       if(nai == "a") add_suffix <- " (Individual)"
       if(nai == "u") add_suffix <- " (Individual)"
@@ -2242,6 +2251,7 @@ plot_curves.bgmfit <- function(model,
           axis.title.y = ggplot2::element_text(angle = 90)
         )
       }
+      if (nchar(opt) == 1 & opt == "O") return(plot.list[["O"]])
     }
 
     plot.o <- patchwork::wrap_plots(plot.list,
@@ -2255,7 +2265,7 @@ plot_curves.bgmfit <- function(model,
     plot.o <- plot.o + patchwork::plot_layout(guides = "collect")
     plot.o <-  plot.o & ggplot2::theme(legend.position = legendpos)
   }
-
+  
   if (!returndata) {
     if(print) print(plot.o)
     if (grepl("d", opt, ignore.case = F) |
@@ -2267,21 +2277,21 @@ plot_curves.bgmfit <- function(model,
     if(!is.null(p.as.d.out_attr)) {
       plot.o[['growthparameters']] <- p.as.d.out_attr
     }
-    if(each_object) {
-      out_all <- list(combined = plot.o, plots = plot.list)
-      return(out_all)
-    } else {
-      if(is.list(plot.o) & length(plot.o) == 1) {
-        combined <- NULL
-        out <- plot.o[[1]]
-      }
-      if(!is.list(plot.o)) {
-        combined <- NULL
-        out <- plot.o
-      }
-      if(is.null(combined)) return(out) else return(plot.o)
-    }
-    # return(plot.o)
+    # if(each_object) {
+    #   out_all <- list(combined = plot.o, plots = plot.list)
+    #   return(out_all)
+    # } else {
+    #   if(is.list(plot.o) & length(plot.o) == 1) {
+    #     combined <- NULL
+    #     out <- plot.o[[1]]
+    #   }
+    #   if(!is.list(plot.o)) {
+    #     combined <- NULL
+    #     out <- plot.o
+    #   }
+    #   if(is.null(combined)) return(out) else return(plot.o)
+    # }
+    return(plot.o)
   } else if (returndata) {
     attr(d.out, 'growthparameters') <- p.as.d.out_attr
     if(returndata_add_parms) {

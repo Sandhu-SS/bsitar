@@ -2334,18 +2334,18 @@ that users carefully consider the placement of knots—whether using the
 approach suggested here or another method of their choice—to ensure optimal
 model performance.
 
-Like \pkg{sitar}, the \insertCite{Cole2010}{bsitar}, the \pkg{bsitar} package
+Like \pkg{sitar}, \insertCite{Cole2010}{bsitar}, the \pkg{bsitar} package
 fits the \emph{SITAR} model with (usually) three random effects: size
 (parameter \code{a}), timing (parameter \code{b}), and intensity (parameter
 \code{c}). Additionally, there is a slope parameter (parameter \code{d}) that
 models the variability in the adult slope of the growth curve (see
 \code{\link[sitar:sitar]{sitar::sitar()}} for details).
 
-Note that author of the \pkg{sitar} package \insertCite{Cole2010}{bsitar}
-enforces the inclusion of \code{d} parameter as a random effect only,
-excluding it from the fixed structure of the model. However, the \pkg{bsitar}
-package allows inclusion of the \code{d} parameter in both the fixed and/or
-random effects structures of the \emph{SITAR} model.
+Note that the \pkg{sitar} package \insertCite{Cole2010}{bsitar} enforces the
+inclusion of \code{d} parameter as a random effect only, excluding it from
+the fixed structure of the model. However, the \pkg{bsitar} package allows
+inclusion of the \code{d} parameter in both the fixed and/or random effects
+structures of the \emph{SITAR} model.
 
 For the three-parameter version of the \emph{SITAR} model (default), the
 fixed effects structure (i.e., population average trajectory) is specified as

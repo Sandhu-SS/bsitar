@@ -122,8 +122,9 @@
 #' @param add_plot_df Optional logical (default \code{FALSE}) indicating whether
 #'   to add \code{plot_df} to the returned value.
 #'   
-#' @param wrap_title Optional logical (default \code{TRUE}) indicating whether
-#'   to wrap plot title.
+#' @param wrap_title Optional logical indicating whether to wrap plot title. If
+#'   \code{NULL} (default), then \code{wrap_title} is internally set as
+#'   \code{TRUE} when three or more plots are requested.
 #'   
 #' @param title_size Text size of plot title.
 #' 
@@ -243,14 +244,14 @@
 #' # Residual vs Fitted plot
 #' res1 <- model_diagnostics(
 #'   model = model,
-#'   plots = c("rvf")
+#'   plots = "rvf"
 #' )
 #' 
 #'
 #' # MCMC diagnostics for selected parameters
 #' res2 <- model_diagnostics(
 #'   model = model,
-#'   plots = c("trace", "acf", "dens_overlay", "rhat", "neff"),
+#'   plots = c("trace", "dens_overlay"),
 #'   pars = c("b_a_Intercept", "b_b_Intercept")
 #' )
 #' res2$combined
@@ -258,7 +259,7 @@
 #' # Posterior predictive checks
 #' res3 <- model_diagnostics(
 #'   model = model,
-#'   plots = c("ppc_overlay", "ppc_hist", "ppc_stat"),
+#'   plots = c("ppc_overlay", "ppc_scatter"),
 #'   ndraws = 10,
 #'   ppc_stat = "sd"
 #' )
@@ -317,7 +318,7 @@ model_diagnostics.bgmfit <- function(
     usesavedfuns = NULL,
     clearenvfuns = NULL,
     category = ".category",
-    wrap_title = FALSE,
+    wrap_title = NULL,
     title_size = 12,
     each_object = FALSE,
     qq_plot_args = list(draw_ids = 1:10, 
@@ -325,7 +326,7 @@ model_diagnostics.bgmfit <- function(
                         summary = "mean", 
                         qq_type = 'qq',
                         seed = 123),
-    patch_plot.margin = ggplot2::margin(10, 0, 10, 0),# Top, Right, Bottom, Left
+    patch_plot.margin = ggplot2::margin(10, 0, 10, 0),
     funlist = NULL,
     future = FALSE,
     future_session = 'multisession',
@@ -1218,7 +1219,7 @@ model_diagnostics.bgmfit <- function(
     resid_df_mean <- resid_df %>% 
       dplyr::group_by(.row) %>%
       dplyr::summarise(
-        mean_residual = mean(.residual),
+        mean_residual = mean(.residual) ,
         .groups = "drop"
       ) %>%
       dplyr::bind_cols(full.args[['newdata']] %>% 
@@ -1285,7 +1286,7 @@ model_diagnostics.bgmfit <- function(
     out$acfr <- acf_residuals_custom(model,
                                      residual_type = c("raw", "standardized"),
                                      summary = c("mean", "median"),
-                                     re_formula = NULL,
+                                     re_formula = re_formula,
                                      ndraws = ndraws,
                                      draw_ids = draw_ids,
                                      idvar = idvar,
@@ -1310,15 +1311,28 @@ model_diagnostics.bgmfit <- function(
   }
   
   if ("rhat_hist" %in% plots) {
-    out$rhat_hist <- brms::mcmc_plot(model, type = "rhat_hist")
-    out$rhat_hist <- out$rhat_hist + 
-      ggplot2::labs(title = "Rhat plot") 
+    suppressWarnings({ 
+      suppressMessages({
+      out$rhat_hist <- brms::mcmc_plot(model, type = "rhat_hist", bins  = bins)
+      out$rhat_hist <- out$rhat_hist + 
+        ggplot2:: scale_x_continuous(labels = scales::label_number(accuracy = 0.001),
+                                     limits = 
+                                       c(1, max(out$rhat_hist$data$value, 
+                                                na.rm = TRUE))) +
+        ggplot2:: scale_x_continuous(labels = scales::label_number(accuracy = 0.01)) +
+        ggplot2::labs(title = "Rhat plot") 
+    })
+      })
   }
   
   if ("neff" %in% plots) {
-    out$neff <- brms::mcmc_plot(model, type = "neff")
-    out$neff <- out$neff + 
-      ggplot2::labs(title = "Effective sample size plot") 
+    suppressWarnings({ 
+      suppressMessages({
+        out$neff <- brms::mcmc_plot(model, type = "neff")
+        out$neff <- out$neff + 
+          ggplot2::labs(title = "Effective sample size plot") 
+      })
+    })   
   }
   
   if ("ppc_overlay" %in% plots) {
@@ -1358,6 +1372,10 @@ model_diagnostics.bgmfit <- function(
   for (namespi in names(out)) {
     out[[namespi]] <-  out[[namespi]] +
       ggplot2::theme(plot.title = ggplot2::element_text(size = title_size))
+  }
+  
+  if(is.null(wrap_title)) {
+    if(length(plots) >=3) wrap_title <- TRUE else wrap_title <- FALSE
   }
 
   if(!wrap_title) {
@@ -1402,7 +1420,7 @@ model_diagnostics.bgmfit <- function(
   }
   
   if (is.null(ncol)) {
-    ncol <- if (length(patchable_plots) <= 2) length(patchable_plots) else 2
+    ncol <- if (length(patchable_plots) <= 2) 1 else 2
   }
 
   patchable_plots <- patchable_plots[plots]
