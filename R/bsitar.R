@@ -3597,11 +3597,12 @@ bsitar <- function(x,
   #   - 'isp' : integrated splines
   #   - 'msp' : M-splines
   # The argument '.' allows specifying spline type as a string.
-  # For advanced/developmental control, a named list `smat` can be passed via `...`.
+  # For advanced/developmental control, a named list `smat` can be passed 
+  # via `...`.
   # -------------------------------------------------------------------------
   # ADVANCED SPLINE CONTROL VIA `smat`
   # -------------------------------------------------------------------------
-  # The `smat` list (passed through `...`) allows fine-grained control of spline behavior.
+  # The `smat` list (via `...`) allows fine-grained control of spline behavior.
   # These options are currently experimental and may be formally exposed later.
   # Components of `smat`:
   # 1. type (character)
@@ -4210,6 +4211,24 @@ bsitar <- function(x,
     smat_check_sparsity <- as.integer(spline_type_list[['check_sparsity']])
   } else {
     # allow further checks - for later use
+  }
+ 
+  if(smat == 'moi') {
+    smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
+    smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_preH         <- as.integer(spline_type_list[['preH']])
+    smat_normalize    <- as.integer(spline_type_list[['normalize']])
+    smat_centerval    <- 0
+    smat_derivs       <- 0
+    smat_intercept    <- as.integer(spline_type_list[['intercept']])
+    smat_degree       <- as.integer(spline_type_list[['degree']])
+    smat_what         <- spline_type_list[['what']]
+    smat_when         <- spline_type_list[['when']]
+    smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
+    smat_include_stan <- as.integer(spline_type_list[['include']])
+    smat_include_path <- spline_type_list[['path']]
+    smat_sparse       <- as.integer(spline_type_list[['sparse']])
+    smat_check_sparsity <- as.integer(spline_type_list[['check_sparsity']])
   }
   
   if(smat_sparse) {
@@ -11986,11 +12005,13 @@ bsitar <- function(x,
         stop2c("Something wrong with 'prepare_transformations' for data_custom")
       }
     } 
-    
+   
     for (j in 1:length(setsigmaxvar_names_val)) {
       if(!setsigmaxvar_names_val[j]) {
-        data_custom_data <- data_custom_data %>% 
-          dplyr::select(-sigmaxvarvaluelist[[j]])
+        if(!is.na(sigmaxvarvaluelist[[j]])) {
+          data_custom_data <- data_custom_data %>% 
+            dplyr::select(-sigmaxvarvaluelist[[j]])
+        }
       }
     }
 
@@ -12639,7 +12660,6 @@ bsitar <- function(x,
   
     if(is.null(brm_args$threads$threads)) {
       if(brm_args$backend == "cmdstanr") {
-        # brm_args$stan_model_args <- list()
         brm_args$stan_model_args$stanc_options <- NULL
       }
     }

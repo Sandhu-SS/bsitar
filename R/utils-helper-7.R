@@ -2703,12 +2703,14 @@ prepare_function_nsp_rcs <- function(x,
   if(funx_names == "GS_bsp_call_stan_fast_2") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_tuple_stan',
-                                     'GS_bsp_nsk_stan_fast_2',
+                                     'GS_bsp_intermediate_stan',
+                                     'GS_bsp_stan',
                                      'GS_bsp_call_stan')
   } else if(funx_names == "GS_bsp_call_stan_fast_1") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_tuple_stan',
-                                     'GS_bsp_nsk_stan_fast_1',
+                                     'GS_bsp_intermediate_stan',
+                                     'GS_bsp_stan',
                                      'GS_bsp_call_stan')
   } else if(funx_names == "GS_bsp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
@@ -2719,13 +2721,15 @@ prepare_function_nsp_rcs <- function(x,
   # msp
   if(funx_names == "GS_msp_call_stan_fast_2") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-                                     'GS_msp_tuple_stan',
-                                     'GS_msp_nsk_stan_fast_2',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_msp_stan',
+                                     'GS_bsp_stan',
                                      'GS_msp_call_stan')
   } else if(funx_names == "GS_msp_call_stan_fast_1") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-                                     'GS_msp_tuple_stan',
-                                     'GS_msp_nsk_stan_fast_1',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_msp_stan',
+                                     'GS_bsp_stan',
                                      'GS_msp_call_stan')
   } else if(funx_names == "GS_msp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
