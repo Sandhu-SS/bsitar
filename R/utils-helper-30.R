@@ -601,6 +601,8 @@ acf_residuals_custom <- function(
     }
   }
   lag_max <- max(0L, min(as.integer(lag_max), length(res) - 1L))
+  lag_max <- pmin(brms::ndraws(model), lag_max)
+  
   if (sort_residuals) {
     if (!is.null(idvar) && !is.null(xvar)) {
       # ord <- order(dat[[idvar]], dat[[xvar]])

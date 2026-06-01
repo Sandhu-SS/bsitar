@@ -1110,12 +1110,10 @@ get_fun_form <- function(xaxis_breaks_fun) {
   return(xaxis_bk_call)
 }
 
-
-
 build_scale_x_continuous_str <- function(x_minimum, x_maximum, by = 1,
                                          xaxis_bk_call) {
-  scale_x_continuous_str <- 
-    "scale_x_continuous_fun(x_minimum_str, x_maximum_str, by=, fun=)"
+  scale_x_continuous_str <- "scale_x_continuous_fun(x_minimum_str, 
+  x_maximum_str, by=, fun=)" 
   scale_x_continuous_str <- gsub("x_minimum_str", paste0("", 
                                                          x_minimum), 
                                  scale_x_continuous_str, fixed = T)
@@ -1131,10 +1129,6 @@ build_scale_x_continuous_str <- function(x_minimum, x_maximum, by = 1,
   return(scale_x_continuous_str)
 }
 
-
-
-
-
 check_unique_cap_opt <- function(opt) {
   chars <- strsplit(opt, "")[[1]]
   letters_lower <- tolower(chars)
@@ -1148,8 +1142,6 @@ check_unique_cap_opt <- function(opt) {
   }
   return(TRUE)
 }
-
-
 
 get_unique_opt_bands <- function(opt, bands, upper = FALSE) {
   if(is.null(bands)) bands <- ""
@@ -1167,7 +1159,6 @@ get_unique_opt_bands <- function(opt, bands, upper = FALSE) {
   out <- list(opt = opt_chars, bands = bands_chars)
   return(out)
 }
-
 
 get_opt_bands <- function(opt, bands, upper = TRUE) {
   opt_chars   <- strsplit(opt, "")  [[1]] 
@@ -1190,9 +1181,6 @@ get_opt_bands <- function(opt, bands, upper = TRUE) {
   out <- list(opt = opt_chars, bands = unname(bands_match_opt))
   return(out)
 }
-
-
-
 
 loop_opt_bands <- function(opti, 
                            bandsi, 
@@ -1266,15 +1254,8 @@ loop_opt_bands <- function(opti,
       assign(eoutii, eout[[eoutii]])
     }
   }
-  opt <- opti
+  opt <- opt.org <- opti
   bands <- tolower(bandsi)
-  
-  opt.org <- opt
-  # if (grepl("O", opt, ignore.case = T) |
-  #     grepl("O", opt, ignore.case = T)) {
-  #   arguments$opt <- opt <- 'D'
-  # }
-  
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
   } else {
@@ -1685,11 +1666,6 @@ loop_opt_bands <- function(opti,
   scale_x_continuous_str <- build_scale_x_continuous_str(x_minimum, 
                                                          x_maximum, 
                                                          by = 1, xaxis_bk_call)
-  # # d.x <<- d.
-  # # stop()
-  # print(opt)
-  # ##
-  
   
   if (grepl("O", opt.org, ignore.case = T) |
       grepl("O", opt.org, ignore.case = T)) {
@@ -1703,6 +1679,7 @@ loop_opt_bands <- function(opti,
     d.o <- model[['data']]
     if (layout == 'facet')
       color.d <- color.v <- color_single
+    
     if (grepl("O", opt.org, ignore.case = T)) {
       d.o <- d.o
       index_opt <- gregexpr("O", opt.org, ignore.case = T)[[1]]
@@ -1748,7 +1725,7 @@ loop_opt_bands <- function(opti,
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
     }
   }
-  ##
+  
   if (grepl("d", opt, ignore.case = T) |
       grepl("v", opt, ignore.case = T)) {
     curves <- unique(d.$curve)

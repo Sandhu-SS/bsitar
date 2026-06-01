@@ -39,9 +39,7 @@
 #'   - 'u': Unadjusted individual-specific distance curves
 #'   - 'a': Adjusted individual-specific distance curves (adjusted for 
 #'   random effects)
-#'   
-#'   Note that 'd' and 'D' cannot be specified together, nor can 'v' and
-#'   'V'. Other combinations are allowed, e.g., 'dvau', 'Dvau', 'dVau', etc.
+#'   - 'O': Observed individual-specific growth curves
 #'
 #' @param apv A logical value (default \code{FALSE}) indicating whether to
 #'   calculate and plot the age at peak velocity (APGV) when \code{opt} includes
@@ -104,11 +102,11 @@
 #' @param label.subtitle An optional character string to label the title. Default
 #'   \code{NULL}
 #'
-#' @param legendpos A character string to specify the position of the legend. If
-#'   \code{NULL} (default), the legend position is set to 'bottom' for distance
-#'   and velocity curves in the \code{'single'} layout. For individual-specific
-#'   curves, the legend position is set to \code{'none'} to suppress the legend.
-#'
+#' @param legendpos A character string to specify the position of the legend.
+#'   If, the legend position is set to 'bottom' for distance and velocity curves
+#'   in the \code{'single'} layout. For individual-specific curves, the legend
+#'   position is set to \code{'none'} to suppress the legend.
+#' 
 #' @param linetype.apv A character string to specify the type of the vertical
 #'   line marking the APGV. Default \code{NULL} sets the linetype to
 #'   \code{dotted}.
@@ -165,6 +163,10 @@
 #' @param each_object Optional logical (default \code{FALSE}) indicating whether
 #'   to return each plot object (combined and individual plots) or only the
 #'   combined when multiple plots are requested.
+#'   
+#' @param ncol Optional integer (default \code{NULL}) specifying the number of
+#'   columns for [patchwork::wrap_plots()]. If \code{NULL}, then number of
+#'   columns is set as \code{2}.
 #'   
 #' @param print A logical value (default \code{TRUE}) to indicate whether
 #'   to print the plot object before returning it.
@@ -303,7 +305,7 @@ plot_curves.bgmfit <- function(model,
                                label.y = NULL,
                                label.title = NULL,
                                label.subtitle = NULL,
-                               legendpos = NULL,
+                               legendpos = 'bottom',
                                linetype.apv = NULL,
                                linewidth.main = NULL,
                                linewidth.apv = NULL,
@@ -319,6 +321,7 @@ plot_curves.bgmfit <- function(model,
                                show_vel_peak = FALSE,
                                show_vel_cessation = FALSE,
                                each_object = FALSE,
+                               ncol = NULL,
                                print = TRUE,
                                returndata = FALSE,
                                returndata_add_parms = FALSE,
@@ -507,7 +510,12 @@ plot_curves.bgmfit <- function(model,
   loop_opt_bands_no  <- check_unique_cap_opt(opt)
   opt_old       <- opt
   bands_old     <- bands
-  if (nchar(opt) == 1 & opt == "O") loop_opt_bands_no <- FALSE
+  if (nchar(opt) == 1 & opt == "O") {
+    loop_opt_bands_no <- FALSE
+  }
+  if(grepl("O", opt)) {
+    loop_opt_bands_no <- FALSE
+  }
   plot.list.DV <- NULL
   if(!loop_opt_bands_no) {
     opt_bands_old <- get_opt_bands(opt, bands, upper = FALSE)
@@ -539,7 +547,6 @@ plot_curves.bgmfit <- function(model,
   opt           <- paste0(opt_old, collapse = "")
   bands         <- paste0(bands_old, collapse = "")
   arguments$opt <- opt
-  
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
   } else {
@@ -2184,7 +2191,8 @@ plot_curves.bgmfit <- function(model,
   } else {
     how_opt <- -1
   }
-  if (nchar(opt) > how_opt) { # > 2
+  
+  if (nchar(opt) > how_opt) { # > 2 / >= 
     if (!exists('plot.o.d'))
       plot.o.d <- NULL
     if (!exists('plot.o.v'))
@@ -2215,7 +2223,7 @@ plot_curves.bgmfit <- function(model,
     
     plot.list <- list(d = plot.o.d, v = plot.o.v, a = plot.o.a, u = plot.o.u)
     plot.list <- plot.list[lengths(plot.list) != 0]
-    
+   
     if(!loop_opt_bands_no) {
       plot.o.D <- plot.list.DV[['D']]
       plot.o.V <- plot.list.DV[['V']]
@@ -2230,6 +2238,7 @@ plot_curves.bgmfit <- function(model,
       plot.list <- plot.list[lengths(plot.list) != 0]
     }
     plot.list <- plot.list[strsplit(unique_opt_sort, "")[[1]]]
+    
     for (nai in names(plot.list)) {
       if(nai == "d") add_suffix <- " (Population)"
       if(nai == "v") add_suffix <- " (Population)"
@@ -2238,8 +2247,14 @@ plot_curves.bgmfit <- function(model,
       if(nai == "V") add_suffix <- " (Individual)"
       if(nai == "a") add_suffix <- " (Individual)"
       if(nai == "u") add_suffix <- " (Individual)"
-      if(nai == "v" | nai == "V") addylab <- "Velocity" else addylab <- "Distance"
-      if(nai == "a" | nai == "u") addylab <- "Distance"
+      if(nai == "a" | nai == "u") {
+        addylab <- "Distance"
+      }
+      if(nai == "v" | nai == "V") {
+        addylab <- "Velocity" 
+      } else {
+        addylab <- "Distance"
+      }
       plot.list[[nai]] <- plot.list[[nai]] + ggplot2::labs(title = paste0(
         ifelse(is.null(plot.list[[nai]]$labels$title), "", 
                plot.list[[nai]]$labels$title), add_suffix)
@@ -2253,19 +2268,28 @@ plot_curves.bgmfit <- function(model,
       }
       if (nchar(opt) == 1 & opt == "O") return(plot.list[["O"]])
     }
-
-    plot.o <- patchwork::wrap_plots(plot.list,
-                                    ncol = 2, nrow = NULL) %>%
-      add_global_label(
-        Xlab = label.x,
-        Ylab = "",
-        size = 5,
-        Xgap = 0.08,
-        Ygap = 0.04)
-    plot.o <- plot.o + patchwork::plot_layout(guides = "collect")
-    plot.o <-  plot.o & ggplot2::theme(legend.position = legendpos)
+    if(is.null(ncol)) {
+      if(length(plot.list) <= 2) setncol <- length(plot.list) 
+      else setncol <- 2
+    }
+    
+    if(length(plot.list) >= 2) {
+      plot.o <- patchwork::wrap_plots(plot.list,
+                                      ncol = setncol, nrow = NULL) %>%
+        add_global_label(
+          Xlab = label.x,
+          Ylab = "",
+          size = 5,
+          Xgap = 0.08,
+          Ygap = 0.04)
+      plot.o <- plot.o + patchwork::plot_layout(guides = "collect")
+      plot.o <-  plot.o & ggplot2::theme(legend.position = legendpos)
+    } else if(length(plot.list) == 1) {
+      plot.o <- plot.list[[1]]
+      plot.o <-  plot.o + ggplot2::theme(legend.position = legendpos)
+    }
   }
-  
+
   if (!returndata) {
     if(print) print(plot.o)
     if (grepl("d", opt, ignore.case = F) |
@@ -2275,23 +2299,32 @@ plot_curves.bgmfit <- function(model,
       }
     }
     if(!is.null(p.as.d.out_attr)) {
+      # if(inherits(plot.o, 'patchwork')) {
+      #   attr(plot.o, 'growthparameters') <- p.as.d.out_attr
+      # } else {
+      #   plot.o[['growthparameters']] <- p.as.d.out_attr
+      # }
       plot.o[['growthparameters']] <- p.as.d.out_attr
     }
-    # if(each_object) {
-    #   out_all <- list(combined = plot.o, plots = plot.list)
-    #   return(out_all)
-    # } else {
-    #   if(is.list(plot.o) & length(plot.o) == 1) {
-    #     combined <- NULL
-    #     out <- plot.o[[1]]
-    #   }
-    #   if(!is.list(plot.o)) {
-    #     combined <- NULL
-    #     out <- plot.o
-    #   }
-    #   if(is.null(combined)) return(out) else return(plot.o)
-    # }
-    return(plot.o)
+    if(each_object) {
+      if(exists('plot.list')) {
+        out_all <- list(combined = plot.o, plots = plot.list)
+      } else {
+        out_all <- plot.o
+      }
+      return(out_all)
+    } else {
+      if(is.list(plot.o) & length(plot.o) == 1) {
+        combined <- NULL
+        out <- plot.o[[1]]
+      }
+      if(!is.list(plot.o)) {
+        combined <- NULL
+        out <- plot.o
+      }
+      if(is.null(combined)) return(out) else return(plot.o)
+    }
+    # return(plot.o)
   } else if (returndata) {
     attr(d.out, 'growthparameters') <- p.as.d.out_attr
     if(returndata_add_parms) {

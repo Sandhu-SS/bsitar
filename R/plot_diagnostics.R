@@ -86,8 +86,8 @@
 #' @param dpar Optional distributional parameter name passed to the underlying
 #'   draw function when relevant.
 #'
-#' @param pars Optional character vector of parameter names for MCMC diagnostic
-#'   plots such as trace, autocorrelation, and density overlays.
+#' @param variable Optional character vector of parameter names for MCMC
+#'   diagnostic plots such as trace, autocorrelation, and density overlays.
 #'
 #' @param combine Logical; if \code{TRUE} and more than one plot is generated,
 #'   compatible plots are combined with [patchwork::wrap_plots()]. If
@@ -226,7 +226,7 @@
 #' [tidybayes::add_linpred_draws()], [tidybayes::add_predicted_draws()],
 #' [patchwork::wrap_plots()]
 #' 
-#' @rdname model_diagnostics
+#' @rdname plot_diagnostics
 #' @export
 #' 
 #' @inherit berkeley author
@@ -242,22 +242,22 @@
 #' model <- getNsObject(berkeley_exfit)
 #' 
 #' # Residual vs Fitted plot
-#' res1 <- model_diagnostics(
+#' res1 <- plot_diagnostics(
 #'   model = model,
 #'   plots = "rvf"
 #' )
 #' 
 #'
 #' # MCMC diagnostics for selected parameters
-#' res2 <- model_diagnostics(
+#' res2 <- plot_diagnostics(
 #'   model = model,
 #'   plots = c("trace", "dens_overlay"),
-#'   pars = c("b_a_Intercept", "b_b_Intercept")
+#'   variable = c("b_a_Intercept", "b_b_Intercept")
 #' )
 #' res2$combined
 #'
 #' # Posterior predictive checks
-#' res3 <- model_diagnostics(
+#' res3 <- plot_diagnostics(
 #'   model = model,
 #'   plots = c("ppc_overlay", "ppc_scatter"),
 #'   ndraws = 10,
@@ -266,14 +266,14 @@
 #' res3$combined
 #'
 #' # Use linear predictor instead of expected predictions
-#' res4 <- model_diagnostics(
+#' res4 <- plot_diagnostics(
 #'   model = model,
 #'   plots = "rvf",
 #'   set_draws = "linpred"
 #' )
 #' }
 #'
-model_diagnostics.bgmfit <- function(
+plot_diagnostics.bgmfit <- function(
     model,
     newdata = NULL,
     plots = c(
@@ -298,12 +298,12 @@ model_diagnostics.bgmfit <- function(
     ),
     set_draws = "epred",
     resp = NULL,
-    ndraws = 10,
+    ndraws = NULL,
     draw_ids = NULL,
     seed = 123,
     re_formula = NULL,
     dpar = NULL,
-    pars = NULL,
+    variable = NULL,
     combine = TRUE,
     ncol = NULL,
     point_alpha = 0.15,
@@ -321,7 +321,7 @@ model_diagnostics.bgmfit <- function(
     wrap_title = NULL,
     title_size = 12,
     each_object = FALSE,
-    qq_plot_args = list(draw_ids = 1:10, 
+    qq_plot_args = list(draw_ids = NULL, 
                         draw_ids_select = 1, 
                         summary = "mean", 
                         qq_type = 'qq',
@@ -767,12 +767,12 @@ model_diagnostics.bgmfit <- function(
   }
   
   if(!is.null(model$xcall)) {
-    if(grepl("model_diagnostics", model$xcall)) {
-      xcall <- "model_diagnostics"
-    } else if(grepl("model_diagnostics", model$xcall)) {
-      xcall <- "model_diagnostics"
-    } else if(grepl("model_diagnostics", model$xcall)) {
-      xcall <- "model_diagnostics"
+    if(grepl("plot_diagnostics", model$xcall)) {
+      xcall <- "plot_diagnostics"
+    } else if(grepl("plot_diagnostics", model$xcall)) {
+      xcall <- "plot_diagnostics"
+    } else if(grepl("plot_diagnostics", model$xcall)) {
+      xcall <- "plot_diagnostics"
     }
   } else {
     rlang_trace_back <- rlang::trace_back()
@@ -1034,7 +1034,7 @@ model_diagnostics.bgmfit <- function(
   full.args <- 
     sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                arguments = full.args, 
-                               check_formalArgs = model_diagnostics.bgmfit,
+                               check_formalArgs = plot_diagnostics.bgmfit,
                                check_formalArgs_exceptions = NULL,
                                check_trace_back = NULL,
                                envir = parent.frame())
@@ -1092,6 +1092,8 @@ model_diagnostics.bgmfit <- function(
     stop("Please install required packages: ", 
          paste(missing_pkgs, collapse = ", "))
   }
+  
+  enverr. <- environment()
   
   needs_tidybayes <- any(c("rvf", "rvp", "qq", "qqn", "qqp") %in% plots)
   if (needs_tidybayes && !requireNamespace("tidybayes", quietly = TRUE)) {
@@ -1202,7 +1204,7 @@ model_diagnostics.bgmfit <- function(
       qq_plot_args[['data']]         <- full.args[['newdata']]
       qq_plot_args[['resid_draws']]  <- resid_df
       if(is.null(qq_plot_args[['draw_ids']])) 
-        qq_plot_args[['draw_ids']] <- 1:10
+        qq_plot_args[['draw_ids']] <- 1:pmin(brms::ndraws(model), 10)
       if(is.null(qq_plot_args[['draw_ids_select']])) 
         qq_plot_args[['draw_ids_select']] <- 1
       if(is.null(qq_plot_args[['summary']])) 
@@ -1243,12 +1245,11 @@ model_diagnostics.bgmfit <- function(
       ) +
       ggplot2::theme_minimal()
   }
-  
 
   suppressMessages({
     if ("trace" %in% plots) {
       out$trace <- brms::mcmc_plot(
-        model, type = "trace", variable = pars, regex = regex 
+        model, type = "trace", variable = variable, regex = regex 
       )
       out$trace <- out$trace + 
       ggplot2::labs(title = "Trace plot") 
@@ -1256,30 +1257,55 @@ model_diagnostics.bgmfit <- function(
   })
 
   if ("dens_overlay" %in% plots) {
-    out$dens_overlay <- brms::mcmc_plot(
-      model, type = "dens_overlay", variable = pars, regex = regex 
-    )
-    out$dens_overlay <- out$dens_overlay + 
-      ggplot2::labs(title = "Density overlay plot") 
+    if(brms::nchains(model) > 1) {
+      out$dens_overlay <- brms::mcmc_plot(
+        model, type = "dens_overlay", variable = variable, regex = regex 
+      )
+      out$dens_overlay <- out$dens_overlay + 
+        ggplot2::labs(title = "Density overlay plot") 
+    } else {
+      if(verbose) message("dens_overlay failed because of only one chain")
+    }
   }
 
   if ("pairs" %in% plots) {
     insight::check_if_installed('ggpubr')
     brms_pairs_brmsfit <- utils::getFromNamespace('pairs.brmsfit', 'brms')
-    out$pairs <- brms_pairs_brmsfit(
-      x = model, variable = pars, regex = regex 
+    assign('err.', FALSE, envir = enverr.)
+    tryCatch(
+      expr = {
+        suppressWarnings({
+          pairs_obj <- brms_pairs_brmsfit(
+            x = model, variable = variable, regex = regex 
+          )
+        })
+      },
+      error = function(e) {
+        assign('err.', TRUE, envir = enverr.)
+      }
     )
-    out$pairs <- ept("ggpubr::as_ggplot(out$pairs)")
-    out$pairs <- out$pairs +
-      ggplot2::labs(title = "Pairs plot")
+    err. <- get('err.', envir = enverr.)
+    if (err.) {
+      if(verbose) message("pairs plot failed")
+      out$pairs <- NULL
+    } else {
+      out$pairs <- pairs_obj 
+      out$pairs <- ept("ggpubr::as_ggplot(out$pairs)")
+      out$pairs <- out$pairs +
+        ggplot2::labs(title = "Pairs plot")
+    }
   }
-
+  
   if ("acfp" %in% plots) {
-    out$acfp <- brms::mcmc_plot(
-      model, type = "acf", variable = pars, regex = regex 
-    )
-    out$acfp <- out$acfp + 
-      ggplot2::labs(title = "Autocorrelation plot") 
+    if(brms::ndraws(model) > 20) {
+      out$acfp <- brms::mcmc_plot(
+        model, type = "acf", variable = variable, regex = regex 
+      )
+      out$acfp <- out$acfp + 
+        ggplot2::labs(title = "Autocorrelation plot") 
+    } else {
+      if(verbose) message("acf for parameters failed because of < 20 iter")
+    }
   }
   
   if ("acfr" %in% plots) {
@@ -1303,11 +1329,14 @@ model_diagnostics.bgmfit <- function(
       ggplot2::labs(title = "Autocorrelation of Residuals") 
   }
   
-  
   if ("rhat" %in% plots) {
-    out$rhat <- brms::mcmc_plot(model, type = "rhat")
-    out$rhat <- out$rhat + 
-      ggplot2::labs(title = "Rhat plot") 
+    suppressWarnings({ 
+      suppressMessages({ 
+        out$rhat <- brms::mcmc_plot(model, type = "rhat")
+        out$rhat <- out$rhat + 
+          ggplot2::labs(title = "Rhat plot") 
+      })
+    })
   }
   
   if ("rhat_hist" %in% plots) {
@@ -1335,15 +1364,20 @@ model_diagnostics.bgmfit <- function(
     })   
   }
   
+ 
   if ("ppc_overlay" %in% plots) {
-    out$ppc_overlay <- brms::pp_check(
-      model, type = "dens_overlay", ndraws = ndraws, size = 2,  alpha = 4
-    ) +
-      ggplot2::theme(
-        legend.position = "inside",
-        legend.position.inside = c(0.15, 0.9)
-      ) + 
-      ggplot2::labs(title = "Posterior Predictive Check: Density Overlay")
+    if(brms::nchains(model) > 0) {
+      out$ppc_overlay <- brms::pp_check(
+        model, type = "dens_overlay", ndraws = ndraws, size = 2,  alpha = 4
+      ) +
+        ggplot2::theme(
+          legend.position = "inside",
+          legend.position.inside = c(0.15, 0.9)
+        ) + 
+        ggplot2::labs(title = "Posterior Predictive Check: Density Overlay")
+    } else {
+      if(verbose) message("ppc_overlay failed because of only one chain")
+    }
   }
 
   if ("ppc_hist" %in% plots) {
@@ -1485,10 +1519,10 @@ model_diagnostics.bgmfit <- function(
 
 
 
-#' @rdname model_diagnostics
+#' @rdname plot_diagnostics
 #' @export
-model_diagnostics <- function(model, ...) {
-  UseMethod("model_diagnostics")
+plot_diagnostics <- function(model, ...) {
+  UseMethod("plot_diagnostics")
 }
 
 

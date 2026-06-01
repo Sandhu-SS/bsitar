@@ -54,7 +54,7 @@
   label.y = NULL,
   label.title = NULL,
   label.subtitle = NULL,
-  legendpos = NULL,
+  legendpos = "bottom",
   linetype.apv = NULL,
   linewidth.main = NULL,
   linewidth.apv = NULL,
@@ -70,6 +70,7 @@
   show_vel_peak = FALSE,
   show_vel_cessation = FALSE,
   each_object = FALSE,
+  ncol = NULL,
   print = TRUE,
   returndata = FALSE,
   returndata_add_parms = FALSE,
@@ -107,10 +108,8 @@ plotting options:
 \item 'u': Unadjusted individual-specific distance curves
 \item 'a': Adjusted individual-specific distance curves (adjusted for
 random effects)
-}
-
-Note that 'd' and 'D' cannot be specified together, nor can 'v' and
-'V'. Other combinations are allowed, e.g., 'dvau', 'Dvau', 'dVau', etc.}
+\item 'O': Observed individual-specific growth curves
+}}
 
 \item{apv}{A logical value (default \code{FALSE}) indicating whether to
 calculate and plot the age at peak velocity (APGV) when \code{opt} includes
@@ -414,10 +413,10 @@ removed, and the same label is used as the title.}
 \item{label.subtitle}{An optional character string to label the title. Default
 \code{NULL}}
 
-\item{legendpos}{A character string to specify the position of the legend. If
-\code{NULL} (default), the legend position is set to 'bottom' for distance
-and velocity curves in the \code{'single'} layout. For individual-specific
-curves, the legend position is set to \code{'none'} to suppress the legend.}
+\item{legendpos}{A character string to specify the position of the legend.
+If, the legend position is set to 'bottom' for distance and velocity curves
+in the \code{'single'} layout. For individual-specific curves, the legend
+position is set to \code{'none'} to suppress the legend.}
 
 \item{linetype.apv}{A character string to specify the type of the vertical
 line marking the APGV. Default \code{NULL} sets the linetype to
@@ -475,6 +474,10 @@ whether to display the CGV line(s) on the plot.}
 \item{each_object}{Optional logical (default \code{FALSE}) indicating whether
 to return each plot object (combined and individual plots) or only the
 combined when multiple plots are requested.}
+
+\item{ncol}{Optional integer (default \code{NULL}) specifying the number of
+columns for \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. If \code{NULL}, then number of
+columns is set as \code{2}.}
 
 \item{print}{A logical value (default \code{TRUE}) to indicate whether
 to print the plot object before returning it.}

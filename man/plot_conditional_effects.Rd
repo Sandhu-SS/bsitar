@@ -291,10 +291,10 @@ removed, and the same label is used as the title.}
 \item{label.subtitle}{An optional character string to label the title. Default
 \code{NULL}}
 
-\item{legendpos}{A character string to specify the position of the legend. If
-\code{NULL} (default), the legend position is set to 'bottom' for distance
-and velocity curves in the \code{'single'} layout. For individual-specific
-curves, the legend position is set to \code{'none'} to suppress the legend.}
+\item{legendpos}{A character string to specify the position of the legend.
+If, the legend position is set to 'bottom' for distance and velocity curves
+in the \code{'single'} layout. For individual-specific curves, the legend
+position is set to \code{'none'} to suppress the legend.}
 
 \item{dummy_to_factor}{A named list (default \code{NULL}) to convert dummy
 variables into a factor variable. The list must include the following
