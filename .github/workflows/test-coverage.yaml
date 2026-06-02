@@ -73,6 +73,7 @@ jobs:
             spelling
             Hmisc
             tidybayes
+            openxlsx2
 
       # Some issues with processx package, so install it
       - name: Install dependencies
