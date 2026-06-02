@@ -30,8 +30,10 @@ test_that("test plot_diagnostics", {
                        seed = 123)
   }))
   
+  # "pairs", - need ggpubr 
+  # set wrap_title = FALSE, otherwise need ggtext
   
-  plots_c <- c("rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "acfp",
+  plots_c <- c("rvf", "rvp", "qq", "qqn", "qqp",  "acf", "acfp",
                "acfr", "trace", "dens_overlay", "rhat", "rhat_hist", 
                "neff", "ppc_overlay", "ppc_hist", "ppc_scatter", "ppc_stat")
   
@@ -41,7 +43,7 @@ test_that("test plot_diagnostics", {
     plots_list[[plots_ci]] <- 
       plot_diagnostics(test_fit, plots = plots_ci, 
                        variable = c("b_a_Intercept", "b_b_Intercept"),
-                       print = FALSE)
+                       wrap_title = FALSE, combine = FALSE, print = FALSE)
   }
   
   

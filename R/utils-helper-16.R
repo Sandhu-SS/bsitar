@@ -374,7 +374,7 @@ xyadj_curves.bgmfit <-
       out <- newdata
       out[[Xx]] <- x.adj[, 1]
       out[[Yy]] <- y.adj[, 1]
-      out <- out %>% dplyr::relocate(c(Xx, Yy, idvar))
+      out <- out %>% dplyr::all_of(c(Xx, Yy, idvar))
       out <- cbind(out, y.adj)
     } 
     if(summary) {
