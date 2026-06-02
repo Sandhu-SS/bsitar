@@ -44,5 +44,6 @@
 # utils-helper-27-knot_search
 # utils-helper-28-hypothesis_test - related
 # utils-helper-29-summary_table - related
+# utils-helper-30-plot_diagnostics - related
 
 

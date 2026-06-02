@@ -1,6 +1,1194 @@
 
 
 
+#' An internal function to evaluate priors specified in data block of Stan
+#'
+#' @param model An object of class \code{bgmfit}
+#' @param spriors A prior object. If \code{NULL} (default),
+#'   [brms::prior_summary()] is used to \code{spriors} from the  \code{model}
+#' @param sdata A Stan data object. If \code{NULL} (default), [brms::standata()]
+#'   is used to get \code{sdata} from the  \code{model}.
+#' @param prior_name_asit A logical (default \code{FALSE}) to indicate whether
+#'   prior names should be returned as it is from the stancode.
+#' @param gsub_group A character vector specifying the group identifier that
+#'   will be removed from the \code{group} column of the prior object. Default
+#'   \code{NULL}.
+#' @param sort_response A character vector specifying the order of response
+#'   variables that will be used in sorting the \code{resp} column in the prior
+#'   object. Default \code{NULL}.
+#' @param sort_parameter A character vector specifying the order of parameter
+#'   names that will be used in sorting the \code{nlpar} column in the prior
+#'   object. Default \code{NULL}.
+#' @param sort_coefficient A character vector specifying the order of
+#'   coefficient names that will be used in sorting the \code{nlpar} column in
+#'   the prior object. Default \code{NULL}.
+#' @param sort_class A character vector specifying the order of class names that
+#'   will be used in sorting the \code{class} column in the prior object.
+#'   Default \code{NULL}.
+#' @param digits An integer to set the \code{digits} argument for the
+#'   \code{round} function.
+#' @param viewer A logical (default \code{FALSE}) to indicate whether to display
+#'   the output in R viewer. Currently ignored to avoid dependency on the 'gt'
+#'   package.
+#' @param sort_dpar A logical (default \code{FALSE}) to indicate whether to
+#'   sort \code{sigma} as last rows when \code{dpar} column has \code{sigma}
+#' @param raw A logical (default \code{FALSE}) to indicate whether to return
+#'   the output in original format.
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @return A data frame object.
+#' @noRd
+#'
+priors_to_textdata <- function(model,
+                               spriors = NULL,
+                               sdata = NULL,
+                               prior_name_asit = FALSE,
+                               gsub_coef = NULL,
+                               gsub_group = NULL,
+                               sort_response = NULL,
+                               sort_group = NULL,
+                               sort_parameter = c(letters[1:26], "sigma"),
+                               sort_coefficient = c("Intercept"),
+                               sort_class = c("b", "sd", "cor"),
+                               digits = 2,
+                               viewer = FALSE,
+                               sort_dpar = TRUE,
+                               raw = FALSE
+) {
+  arguments <- as.list(match.call())[-1]
+  if (missing(model)) {
+    model <- NULL
+  }
+  if(!is.null(model)) {
+    uvarby <- model$model_info$univariate_by$by
+    if(is.null(uvarby)) uvarby <- NA 
+  }
+  
+  nlpar <- NULL;
+  coef <- NULL;
+  class <- NULL;
+  prior <- NULL;
+  group <- NULL;
+  resp <- NULL;
+  dpar <- NULL;
+  Response <- NULL;
+  Coefficient <- NULL;
+  Parameter <- NULL;
+  Group <- NULL;
+  Class <- NULL;
+  . <- NULL;
+  
+  if (is.null(model) & is.null(spriors) & is.null(sdata)) {
+    stop2c("Supply either model or spriors and sdata arguments")
+  } else if (!is.null(model) &
+             !is.null(spriors) & !is.null(sdata)) {
+    stop2c("Supply only model or spriors and sdata arguments")
+  } else if (!is.null(model)) {
+    spriors <- brms::prior_summary(model)
+    sdata <- brms::standata(model)
+  } else if (is.null(model)) {
+    if (is.null(spriors) & is.null(sdata)) {
+      stop2c("Supply spriors and sdata arguments")
+    }
+    if (is.null(spriors) & is.null(sdata)) {
+      stop2c("Supply spriors and sdata arguments")
+    }
+  }
+  if(!raw) spriors <- spriors %>% dplyr::filter(source == 'user')
+  if( raw) prior_name_asit <- TRUE
+  env_ <- environment()
+  list2env(sdata, envir =  env_)
+  for (i in 1:nrow(spriors)) {
+    getxit <- spriors[i, ]$prior
+    if(getxit == "") getxit <- "flat"
+    prior_name <- strsplit(getxit, "\\(")[[1]][1]
+    if (!prior_name_asit) {
+      if (!is.na(prior_name) & prior_name == 'lkj') {
+        prior_name_case <- toupper(prior_name)
+      } else if (!is.na(prior_name) & prior_name == 'lkj_corr_cholesky') {
+        prior_name_case <- 'LKJ'
+      } else {
+        if(!raw) prior_name_case <- firstup(prior_name)
+      }
+    }
+    if (prior_name_asit) prior_name_case <- prior_name
+    getxit_2 <-
+      regmatches(getxit, gregexpr("(?<=\\().*?(?=\\))", getxit, perl = T))[[1]]
+    if(identical(getxit_2, character(0))) {
+      getxit_7 <- paste0(prior_name_case, '')
+    }  else if(!identical(getxit_2, character(0))) {
+      getxit_3 <- strsplit(getxit_2, ",")[[1]]
+      getxit_4 <- sapply(getxit_3, function(x)
+        eval(parse(text = x)))
+      getxit_4 <- round(getxit_4, digits = digits)
+      getxit_5 <- paste(getxit_4, collapse = ", ")
+      getxit_6 <- paste0("(", getxit_5, ")")
+      getxit_7 <- paste0(prior_name_case, getxit_6)
+    } else {
+      getxit_7 <- NULL
+    }
+    spriors[i, ]$prior <- getxit_7
+  }
+  
+  if(raw) {
+    if(sort_dpar) {
+      if(!all(remove_empty_string_from_vector(spriors[["dpar"]]) == "")) {
+        spriors <- spriors %>% dplyr::arrange(!! as.symbol("dpar"))
+      } 
+    }
+    return(spriors)
+  }
+  
+  spriors <-
+    spriors %>% data.frame() %>% dplyr::select(-c('lb', 'ub', 'source'))
+  spriors <- spriors %>% `rownames<-`(NULL)
+  spriors <-
+    spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'L', 'cor',
+                                                       class))
+  if (!is.null(gsub_coef)) {
+    for (gsub_coefi in gsub_coef) {
+      spriors <-
+        spriors %>%  dplyr::mutate(coef = gsub(gsub_coefi, "" , coef))
+    }
+  }
+  if (!is.null(gsub_group)) {
+    for (gsub_groupi in gsub_group) {
+      spriors <-
+        spriors %>%  dplyr::mutate(group = gsub(gsub_groupi, "" , group))
+    }
+  }
+  spriors <- spriors %>% dplyr::relocate(nlpar, coef,
+                                         class, prior,
+                                         group, resp,
+                                         dpar)
+  spriors <-
+    spriors %>%  dplyr::mutate(coef =  dplyr::if_else(coef == '' &
+                                                        class == 'Intercept',
+                                                      class, coef))
+  spriors <-
+    spriors %>%  dplyr::mutate(
+      class =  dplyr::if_else(
+        class == 'Intercept' &
+          dpar == 'sigma' &
+          class == 'Intercept',
+        'b',
+        class
+      )
+    )
+  spriors <-
+    spriors %>%  dplyr::mutate(nlpar =  dplyr::if_else(nlpar == '' &
+                                                         dpar != '',
+                                                       dpar, nlpar)) %>%
+    dplyr::select(-'dpar')
+  spriors <- spriors %>% dplyr::rename(
+    Parameter = nlpar,
+    Coefficient = coef,
+    Class = class,
+    Prior = prior,
+    Group = group,
+    Response = resp
+  )
+  if(is.null(sort_response)) {
+    if (!is.null(model)) {
+      if(length(model$model_info$nys) > 1) {
+        sort_response <- model$model_info$yvars
+      }
+    }
+  }
+  spriors <- spriors %>%
+    dplyr::arrange(match(Response, sort_response)) %>%
+    dplyr::arrange(match(Coefficient, sort_coefficient)) %>%
+    dplyr::arrange(match(Parameter, sort_parameter)) %>%
+    dplyr::arrange(match(Group, sort_group)) %>%
+    dplyr::arrange(match(Class, sort_class))
+  if (!is.null(model)) {
+    if (is.na(uvarby) &
+        !model$model_info$multivariate$mvar) {
+      spriors <- spriors %>%  dplyr::select(-'Response')
+    }
+  }
+  
+  if(sort_dpar) {
+    if(!all(remove_empty_string_from_vector(spriors[["dpar"]]) == "")) {
+      spriors <- spriors %>% dplyr::arrange(!! as.symbol("dpar"))
+    } 
+  }
+
+  return(spriors)
+}
+
+
+
+
+
+
+
+#' Create a prior summary flextable for a bsitar model
+#'
+#' Builds a formatted summary table of user-specified prior distributions from a
+#' \code{bsitar} model. The table includes the prior distribution text, one or
+#' more simulated credible interval columns derived from draws from the parsed
+#' prior distributions, and a simulated empirical range column based on
+#' \code{base::range()}.
+#'
+#' The function parses priors returned by
+#' \code{priors_to_textdata()}, simulates draws from each parsed prior
+#' distribution, computes interval summaries with \code{ggdist::point_interval()},
+#' and formats the result as a \code{flextable}. If a \code{tag} column is
+#' present but entirely empty, it is removed before the table is built.
+#'
+#' Optional transformations can be applied to selected combinations of
+#' \code{class} and \code{parameter}. Transformation targets are defined by the
+#' Cartesian product of all values supplied in \code{transform_class} and all
+#' values supplied in \code{transform_parameter}. This allows any number of
+#' available classes and any number of available parameters to be selected.
+#'
+#' More formally, if \code{transform_class} contains the selected classes and
+#' \code{transform_parameter} contains the selected parameters, then the
+#' transformation targets all combinations in
+#' \code{transform_class x transform_parameter}.
+#'
+#' The \code{transform_fun} argument controls which function is applied:
+#' \itemize{
+#'   \item If a single function is supplied, it is applied to every targeted
+#'   class/parameter combination.
+#'   \item If a list of functions with length equal to
+#'   \code{length(transform_parameter)} is supplied, the functions are matched to
+#'   parameters and recycled across all selected classes.
+#'   \item If a list of functions with length equal to
+#'   \code{length(transform_class) * length(transform_parameter)} is supplied,
+#'   the functions are matched directly to the fully expanded class/parameter
+#'   combinations in \code{expand.grid()} order.
+#' }
+#'
+#' Transformations are applied to simulated draws before the credible intervals
+#' and empirical ranges are computed. This means the reported summaries reflect
+#' the transformed scale directly.
+#'
+#' The function validates requested transformation classes and parameters
+#' against the values actually present in the parsed prior summary. If a user
+#' supplies a class or parameter that does not exist, the function stops with an
+#' informative error.
+#'
+#' Footnote markers are assigned dynamically in sequence. The first four markers
+#' are always used for Class, Parameter, Coefficient, and Prior distribution.
+#' Credible interval columns are assigned the next available letters, the
+#' Range column receives the next letter after the final CI column, and the
+#' transformation mapping note receives the next letter after the Range note.
+#'
+#' @param model A fitted \code{bsitar} model object.
+#' @param tab_title A character string used as the table title/header line. If
+#'   \code{""}, defaults to \code{"Prior_summary"}. If \code{NULL}, no header
+#'   line is added.
+#' @param set_width A numeric vector of interval masses to report, such as
+#'   \code{0.95} or \code{c(0.95, 0.99)}. Each value creates one CI column.
+#' @param set_digits An integer giving the number of digits used when extracting
+#'   priors from \code{priors_to_textdata()}.
+#' @param main_dir A character string giving the base directory used when saving
+#'   output files.
+#' @param tab_dir A character string naming the subdirectory under
+#'   \code{main_dir} used for saved tables.
+#' @param save_table Controls whether the table is saved. Use \code{NULL} or
+#'   \code{FALSE} to avoid saving, \code{TRUE} or \code{"xlsx"} to save as xlsx,
+#'   and \code{"docx"} to save as a Word document.
+#' @param return_table Logical. If \code{TRUE}, returns the flextable object. If
+#'   \code{NULL}, defaults to \code{!save_it}, i.e. returns the table when not
+#'   saving and returns invisibly when saving.
+#' @param output_file Optional output filename, with or without extension. If no
+#'   directory is supplied, the file is written to
+#'   \code{file.path(main_dir, tab_dir)}.
+#' @param set_table_dir Logical. If \code{TRUE}, sets the working directory to
+#'   \code{file.path(main_dir, tab_dir)} for the duration of the function and
+#'   restores the previous working directory on exit.
+#' @param range_samples Integer number of simulated draws used per prior
+#'   distribution to compute both the reported CI columns and the empirical
+#'   range column.
+#' @param seed Integer random seed used before drawing simulated values from the
+#'   parsed prior distributions.
+#' @param transform_class Optional character vector of class values to transform.
+#'   These are expanded with \code{transform_parameter} using a Cartesian
+#'   product. Any supplied value must exist among the available classes in the
+#'   parsed priors.
+#' @param transform_parameter Optional character vector of parameter values to
+#'   transform. These are expanded with \code{transform_class} using a Cartesian
+#'   product. Any supplied value must exist among the available parameters in the
+#'   parsed priors.
+#' @param transform_fun Optional function or list of functions controlling the
+#'   transformation to apply. Accepted forms are:
+#'   \itemize{
+#'     \item A single function, recycled to all targeted combinations.
+#'     \item A list of functions of length \code{length(transform_parameter)},
+#'     matched to parameters and recycled across classes.
+#'     \item A list of functions of length
+#'     \code{length(transform_class) * length(transform_parameter)},
+#'     matched directly to all expanded combinations.
+#'   }
+#'   Each function must accept a numeric vector and return a numeric vector of
+#'   the same length.
+#'   
+#' @param verbose Logical. If \code{TRUE}, prints information.
+#'
+#' @returns
+#' A \code{flextable} object when \code{return_table = TRUE}. Otherwise returns
+#' \code{invisible(NULL)} after optionally saving the table as \code{.docx} or
+#' \code{.xlsx}.
+#'
+#' @details
+#' The Range column is not an analytic support bound. It is a simulated empirical
+#' range computed from \code{range_samples} draws from each parsed prior
+#' distribution. Consequently, the reported range depends slightly on the random
+#' seed, the number of simulated draws, and any transformation applied.
+#'
+#' Credible interval columns are also simulation-based. They are computed from
+#' the same simulated draws used for the range column, which ensures consistent
+#' row alignment between interval summaries and range summaries.
+#'
+#' Requested transformations are validated in two stages. First, every supplied
+#' class must exist among available classes and every supplied parameter must
+#' exist among available parameters. Second, every expanded class/parameter
+#' combination must exist in the parsed prior table; otherwise the function
+#' stops with an error.
+#'
+#' Transformations are applied to simulated draws before summary computation.
+#' This is generally preferable to transforming already-computed interval
+#' endpoints because the summaries then directly reflect the transformed
+#' distribution.
+#'
+#' If the resulting summary data contains a \code{tag} column and every entry is
+#' either \code{NA} or an empty string after trimming whitespace, that column is
+#' removed automatically before constructing the flextable.
+#'
+#' @examples
+#' \donttest{
+#' # Basic table
+#' ft <- prior_summary_table(
+#'   model = fit,
+#'   set_width = 0.95,
+#'   range_samples = 5000,
+#'   seed = 123,
+#'   return_table = TRUE
+#' )
+#'
+#' # Apply one function to all selected class/parameter combinations
+#' ft_all <- prior_summary_table(
+#'   model = fit,
+#'   transform_class = c("b", "sd"),
+#'   transform_parameter = c("c"),
+#'   transform_fun = function(x) exp(x),
+#'   return_table = TRUE
+#' )
+#'
+#' # Apply one function per selected parameter, recycled across all selected classes
+#' ft_param <- prior_summary_table(
+#'   model = fit,
+#'   transform_class = c("b", "sd"),
+#'   transform_parameter = c("b", "c"),
+#'   transform_fun = list(
+#'     function(x) x,
+#'     function(x) exp(x)
+#'   ),
+#'   return_table = TRUE
+#' )
+#'
+#' # Apply one function per expanded class/parameter combination
+#' ft_full <- prior_summary_table(
+#'   model = fit,
+#'   transform_class = c("b", "sd"),
+#'   transform_parameter = c("b", "c"),
+#'   transform_fun = list(
+#'     function(x) x,
+#'     function(x) exp(x),
+#'     function(x) x,
+#'     function(x) exp(x)
+#'   ),
+#'   return_table = TRUE
+#' )
+#' }
+#'
+#'
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @keywords internal
+#' @noRd
+#' 
+prior_summary_table <- function(model,
+                                     tab_title = "",
+                                     set_width = c(0.95, 0.9999),
+                                     set_digits = 1,
+                                     main_dir = getwd(),
+                                     tab_dir = "tables",
+                                     save_table = NULL,
+                                     return_table = NULL,
+                                     output_file = NULL,
+                                     set_table_dir = FALSE,
+                                     range_samples = 5000,
+                                     seed = 123,
+                                     transform_class = NULL,
+                                     transform_parameter = NULL,
+                                     transform_fun = NULL,
+                                     verbose = FALSE) {
+  
+  .dist_obj <- NULL;
+  .lower <- NULL;
+  .row_id  <- NULL;
+  .upper <- NULL;
+  .value <- NULL;
+  .width <- NULL;
+  .rule_id <- NULL;
+  ci <- NULL;
+  coefficient <- NULL;
+  dpar <- NULL;
+  draws <- NULL;
+  group <- NULL;
+  lb <- NULL;
+  level_lab <- NULL;
+  nlpar <- NULL;
+  parameter <- NULL;
+  resp <- NULL;
+  tag <- NULL;
+  ub <- NULL;
+  xmax_range <- NULL;
+  xmin_range <- NULL;
+  zz <- NULL;
+  
+  insight::check_if_installed("distributional", prompt = FALSE)
+  insight::check_if_installed("flexlsx", prompt = FALSE)
+  insight::check_if_installed("flextable", prompt = FALSE)
+  insight::check_if_installed("ggdist", prompt = FALSE)
+  
+  ggplot2::theme_set(ggdist::theme_ggdist())
+  
+  if (is.null(tab_title)) {
+    tab_name <- NULL
+  } else if (identical(tab_title, "")) {
+    tab_name <- "Prior_summary"
+  } else {
+    tab_name <- tab_title
+  }
+  
+  fun_dir <- function(output_dir, setdir = TRUE) {
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, recursive = TRUE)
+    } else {
+      message("Dir already exists!")
+    }
+    
+    if (isTRUE(setdir)) {
+      old_wd <- getwd()
+      setwd(output_dir)
+      message("Directory set to ", output_dir)
+      return(old_wd)
+    }
+    
+    invisible(NULL)
+  }
+  
+  format_transform_fun <- function(f) {
+    if (!is.function(f)) {
+      return("<not a function>")
+    }
+    
+    txt <- paste(deparse(f), collapse = " ")
+    txt <- gsub("[[:space:]]+", " ", txt)
+    txt <- trimws(txt)
+    
+    if (nchar(txt) > 80) {
+      txt <- paste0(substr(txt, 1, 77), "...")
+    }
+    
+    txt
+  }
+  
+  old_wd <- NULL
+  if (isTRUE(set_table_dir)) {
+    old_wd <- fun_dir(file.path(main_dir, tab_dir), setdir = TRUE)
+    on.exit(setwd(old_wd), add = TRUE)
+  }
+  
+  prior_object <-
+    priors_to_textdata(
+      model,
+      spriors = NULL,
+      sdata = NULL,
+      prior_name_asit = FALSE,
+      gsub_coef = NULL,
+      gsub_group = NULL,
+      sort_response = NULL,
+      sort_group = NULL,
+      sort_parameter = c(letters[1:26], "sigma"),
+      sort_coefficient = c("Intercept"),
+      sort_class = c("b", "sd", "cor"),
+      digits = set_digits,
+      viewer = FALSE,
+      sort_dpar = TRUE,
+      raw = TRUE
+    ) %>%
+    dplyr::filter(source == "user") %>%
+    dplyr::filter(class != "L") %>% 
+    dplyr::mutate(
+      lb = dplyr::if_else(class == "sd", "0", lb),
+      lb = dplyr::if_else(class == "sd" & dpar == "sigma", "0", lb),
+      .row_id = dplyr::row_number()
+    ) 
+  
+  prior_parsed <-
+    prior_object %>%
+    ggdist::parse_dist(prior) %>%
+    dplyr::mutate(
+      zz = paste0(class, coef, nlpar, dpar, group)
+    )
+  
+  if('sigma' %in% transform_parameter) {
+    prior_parsed <- prior_parsed %>% 
+      dplyr::mutate(nlpar = 
+                      dplyr::if_else(dpar != "" & nlpar == "", 
+                                     dpar, nlpar))
+  }
+
+  available_classes <- sort(unique(prior_parsed$class))
+  available_parameters <- sort(unique(prior_parsed$nlpar))
+  
+  has_transform_args <- !is.null(transform_class) ||
+    !is.null(transform_parameter) ||
+    !is.null(transform_fun)
+  
+  if (isTRUE(has_transform_args)) {
+    if(is.null(transform_class)) transform_class <- "b"
+    if (is.null(transform_class) || is.null(transform_parameter) || is.null(transform_fun)) {
+      stop("If any transformation arguments are supplied, transform_class, transform_parameter, and transform_fun must all be supplied.")
+    }
+    
+    if (!is.character(transform_class)) {
+      stop("transform_class must be a character vector.")
+    }
+    
+    if (!is.character(transform_parameter)) {
+      stop("transform_parameter must be a character vector.")
+    }
+    
+    transform_class <- unique(transform_class)
+    transform_parameter <- unique(transform_parameter)
+    
+    bad_class <- setdiff(transform_class, available_classes)
+    if (length(bad_class) > 0) {
+      stop(
+        "Unknown transform_class value(s): ",
+        paste(bad_class, collapse = ", "),
+        ". Available classes are: ",
+        paste(available_classes, collapse = ", "),
+        "."
+      )
+    }
+    
+    bad_parameter <- setdiff(transform_parameter, available_parameters)
+    if (length(bad_parameter) > 0) {
+      stop(
+        "Unknown transform_parameter value(s): ",
+        paste(bad_parameter, collapse = ", "),
+        ". Available parameters are: ",
+        paste(available_parameters, collapse = ", "),
+        "."
+      )
+    }
+    
+    if (is.function(transform_fun)) {
+      transform_fun <- list(transform_fun)
+    }
+    
+    if (!is.list(transform_fun)) {
+      stop("transform_fun must be a function or a list of functions.")
+    }
+    
+    if (!all(vapply(transform_fun, is.function, logical(1)))) {
+      stop("Every element of transform_fun must be a function.")
+    }
+    
+    n_class <- length(transform_class)
+    n_parameter <- length(transform_parameter)
+    n_combo <- n_class * n_parameter
+    n_fun <- length(transform_fun)
+    
+    if(n_fun > n_combo) {
+      transform_fun <- transform_fun[1:n_combo]
+      n_fun <- length(transform_fun)
+    }
+    
+    if (!(n_fun %in% c(1L, n_parameter, n_combo))) {
+      stop(
+        "transform_fun must have length 1, length(transform_parameter), or ",
+        "length(transform_class) * length(transform_parameter)."
+      )
+    }
+    
+    transform_rules <- expand.grid(
+      class = transform_class,
+      parameter = transform_parameter,
+      stringsAsFactors = FALSE,
+      KEEP.OUT.ATTRS = FALSE
+    )
+    
+    if (n_fun == 1L) {
+      transform_rules$fun <- rep(transform_fun, nrow(transform_rules))
+    } else if (n_fun == n_parameter) {
+      param_fun_map <- transform_fun
+      names(param_fun_map) <- transform_parameter
+      transform_rules$fun <- unname(param_fun_map[transform_rules$parameter])
+    } else {
+      transform_rules$fun <- transform_fun
+    }
+    
+    matched_rows <- unique(paste(prior_parsed$class, prior_parsed$nlpar, sep = "___"))
+    requested_rows <- unique(paste(transform_rules$class, transform_rules$parameter, sep = "___"))
+    missing_combos <- setdiff(requested_rows, matched_rows)
+    
+    if (length(missing_combos) > 0) {
+      missing_labels <- vapply(
+        strsplit(missing_combos, "___", fixed = TRUE),
+        function(x) paste0("class = '", x[1], "', parameter = '", x[2], "'"),
+        character(1)
+      )
+      stop(
+        "Requested transformation combination(s) not found in priors: ",
+        paste(missing_labels, collapse = "; "),
+        "."
+      )
+    }
+    
+    transform_map_msg <- vapply(
+      seq_len(nrow(transform_rules)),
+      function(i) {
+        paste0(
+          "  - class = '", transform_rules$class[i],
+          "', parameter = '", transform_rules$parameter[i],
+          "' transformed as ", format_transform_fun(transform_rules$fun[[i]])
+        )
+      },
+      character(1)
+    )
+    
+    if(verbose) {
+      message(
+        "Applying transformations to prior draws for the following class/parameter combinations:\n",
+        paste(transform_map_msg, collapse = "\n")
+      )
+    }
+  } else {
+    transform_rules <- NULL
+  }
+  
+  set.seed(seed)
+  
+  sim_tbl <-
+    prior_parsed %>%
+    dplyr::select(.row_id, class, nlpar, .dist_obj) %>%
+    dplyr::rename(parameter = nlpar) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(
+      draws = list(as.numeric(distributional::generate(.dist_obj, 
+                                                       times = range_samples)))
+    ) %>%
+    dplyr::ungroup()
+  
+  if (!is.null(transform_rules)) {
+    transform_rules <- transform_rules %>%
+      dplyr::mutate(.rule_id = dplyr::row_number())
+    
+    sim_tbl <- sim_tbl %>%
+      dplyr::left_join(
+        transform_rules %>% dplyr::select(class, parameter, .rule_id),
+        by = c("class", "parameter")
+      )
+    
+    sim_tbl <- sim_tbl %>%
+      dplyr::rowwise() %>%
+      dplyr::mutate(
+        draws = list(
+          if (is.na(.rule_id)) {
+            draws
+          } else {
+            transform_result <- transform_rules$fun[[.rule_id]](draws)
+            
+            if (!is.numeric(transform_result)) {
+              stop(
+                "Each transform_fun must return a numeric vector. ",
+                "Problem encountered for class = '", class,
+                "', parameter = '", parameter, "'."
+              )
+            }
+            
+            if (length(transform_result) != length(draws)) {
+              stop(
+                "Each transform_fun must return a numeric vector of the same length as its input. ",
+                "Problem encountered for class = '", class,
+                "', parameter = '", parameter, "'."
+              )
+            }
+            
+            as.numeric(transform_result)
+          }
+        )
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-.rule_id)
+    # message("Transformation step completed.")
+  }
+  
+  draws_long <-
+    sim_tbl %>%
+    tidyr::unnest(draws) %>%
+    dplyr::rename(.value = draws)
+  
+  ci_tbl_long <-
+    draws_long %>%
+    dplyr::group_by(.row_id) %>%
+    ggdist::point_interval(
+      .value,
+      .width = set_width,
+      .point = median
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      level_lab = paste0(.width * 100, "% CI"),
+      ci = paste0(
+        sprintf("%0.2f", .lower),
+        ", ",
+        sprintf("%0.2f", .upper)
+      )
+    ) %>%
+    dplyr::select(.row_id, level_lab, ci)
+  
+  ci_tbl_wide <-
+    ci_tbl_long %>%
+    tidyr::pivot_wider(
+      id_cols = .row_id,
+      names_from = level_lab,
+      values_from = ci
+    )
+  
+  range_tbl <-
+    draws_long %>%
+    dplyr::group_by(.row_id) %>%
+    dplyr::summarise(
+      xmin_range = min(.value, na.rm = TRUE),
+      xmax_range = max(.value, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      range = paste0(
+        sprintf("%0.2f", xmin_range),
+        ", ",
+        sprintf("%0.2f", xmax_range)
+      )
+    ) %>%
+    dplyr::select(.row_id, range)
+  
+  prior_object_range_ci <-
+    prior_parsed %>%
+    dplyr::left_join(ci_tbl_wide, by = ".row_id") %>%
+    dplyr::left_join(range_tbl, by = ".row_id") %>%
+    dplyr::mutate(
+      ub = dplyr::if_else(ub == "", "Inf", ub),
+      lb = dplyr::if_else(lb == "", "Inf", lb),
+      prior = dplyr::if_else(
+        ub == "Inf" & lb == "Inf",
+        prior,
+        paste0(prior, "[", lb, ", ", ub, "]")
+      )
+    ) %>%
+    dplyr::select(
+      -dplyr::any_of(c(".dist", ".args", ".dist_obj")),
+      -lb, -ub, -source
+    ) %>%
+    dplyr::mutate(
+      coef = gsub("class", "", coef, ignore.case = FALSE)
+    ) %>%
+    dplyr::arrange(.row_id)
+  
+  ci_labs <- paste0(set_width * 100, "% CI")
+  range_lab <- "Range"
+  
+  relocate_cols <- ci_labs[ci_labs %in% names(prior_object_range_ci)]
+  if (length(relocate_cols) > 0) {
+    prior_object_range_ci <-
+      prior_object_range_ci %>%
+      dplyr::relocate(dplyr::all_of(relocate_cols), .after = nlpar)
+  }
+  
+  if ("range" %in% names(prior_object_range_ci)) {
+    prior_object_range_ci <-
+      prior_object_range_ci %>%
+      dplyr::relocate(range, .after = dplyr::last_col())
+  }
+  
+  prior_object_range_ci_out <-
+    dplyr::bind_rows(
+      prior_object_range_ci %>%
+        dplyr::filter(dpar == ""),
+      prior_object_range_ci %>%
+        dplyr::filter(dpar != "") %>%
+        dplyr::mutate(
+          class = dpar,
+          dpar = ""
+        )
+    ) %>%
+    dplyr::arrange(.row_id) %>%
+    dplyr::mutate(
+      coef = dplyr::if_else(class == "sd", paste0(coef, " (", group, ")"), coef)
+    ) %>%
+    dplyr::select(-resp, -dpar, -group, -zz, -.row_id) %>%
+    dplyr::relocate(nlpar, .after = class) %>%
+    dplyr::relocate(prior, .after = coef) %>%
+    dplyr::rename(
+      parameter = nlpar,
+      coefficient = coef
+    ) %>%
+    dplyr::mutate(
+      parameter = dplyr::if_else(class == "sigma", class, parameter),
+      class = dplyr::if_else(parameter == "sigma", "rsd", class),
+      coefficient = gsub("ClassI", "Class I", coefficient)
+    )
+  
+  if ("tag" %in% names(prior_object_range_ci_out)) {
+    tag_all_empty <- all(is.na(prior_object_range_ci_out$tag) |
+                           trimws(as.character(prior_object_range_ci_out$tag)) == "")
+    if (isTRUE(tag_all_empty)) {
+      prior_object_range_ci_out <- prior_object_range_ci_out %>%
+        dplyr::select(-tag)
+    }
+  }
+  
+  header_labs <- list(
+    class = "Class",
+    parameter = "Parameter",
+    coefficient = "Coefficient",
+    prior = "Prior distribution",
+    range = range_lab
+  )
+  
+  for (lab in ci_labs) {
+    if (lab %in% names(prior_object_range_ci_out)) {
+      header_labs[[lab]] <- lab
+    }
+  }
+  
+  add_header_lines_set <- tab_name
+  
+  foot_letters <- letters
+  class_sym <- foot_letters[1]
+  parameter_sym <- foot_letters[2]
+  coefficient_sym <- foot_letters[3]
+  prior_sym <- foot_letters[4]
+  
+  ci_cols <- ci_labs[ci_labs %in% names(prior_object_range_ci_out)]
+  ci_syms <- foot_letters[seq.int(from = 5, length.out = length(ci_cols))]
+  range_sym <- foot_letters[5 + length(ci_cols)]
+  transform_note_sym <- foot_letters[6 + length(ci_cols)]
+  
+  transform_desc <- NULL
+  transform_note_text <- NULL
+  
+  if (!is.null(transform_rules)) {
+    transform_desc <- unique(vapply(
+      seq_len(nrow(transform_rules)),
+      function(i) {
+        paste0(
+          "class = '", transform_rules$class[i],
+          "', parameter = '", transform_rules$parameter[i], "'"
+        )
+      },
+      character(1)
+    ))
+    
+    transform_note_text <- paste0(
+      "Transformations Note: ",
+      paste(
+        vapply(
+          seq_len(nrow(transform_rules)),
+          function(i) {
+            paste0(
+              "class = '", transform_rules$class[i],
+              "', parameter = '", transform_rules$parameter[i],
+              "' transformed as ", format_transform_fun(transform_rules$fun[[i]])
+            )
+          },
+          character(1)
+        ),
+        collapse = "; "
+      ),
+      "."
+    )
+  }
+  
+  summary_1 <-
+    prior_object_range_ci_out %>%
+    dplyr::ungroup() %>%
+    flextable::flextable() %>%
+    flextable::theme_apa() %>%
+    flextable::merge_at(i = NULL, j = 1, part = "header") %>%
+    flextable::merge_v(j = "class", part = "body") %>%
+    flextable::align(align = "center", part = "all") %>%
+    flextable::set_header_labels(values = header_labs) %>%
+    flextable::footnote(
+      i = NULL,
+      j = 1,
+      value = flextable::as_paragraph(
+        paste0(
+          "Class:",
+          " b - regression parameters;",
+          " sd - standard deviation for random effects;",
+          " rsd - residual standard deviation"
+        )
+      ),
+      ref_symbols = paste0(" ", class_sym, " "),
+      part = "header"
+    ) %>%
+    flextable::footnote(
+      i = NULL,
+      j = 2,
+      value = flextable::as_paragraph(
+        paste0(
+          "Parameter:",
+          " a - size;",
+          " b - timing;",
+          " c - intensity;",
+          " sigma - within individual variability"
+        )
+      ),
+      ref_symbols = paste0(" ", parameter_sym, " "),
+      part = "header"
+    ) %>%
+    flextable::footnote(
+      i = NULL,
+      j = 3,
+      value = flextable::as_paragraph(
+        paste0(
+          "Coefficient:",
+          " For Class b, the Intercept represents Class I estimate ",
+          "whereas Class II denotes the difference between Class I ",
+          "and Class II.",
+          " The s parameters (s1, s2,...) are spline coefficients;",
+          " For Class sd, the Intercept is standard deviation of ",
+          "random effects for the group enclosed in the parentheses ",
+          "(id/study);",
+          " For Class rsd, Class I and Class II denote the ",
+          "within-individual standard deviation estimates"
+        )
+      ),
+      ref_symbols = paste0(" ", coefficient_sym, " "),
+      part = "header"
+    ) %>%
+    flextable::footnote(
+      i = NULL,
+      j = 4,
+      value = flextable::as_paragraph(
+        paste0(
+          "Prior distribution:",
+          " Each coefficient is assigned a normal distribution ",
+          "with mean and standard deviation specified in the ",
+          "parentheses.",
+          " Square brackets with [0, Inf] indicate a half-normal ",
+          "distribution."
+        )
+      ),
+      ref_symbols = paste0(" ", prior_sym, " "),
+      part = "header"
+    )
+  
+  if (length(ci_cols) > 0) {
+    for (i in seq_along(ci_cols)) {
+      ci_note <- paste0(ci_cols[i]," credible interval mass for the estimates.")
+      if (!is.null(transform_desc)) {
+        ci_note <- paste0(
+          ci_note,
+          " Transformations applied for: ",
+          paste(transform_desc, collapse = "; "),
+          ".",
+          " See 'Transformations Note' below for details."
+        )
+      }
+      
+      summary_1 <-
+        summary_1 %>%
+        flextable::footnote(
+          i = NULL,
+          j = which(names(prior_object_range_ci_out) == ci_cols[i]),
+          value = flextable::as_paragraph(ci_note),
+          ref_symbols = paste0(" ", ci_syms[i], " "),
+          part = "header"
+        )
+    }
+  }
+  
+  if ("range" %in% names(prior_object_range_ci_out)) {
+    range_note <- paste0(
+      "Range (min/max) based on base::range() applied to ",
+      range_samples,
+      " simulated draws from the parsed prior distribution."
+    )
+    
+    if (!is.null(transform_desc)) {
+      range_note <- paste0(
+        range_note,
+        " Transformations applied for: ",
+        paste(transform_desc, collapse = "; "),
+        ".",
+        " See 'Transformations Note' below for details."
+      )
+    }
+    
+    summary_1 <-
+      summary_1 %>%
+      flextable::footnote(
+        i = NULL,
+        j = which(names(prior_object_range_ci_out) == "range"),
+        value = flextable::as_paragraph(range_note),
+        ref_symbols = paste0(" ", range_sym, " "),
+        part = "header"
+      )
+  }
+  
+  if (!is.null(transform_note_text) && "range" %in% 
+      names(prior_object_range_ci_out)) {
+    summary_1 <-
+      summary_1 %>%
+      flextable::footnote(
+        i = NULL,
+        j = which(names(prior_object_range_ci_out) == "range"),
+        value = flextable::as_paragraph(transform_note_text),
+        ref_symbols = paste0(" ", "", " "),
+        # ref_symbols = paste0(" ", transform_note_sym, " "),
+        part = "header",
+        inline = FALSE
+      )
+  }
+  
+  summary_1 <-
+    summary_1 %>%
+    flextable::valign(valign = "center", part = "all") %>%
+    flextable::add_header_lines(values = add_header_lines_set) %>%
+    flextable::align(align = "center") %>%
+    flextable::align(i = 1, j = NULL, align = "left", part = "header") %>%
+    flextable::align(i = 2, j = NULL, align = "center", part = "header") %>%
+    flextable::valign(i = 1, j = NULL, valign = "center", part = "header") %>%
+    flextable::valign(i = 2, j = NULL, valign = "center", part = "header") %>%
+    flextable::valign(i = NULL, j = 1, valign = "top", part = "body") %>%
+    flextable::valign(i = NULL, j = 2, valign = "top", part = "body") %>%
+    flextable::valign(i = NULL, j = 3, valign = "top", part = "body") %>%
+    flextable::valign(i = NULL, j = 4, valign = "top", part = "body") %>%
+    flextable::style(
+      pr_t = flextable::fp_text_default(
+        color = "black",
+        font.size = 10,
+        font.family = "Arial"
+      ),
+      part = "all"
+    ) %>%
+    flextable::style(
+      i = 1,
+      j = NULL,
+      pr_t = flextable::fp_text_default(
+        color = "black",
+        font.size = 12,
+        font.family = "Times New Roman"
+      ),
+      part = "header"
+    ) %>%
+    flextable::padding(padding.top = 0, part = "all") %>%
+    flextable::padding(padding.bottom = 0, part = "all") %>%
+    flextable::set_table_properties(width = 1, layout = "fixed") %>%
+    flextable::width(j = 1, width = 0.6, unit = "in") %>%
+    flextable::width(j = 2, width = 0.85, unit = "in") %>%
+    flextable::width(j = 3, width = 1.25, unit = "in") %>%
+    flextable::width(j = 4, width = 1.5, unit = "in")
+  
+  ncols_ft <- ncol(prior_object_range_ci_out)
+  if (ncols_ft >= 5) {
+    for (j in 5:ncols_ft) {
+      summary_1 <- flextable::width(summary_1, j = j, width = 1.25, unit = "in")
+    }
+  }
+  
+  summary_1 <-
+    summary_1 %>%
+    flextable::border_remove() %>%
+    flextable::border_inner_h(border = NULL, part = "header") %>%
+    flextable::hline_top(border = NULL, part = "body") %>%
+    flextable::hline_top(border = NULL, part = "footer")
+  
+  save_tab_xlsx <- FALSE
+  save_tab_docx <- FALSE
+  
+  if (is.null(save_table)) {
+    save_it <- FALSE
+  } else if (is.logical(save_table)) {
+    save_it <- save_table
+    if (save_it) save_tab_xlsx <- TRUE
+  } else if (is.character(save_table)) {
+    if (save_table == "docx") {
+      save_it <- TRUE
+      save_tab_docx <- TRUE
+    } else if (save_table == "xlsx") {
+      save_it <- TRUE
+      save_tab_xlsx <- TRUE
+    } else {
+      save_it <- FALSE
+    }
+  } else {
+    save_it <- FALSE
+  }
+  
+  if (save_it) {
+    if (is.null(output_file)) {
+      output_file <- if (is.null(tab_name)) "Prior summary" else tab_name
+    }
+    
+    if (!is.null(output_file)) {
+      out_path <- if (dirname(output_file) == ".") {
+        file.path(main_dir, tab_dir, output_file)
+      } else {
+        output_file
+      }
+      
+      if (!dir.exists(dirname(out_path))) {
+        dir.create(dirname(out_path), recursive = TRUE)
+      }
+      
+      out_path_docx <- if (grepl("\\.docx$", out_path, ignore.case = TRUE)) {
+        out_path
+      } else {
+        paste0(out_path, ".docx")
+      }
+      
+      if (save_tab_docx) {
+        flextable::save_as_docx(summary_1, path = out_path_docx)
+      }
+      
+      if (save_tab_xlsx) {
+        wb <- openxlsx2::wb_workbook()$add_worksheet("table")
+        wb <- flexlsx::wb_add_flextable(wb, "table", summary_1)
+        out_path_xlsx <- sub("\\.docx$", ".xlsx", out_path_docx,
+                             ignore.case = TRUE)
+        wb$save(out_path_xlsx)
+      }
+    }
+  }
+  
+  if (is.null(return_table)) {
+    return_table <- !save_it
+  }
+  
+  if (isTRUE(return_table)) {
+    return(summary_1)
+  }
+  
+  invisible(NULL)
+}
+
+
+
+
+
 #' Checks if argument is a \code{bgmfit} object
 #'
 #' @param x An \R object
@@ -1491,207 +2679,6 @@ get_xcall__ <- function(xcall, scall, xstr, xclass = NULL) {
 firstup <- function(x) {
   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
   x
-}
-
-
-
-#' An internal function to evaluate priors specified in data block of Stan
-#'
-#' @param model An object of class \code{bgmfit}
-#' @param spriors A prior object. If \code{NULL} (default),
-#'   [brms::prior_summary()] is used to \code{spriors} from the  \code{model}
-#' @param sdata A Stan data object. If \code{NULL} (default), [brms::standata()]
-#'   is used to get \code{sdata} from the  \code{model}.
-#' @param prior_name_asit A logical (default \code{FALSE}) to indicate whether
-#'   prior names should be returned as it is from the stancode.
-#' @param gsub_group A character vector specifying the group identifier that
-#'   will be removed from the \code{group} column of the prior object. Default
-#'   \code{NULL}.
-#' @param sort_response A character vector specifying the order of response
-#'   variables that will be used in sorting the \code{resp} column in the prior
-#'   object. Default \code{NULL}.
-#' @param sort_parameter A character vector specifying the order of parameter
-#'   names that will be used in sorting the \code{nlpar} column in the prior
-#'   object. Default \code{NULL}.
-#' @param sort_coefficient A character vector specifying the order of
-#'   coefficient names that will be used in sorting the \code{nlpar} column in
-#'   the prior object. Default \code{NULL}.
-#' @param sort_class A character vector specifying the order of class names that
-#'   will be used in sorting the \code{class} column in the prior object.
-#'   Default \code{NULL}.
-#' @param digits An integer to set the \code{digits} argument for the
-#'   \code{round} function.
-#' @param viewer A logical (default \code{FALSE}) to indicate whether to display
-#'   the output in R viewer. Currently ignored to avoid dependency on the 'gt'
-#'   package.
-#' @param raw A logical (default \code{FALSE}) to indicate whether to return
-#'   the output in original format.
-#'   
-#' @keywords internal
-#' @return A data frame object.
-#' @noRd
-#'
-priors_to_textdata <- function(model,
-                                spriors = NULL,
-                                sdata = NULL,
-                                prior_name_asit = FALSE,
-                                gsub_coef = NULL,
-                                gsub_group = NULL,
-                                sort_response = NULL,
-                                sort_group = NULL,
-                                sort_parameter = c(letters[1:26], "sigma"),
-                                sort_coefficient = c("Intercept"),
-                                sort_class = c("b", "sd", "cor"),
-                                digits = 2,
-                                viewer = FALSE,
-                                raw = FALSE
-                               ) {
-  arguments <- as.list(match.call())[-1]
-  if (missing(model)) {
-    model <- NULL
-  }
-  if(!is.null(model)) {
-    uvarby <- model$model_info$univariate_by$by
-    if(is.null(uvarby)) uvarby <- NA 
-  }
-
-  nlpar <- NULL;
-  coef <- NULL;
-  class <- NULL;
-  prior <- NULL;
-  group <- NULL;
-  resp <- NULL;
-  dpar <- NULL;
-  Response <- NULL;
-  Coefficient <- NULL;
-  Parameter <- NULL;
-  Group <- NULL;
-  Class <- NULL;
-  . <- NULL;
-
-  if (is.null(model) & is.null(spriors) & is.null(sdata)) {
-    stop2c("Supply either model or spriors and sdata arguments")
-  } else if (!is.null(model) &
-             !is.null(spriors) & !is.null(sdata)) {
-    stop2c("Supply only model or spriors and sdata arguments")
-  } else if (!is.null(model)) {
-    spriors <- brms::prior_summary(model)
-    sdata <- brms::standata(model)
-  } else if (is.null(model)) {
-    if (is.null(spriors) & is.null(sdata)) {
-      stop2c("Supply spriors and sdata arguments")
-    }
-    if (is.null(spriors) & is.null(sdata)) {
-      stop2c("Supply spriors and sdata arguments")
-    }
-  }
-  if(!raw) spriors <- spriors %>% dplyr::filter(source == 'user')
-  if( raw) prior_name_asit <- TRUE
-  env_ <- environment()
-  list2env(sdata, envir =  env_)
-  for (i in 1:nrow(spriors)) {
-    getxit <- spriors[i, ]$prior
-    if(getxit == "") getxit <- "flat"
-    prior_name <- strsplit(getxit, "\\(")[[1]][1]
-    if (!prior_name_asit) {
-      if (!is.na(prior_name) & prior_name == 'lkj') {
-        prior_name_case <- toupper(prior_name)
-      } else if (!is.na(prior_name) & prior_name == 'lkj_corr_cholesky') {
-        prior_name_case <- 'LKJ'
-      } else {
-        if(!raw) prior_name_case <- firstup(prior_name)
-      }
-    }
-    if (prior_name_asit) prior_name_case <- prior_name
-    getxit_2 <-
-      regmatches(getxit, gregexpr("(?<=\\().*?(?=\\))", getxit, perl = T))[[1]]
-    if(identical(getxit_2, character(0))) {
-      getxit_7 <- paste0(prior_name_case, '')
-    }  else if(!identical(getxit_2, character(0))) {
-      getxit_3 <- strsplit(getxit_2, ",")[[1]]
-      getxit_4 <- sapply(getxit_3, function(x)
-        eval(parse(text = x)))
-      getxit_4 <- round(getxit_4, digits = digits)
-      getxit_5 <- paste(getxit_4, collapse = ", ")
-      getxit_6 <- paste0("(", getxit_5, ")")
-      getxit_7 <- paste0(prior_name_case, getxit_6)
-    } else {
-      getxit_7 <- NULL
-    }
-    spriors[i, ]$prior <- getxit_7
-  }
-  if(raw) {
-    return(spriors)
-  }
-  spriors <-
-    spriors %>% data.frame() %>% dplyr::select(-c('lb', 'ub', 'source'))
-  spriors <- spriors %>% `rownames<-`(NULL)
-  spriors <-
-    spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'L', 'cor',
-                                                       class))
-  if (!is.null(gsub_coef)) {
-    for (gsub_coefi in gsub_coef) {
-      spriors <-
-        spriors %>%  dplyr::mutate(coef = gsub(gsub_coefi, "" , coef))
-    }
-  }
-  if (!is.null(gsub_group)) {
-    for (gsub_groupi in gsub_group) {
-      spriors <-
-        spriors %>%  dplyr::mutate(group = gsub(gsub_groupi, "" , group))
-    }
-  }
-  spriors <- spriors %>% dplyr::relocate(nlpar, coef,
-                                         class, prior,
-                                         group, resp,
-                                         dpar)
-  spriors <-
-    spriors %>%  dplyr::mutate(coef =  dplyr::if_else(coef == '' &
-                                                        class == 'Intercept',
-                                                      class, coef))
-  spriors <-
-    spriors %>%  dplyr::mutate(
-      class =  dplyr::if_else(
-        class == 'Intercept' &
-          dpar == 'sigma' &
-          class == 'Intercept',
-        'b',
-        class
-      )
-    )
-  spriors <-
-    spriors %>%  dplyr::mutate(nlpar =  dplyr::if_else(nlpar == '' &
-                                                         dpar != '',
-                                                       dpar, nlpar)) %>%
-    dplyr::select(-'dpar')
-  spriors <- spriors %>% dplyr::rename(
-    Parameter = nlpar,
-    Coefficient = coef,
-    Class = class,
-    Prior = prior,
-    Group = group,
-    Response = resp
-  )
-  if(is.null(sort_response)) {
-    if (!is.null(model)) {
-      if(length(model$model_info$nys) > 1) {
-        sort_response <- model$model_info$yvars
-      }
-    }
-  }
-  spriors <- spriors %>%
-    dplyr::arrange(match(Response, sort_response)) %>%
-    dplyr::arrange(match(Coefficient, sort_coefficient)) %>%
-    dplyr::arrange(match(Parameter, sort_parameter)) %>%
-    dplyr::arrange(match(Group, sort_group)) %>%
-    dplyr::arrange(match(Class, sort_class))
-  if (!is.null(model)) {
-    if (is.na(uvarby) &
-        !model$model_info$multivariate$mvar) {
-      spriors <- spriors %>%  dplyr::select(-'Response')
-    }
-  }
-  return(spriors)
 }
 
 

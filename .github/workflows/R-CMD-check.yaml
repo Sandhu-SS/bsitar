@@ -99,7 +99,12 @@ jobs:
             bayestestR
             growthcleanr
             tidybayes
-            openxlsx2
+            openxlsx2,
+            distributional,
+            flexlsx,
+            flextable,
+            ggdist
+
 
   
       # - name: Build Cmdstan
