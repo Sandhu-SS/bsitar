@@ -1,5 +1,187 @@
 
 
+#' Range by simulation or quantile method
+#'
+#' Compute a two-element range vector using either random normal simulation
+#' or deterministic quantile-based constructions. The function is designed to
+#' feel similar to [base::range()], but adds a `method` argument controlling
+#' how values are obtained before the range is calculated.
+#'
+#' If `x` is `NULL`, the function generates values from a normal distribution.
+#' Method `"r"` uses [stats::rnorm()] for random sampling, whereas methods
+#' `"q1"`, `"q2"`, and `"q3"` use [stats::qnorm()] to construct deterministic,
+#' symmetric values from normal quantiles.
+#'
+#' If `x` is supplied, then `x` is used directly and the arguments `n`,
+#' `mean`, `sd`, and `seed` are ignored. In that case, method `"r"` returns
+#' the ordinary range of `x`, while methods `"q1"`, `"q2"`, and `"q3"` return
+#' the range of empirical quantiles of `x`, computed with [stats::quantile()].
+#'
+#' @param x An optional numeric vector. If supplied, the function works on
+#'   `x` directly and ignores `n`, `mean`, `sd`, and `seed`.
+#' @param ... Additional arguments passed on to [base::range()] when relevant.
+#'   In practice this is mainly included for interface similarity with
+#'   [base::range()].
+#' @param method Character string specifying the method to use. Must be one of
+#'   `"r"`, `"q1"`, `"q2"`, or `"q3"`.
+#'   \describe{
+#'     \item{`"r"`}{Random normal simulation via [stats::rnorm()] when `x` is
+#'     `NULL`; otherwise uses `x` directly.}
+#'     \item{`"q1"`}{Deterministic quantiles using
+#'     `seq(0.001, 0.999, length.out = n)` when `x` is `NULL`, or the analogous
+#'     empirical quantiles of `x` when `x` is supplied.}
+#'     \item{`"q2"`}{Deterministic quantiles using
+#'     `((1:n) - 0.5) / n` when `x` is `NULL`, or the analogous empirical
+#'     quantiles of `x` when `x` is supplied.}
+#'     \item{`"q3"`}{Explicit lower-tail and upper-tail symmetric quantiles when
+#'     `x` is `NULL`, or the analogous empirical quantiles of `x` when `x` is
+#'     supplied. Requires an even effective sample size.}
+#'   }
+#' @param n Integer sample size used only when `x` is `NULL`. Ignored if `x`
+#'   is supplied.
+#' @param mean Numeric mean of the normal distribution used only when `x` is
+#'   `NULL`. Ignored if `x` is supplied.
+#' @param sd Numeric standard deviation of the normal distribution used only
+#'   when `x` is `NULL`. Ignored if `x` is supplied.
+#' @param seed Optional integer seed used only when `x` is `NULL` and
+#'   `method = "r"`. If not `NULL`, [base::set.seed()] is called before
+#'   simulation. Ignored for quantile methods and ignored if `x` is supplied.
+#' @param na.rm Logical; should missing values be removed before computing the
+#'   result? This follows the usual meaning of `na.rm` in R.
+#' @param finite Logical; should non-finite values be removed before computing
+#'   the result?
+#'
+#' @return A numeric vector of length 2 containing the minimum and maximum of
+#'   the constructed values, in the same style as [base::range()].
+#'
+#' @details
+#' The function has two operating modes.
+#'
+#' \strong{1. `x` is `NULL`:} values are generated from a normal distribution.
+#' Method `"r"` generates random values using [stats::rnorm()], so the result is
+#' generally not exactly symmetric. Methods `"q1"`, `"q2"`, and `"q3"` use
+#' [stats::qnorm()] with symmetric probabilities, so the resulting range is
+#' deterministic and symmetric around `mean`.
+#'
+#' \strong{2. `x` is supplied:} the function does not generate from a normal
+#' distribution. Instead, it uses `x` itself. In this case `n`, `mean`, `sd`,
+#' and `seed` are ignored. Method `"r"` returns the ordinary range of `x`.
+#' Methods `"q1"`, `"q2"`, and `"q3"` compute empirical quantiles of `x` using
+#' [stats::quantile()] and then return the range of those quantiles.
+#'
+#' For method `"q3"`, the effective sample size must be even. If `x` is
+#' supplied, this means that the length of `x` after any `na.rm`/`finite`
+#' filtering must be even.
+#'
+#' @examples
+#' # Random simulation from N(0, 1)
+#' range_method(method = "r", n = 1000, mean = 0, sd = 1, seed = 123)
+#'
+#' # Deterministic symmetric ranges from normal quantiles
+#' range_method(method = "q1", n = 1000, mean = 0, sd = 1)
+#' range_method(method = "q2", n = 1000, mean = 0, sd = 1)
+#' range_method(method = "q3", n = 1000, mean = 0, sd = 1)
+#'
+#' # Work directly on observed data
+#' zz <- rnorm(1000, 0, 1)
+#' range_method(x = zz, method = "r")
+#' range_method(x = zz, method = "q1")
+#' range_method(x = zz, method = "q2")
+#'
+#' # When x is supplied, n, mean, sd, and seed are ignored
+#' range_method(x = zz, method = "q1", n = 1000, mean = 0, sd = 10, seed = 999)
+#'
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#'
+range_method <- function(x = NULL, ...,
+                         method = c("r", "q1", "q2", "q3"),
+                         n = 1000,
+                         mean = 0,
+                         sd = 1,
+                         seed = 123,
+                         na.rm = FALSE,
+                         finite = FALSE) {
+  
+  method <- match.arg(method)
+  
+  if (!is.null(x)) {
+    if (na.rm) {
+      x <- x[!is.na(x)]
+    }
+    
+    if (finite) {
+      x <- x[is.finite(x)]
+    }
+    
+    n_x <- length(x)
+    
+    vals <- switch(
+      method,
+      
+      r = x,
+      
+      q1 = {
+        probs <- seq(0.001, 0.999, length.out = n_x)
+        stats::quantile(x, probs = probs, names = FALSE, na.rm = FALSE)
+      },
+      
+      q2 = {
+        probs <- ((1:n_x) - 0.5) / n_x
+        stats::quantile(x, probs = probs, names = FALSE, na.rm = FALSE)
+      },
+      
+      q3 = {
+        if (n_x %% 2 != 0) {
+          stop("For method = 'q3', length(x) after filtering must be even.")
+        }
+        p_low  <- seq(0.001, 0.499, length.out = n_x / 2)
+        p_high <- seq(0.501, 0.999, length.out = n_x / 2)
+        probs  <- c(p_low, p_high)
+        sort(stats::quantile(x, probs = probs, names = FALSE, na.rm = FALSE))
+      }
+    )
+    
+    return(base::range(vals, ..., na.rm = FALSE, finite = FALSE))
+  }
+  
+  vals <- switch(
+    method,
+    
+    r = {
+      if (!is.null(seed)) {
+        base::set.seed(seed)
+      }
+      stats::rnorm(n = n, mean = mean, sd = sd)
+    },
+    
+    q1 = {
+      probs <- seq(0.001, 0.999, length.out = n)
+      stats::qnorm(probs, mean = mean, sd = sd)
+    },
+    
+    q2 = {
+      probs <- ((1:n) - 0.5) / n
+      stats::qnorm(probs, mean = mean, sd = sd)
+    },
+    
+    q3 = {
+      if (n %% 2 != 0) {
+        stop("For method = 'q3', n must be even.")
+      }
+      p_low  <- seq(0.001, 0.499, length.out = n / 2)
+      p_high <- seq(0.501, 0.999, length.out = n / 2)
+      probs  <- c(p_low, p_high)
+      sort(stats::qnorm(probs, mean = mean, sd = sd))
+    }
+  )
+  
+  base::range(vals, ..., na.rm = na.rm, finite = finite)
+}
+
+
 
 #' An internal function to evaluate priors specified in data block of Stan
 #'
@@ -35,10 +217,11 @@
 #' @param raw A logical (default \code{FALSE}) to indicate whether to return
 #'   the output in original format.
 #'   
+#' @return A data frame object.
+#'   
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #' 
 #' @keywords internal
-#' @return A data frame object.
 #' @noRd
 #'
 priors_to_textdata <- function(model,
@@ -302,9 +485,11 @@ priors_to_textdata <- function(model,
 #' @param set_table_dir Logical. If \code{TRUE}, sets the working directory to
 #'   \code{file.path(main_dir, tab_dir)} for the duration of the function and
 #'   restores the previous working directory on exit.
-#' @param range_samples Integer number of simulated draws used per prior
+#' @param draw_samples Integer number of simulated draws used per prior
 #'   distribution to compute both the reported CI columns and the empirical
 #'   range column.
+#' @param add_range Logical indicating whether to include range column in the 
+#'  returned object.
 #' @param seed Integer random seed used before drawing simulated values from the
 #'   parsed prior distributions.
 #' @param transform_class Optional character vector of class values to transform.
@@ -337,7 +522,7 @@ priors_to_textdata <- function(model,
 #'
 #' @details
 #' The Range column is not an analytic support bound. It is a simulated empirical
-#' range computed from \code{range_samples} draws from each parsed prior
+#' range computed from \code{draw_samples} draws from each parsed prior
 #' distribution. Consequently, the reported range depends slightly on the random
 #' seed, the number of simulated draws, and any transformation applied.
 #'
@@ -366,7 +551,7 @@ priors_to_textdata <- function(model,
 #' ft <- prior_summary_table(
 #'   model = fit,
 #'   set_width = 0.95,
-#'   range_samples = 5000,
+#'   draw_samples = 5000,
 #'   seed = 123,
 #'   return_table = TRUE
 #' )
@@ -422,7 +607,8 @@ prior_summary_table <- function(model,
                                      return_table = NULL,
                                      output_file = NULL,
                                      set_table_dir = FALSE,
-                                     range_samples = 5000,
+                                     draw_samples = 5000,
+                                     add_range = FALSE,
                                      seed = 123,
                                      transform_class = NULL,
                                      transform_parameter = NULL,
@@ -450,6 +636,7 @@ prior_summary_table <- function(model,
   ub <- NULL;
   xmax_range <- NULL;
   xmin_range <- NULL;
+  range_vec <- NULL;
   zz <- NULL;
   
   insight::check_if_installed("distributional", prompt = FALSE)
@@ -465,6 +652,10 @@ prior_summary_table <- function(model,
     tab_name <- "Prior_summary"
   } else {
     tab_name <- tab_title
+  }
+  
+  if (!is.logical(add_range) || length(add_range) != 1 || is.na(add_range)) {
+    stop("add_range must be a single TRUE or FALSE value.")
   }
   
   fun_dir <- function(output_dir, setdir = TRUE) {
@@ -534,9 +725,9 @@ prior_summary_table <- function(model,
   
   prior_parsed <-
     prior_object %>%
-    ggdist::parse_dist(prior) %>%
+    ggdist::parse_dist(prior, lb = "lb", ub = "ub") %>%
     dplyr::mutate(
-      zz = paste0(class, coef, nlpar, dpar, group)
+      zz = paste0(class, coef, nlpar, dpar, group, resp)
     )
   
   if('sigma' %in% transform_parameter) {
@@ -686,7 +877,7 @@ prior_summary_table <- function(model,
     dplyr::rowwise() %>%
     dplyr::mutate(
       draws = list(as.numeric(distributional::generate(.dist_obj, 
-                                                       times = range_samples)))
+                                                       times = draw_samples)))
     ) %>%
     dplyr::ungroup()
   
@@ -731,7 +922,6 @@ prior_summary_table <- function(model,
       ) %>%
       dplyr::ungroup() %>%
       dplyr::select(-.rule_id)
-    # message("Transformation step completed.")
   }
   
   draws_long <-
@@ -766,15 +956,26 @@ prior_summary_table <- function(model,
       values_from = ci
     )
   
+  range_method_arg <- list(
+    method = "r",
+    na.rm  = TRUE,
+    seed = seed
+  )
+  
+  
+  if (isTRUE(add_range)) {
   range_tbl <-
     draws_long %>%
     dplyr::group_by(.row_id) %>%
     dplyr::summarise(
-      xmin_range = min(.value, na.rm = TRUE),
-      xmax_range = max(.value, na.rm = TRUE),
+      range_vec = list(
+        do.call(range_method, c(list(x = .value), range_method_arg))
+      ),
       .groups = "drop"
     ) %>%
     dplyr::mutate(
+      xmin_range = vapply(range_vec, `[`, numeric(1), 1),
+      xmax_range = vapply(range_vec, `[`, numeric(1), 2),
       range = paste0(
         sprintf("%0.2f", xmin_range),
         ", ",
@@ -782,11 +983,42 @@ prior_summary_table <- function(model,
       )
     ) %>%
     dplyr::select(.row_id, range)
+  } else {
+    range_tbl <- NULL
+  }
+  
+  
+  # range_tbl <-
+  #   draws_long %>%
+  #   dplyr::group_by(.row_id) %>%
+  #   dplyr::summarise(
+  #     xmin_range = min(.value, na.rm = TRUE),
+  #     xmax_range = max(.value, na.rm = TRUE),
+  #     .groups = "drop"
+  #   ) %>%
+  #   dplyr::mutate(
+  #     range = paste0(
+  #       sprintf("%0.2f", xmin_range),
+  #       ", ",
+  #       sprintf("%0.2f", xmax_range)
+  #     )
+  #   ) %>%
+  #   dplyr::select(.row_id, range)
+  
   
   prior_object_range_ci <-
     prior_parsed %>%
-    dplyr::left_join(ci_tbl_wide, by = ".row_id") %>%
-    dplyr::left_join(range_tbl, by = ".row_id") %>%
+    dplyr::left_join(ci_tbl_wide, by = ".row_id")
+  
+  if (isTRUE(add_range)) {
+    prior_object_range_ci <-
+      prior_object_range_ci %>%
+      dplyr::left_join(range_tbl, by = ".row_id")
+  }
+  
+  
+  prior_object_range_ci <-
+    prior_object_range_ci %>% 
     dplyr::mutate(
       ub = dplyr::if_else(ub == "", "Inf", ub),
       lb = dplyr::if_else(lb == "", "Inf", lb),
@@ -806,7 +1038,7 @@ prior_summary_table <- function(model,
     dplyr::arrange(.row_id)
   
   ci_labs <- paste0(set_width * 100, "% CI")
-  range_lab <- "Range"
+  range_lab <- if (isTRUE(add_range)) "Range" else NULL
   
   relocate_cols <- ci_labs[ci_labs %in% names(prior_object_range_ci)]
   if (length(relocate_cols) > 0) {
@@ -862,9 +1094,12 @@ prior_summary_table <- function(model,
     class = "Class",
     parameter = "Parameter",
     coefficient = "Coefficient",
-    prior = "Prior distribution",
-    range = range_lab
+    prior = "Prior distribution"
   )
+  
+  if (isTRUE(add_range) && "range" %in% names(prior_object_range_ci_out)) {
+    header_labs$range <- range_lab
+  }
   
   for (lab in ci_labs) {
     if (lab %in% names(prior_object_range_ci_out)) {
@@ -882,8 +1117,14 @@ prior_summary_table <- function(model,
   
   ci_cols <- ci_labs[ci_labs %in% names(prior_object_range_ci_out)]
   ci_syms <- foot_letters[seq.int(from = 5, length.out = length(ci_cols))]
-  range_sym <- foot_letters[5 + length(ci_cols)]
-  transform_note_sym <- foot_letters[6 + length(ci_cols)]
+  
+  if (isTRUE(add_range)) {
+    range_sym <- foot_letters[5 + length(ci_cols)]
+    transform_note_sym <- foot_letters[6 + length(ci_cols)]
+  } else {
+    range_sym <- NULL
+    transform_note_sym <- foot_letters[5 + length(ci_cols)]
+  }
   
   transform_desc <- NULL
   transform_note_text <- NULL
@@ -1023,7 +1264,7 @@ prior_summary_table <- function(model,
   if ("range" %in% names(prior_object_range_ci_out)) {
     range_note <- paste0(
       "Range (min/max) based on base::range() applied to ",
-      range_samples,
+      draw_samples,
       " simulated draws from the parsed prior distribution."
     )
     
