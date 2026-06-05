@@ -1,5 +1,6 @@
 
 
+
 #' Range by simulation or quantile method
 #'
 #' Compute a two-element range vector using either random normal simulation
@@ -91,7 +92,7 @@
 #' # When x is supplied, n, mean, sd, and seed are ignored
 #' range_method(x = zz, method = "q1", n = 1000, mean = 0, sd = 10, seed = 999)
 #'
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
@@ -183,47 +184,51 @@ range_method <- function(x = NULL, ...,
 
 
 
-#' An internal function to evaluate priors specified in data block of Stan
+#' Evaluate priors defined in the Stan data block
 #'
-#' @param model An object of class \code{bgmfit}
+#' Extracts and organises prior information for a fitted model by combining
+#' prior summaries and the corresponding Stan data into a structured data frame.
+#'
+#' @param model An object of class \code{bgmfit}.
 #' @param spriors A prior object. If \code{NULL} (default),
-#'   [brms::prior_summary()] is used to \code{spriors} from the  \code{model}
-#' @param sdata A Stan data object. If \code{NULL} (default), [brms::standata()]
-#'   is used to get \code{sdata} from the  \code{model}.
-#' @param prior_name_asit A logical (default \code{FALSE}) to indicate whether
-#'   prior names should be returned as it is from the stancode.
-#' @param gsub_group A character vector specifying the group identifier that
-#'   will be removed from the \code{group} column of the prior object. Default
-#'   \code{NULL}.
-#' @param sort_response A character vector specifying the order of response
-#'   variables that will be used in sorting the \code{resp} column in the prior
+#'   \code{\link[brms:prior_summary]{brms::prior_summary()}} is used to obtain
+#'   \code{spriors} from \code{model}.
+#' @param sdata A Stan data object. If \code{NULL} (default),
+#'   \code{\link[brms:standata]{brms::standata()}} is used to obtain
+#'   \code{sdata} from \code{model}.
+#' @param prior_name_asit Logical (default \code{FALSE}) indicating whether
+#'   prior names should be returned exactly as they appear in the Stan code.
+#' @param gsub_group Character vector specifying group identifiers to remove
+#'   from the \code{group} column of the prior object. Default \code{NULL}.
+#' @param sort_response Character vector specifying the desired order of
+#'   response variables used to sort the \code{resp} column of the prior
 #'   object. Default \code{NULL}.
-#' @param sort_parameter A character vector specifying the order of parameter
-#'   names that will be used in sorting the \code{nlpar} column in the prior
+#' @param sort_parameter Character vector specifying the desired order of
+#'   parameter names used to sort the \code{nlpar} column of the prior
 #'   object. Default \code{NULL}.
-#' @param sort_coefficient A character vector specifying the order of
-#'   coefficient names that will be used in sorting the \code{nlpar} column in
-#'   the prior object. Default \code{NULL}.
-#' @param sort_class A character vector specifying the order of class names that
-#'   will be used in sorting the \code{class} column in the prior object.
+#' @param sort_coefficient Character vector specifying the desired order of
+#'   coefficient names used to sort the \code{coef} column of the prior
+#'   object. Default \code{NULL}.
+#' @param sort_class Character vector specifying the desired order of class
+#'   names used to sort the \code{class} column of the prior object.
 #'   Default \code{NULL}.
-#' @param digits An integer to set the \code{digits} argument for the
-#'   \code{round} function.
-#' @param viewer A logical (default \code{FALSE}) to indicate whether to display
-#'   the output in R viewer. Currently ignored to avoid dependency on the 'gt'
-#'   package.
-#' @param sort_dpar A logical (default \code{FALSE}) to indicate whether to
-#'   sort \code{sigma} as last rows when \code{dpar} column has \code{sigma}
-#' @param raw A logical (default \code{FALSE}) to indicate whether to return
-#'   the output in original format.
-#'   
-#' @return A data frame object.
-#'   
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' 
+#' @param digits Integer giving the number of decimal places to use when
+#'   rounding numeric values via \code{round()}.
+#' @param viewer Logical (default \code{FALSE}) indicating whether to display
+#'   the output in the R Viewer. Currently ignored to avoid a dependency on
+#'   the \pkg{gt} package.
+#' @param sort_dpar Logical (default \code{FALSE}) indicating whether to sort
+#'   rows with \code{dpar == "sigma"} to the end of the prior object.
+#' @param raw Logical (default \code{FALSE}) indicating whether to return the
+#'   output in its original (unsorted/unrounded) format.
+#'
+#' @return A data frame containing prior information derived from
+#'   \code{model}, \code{spriors}, and \code{sdata}.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
 #' @noRd
-#'
 priors_to_textdata <- function(model,
                                spriors = NULL,
                                sdata = NULL,
@@ -487,11 +492,11 @@ priors_to_textdata <- function(model,
 #'   restores the previous working directory on exit.
 #' @param draw_samples Integer number of simulated draws used per prior
 #'   distribution to compute both the reported CI columns and the empirical
-#'   range column.
+#'   range column. Note that the default value is \code{100000} to approximate
+#'   the stabilized distribution. However, it make take some time (approximate
+#'   one minute).
 #' @param add_range Logical indicating whether to include range column in the 
 #'  returned object.
-#' @param seed Integer random seed used before drawing simulated values from the
-#'   parsed prior distributions.
 #' @param transform_class Optional character vector of class values to transform.
 #'   These are expanded with \code{transform_parameter} using a Cartesian
 #'   product. Any supplied value must exist among the available classes in the
@@ -513,6 +518,10 @@ priors_to_textdata <- function(model,
 #'   Each function must accept a numeric vector and return a numeric vector of
 #'   the same length.
 #'   
+#' @param range_method_arg An optional named list to pass arguments to the
+#'   \code{'range_method()'}.
+#' @param seed Integer random seed used before drawing simulated values from the
+#'   parsed prior distributions.
 #' @param verbose Logical. If \code{TRUE}, prints information.
 #'
 #' @returns
@@ -547,7 +556,7 @@ priors_to_textdata <- function(model,
 #'
 #' @examples
 #' \donttest{
-#' # Basic table
+#' # Basic table - Note that the recommended number of draw_samples is 100000
 #' ft <- prior_summary_table(
 #'   model = fit,
 #'   set_width = 0.95,
@@ -593,27 +602,29 @@ priors_to_textdata <- function(model,
 #' }
 #'
 #'
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
+#' 
 #' @keywords internal
 #' @noRd
 #' 
 prior_summary_table <- function(model,
-                                     tab_title = "",
-                                     set_width = c(0.95, 0.9999),
-                                     set_digits = 1,
-                                     main_dir = getwd(),
-                                     tab_dir = "tables",
-                                     save_table = NULL,
-                                     return_table = NULL,
-                                     output_file = NULL,
-                                     set_table_dir = FALSE,
-                                     draw_samples = 5000,
-                                     add_range = FALSE,
-                                     seed = 123,
-                                     transform_class = NULL,
-                                     transform_parameter = NULL,
-                                     transform_fun = NULL,
-                                     verbose = FALSE) {
+                                tab_title = "",
+                                set_width = c(0.95, 0.9999),
+                                set_digits = 1,
+                                main_dir = getwd(),
+                                tab_dir = "tables",
+                                save_table = NULL,
+                                return_table = NULL,
+                                output_file = NULL,
+                                set_table_dir = FALSE,
+                                draw_samples = 100000,
+                                add_range = FALSE,
+                                transform_class = NULL,
+                                transform_parameter = NULL,
+                                transform_fun = NULL,
+                                range_method_arg = NULL,
+                                seed = 123,
+                                verbose = FALSE) {
   
   .dist_obj <- NULL;
   .lower <- NULL;
@@ -870,16 +881,39 @@ prior_summary_table <- function(model,
   
   set.seed(seed)
   
-  sim_tbl <-
+  # 1) Start from prior_parsed and create a key that defines "same prior"
+  sim_tbl0 <-
     prior_parsed %>%
-    dplyr::select(.row_id, class, nlpar, .dist_obj) %>%
-    dplyr::rename(parameter = nlpar) %>%
+    dplyr::mutate(
+      parameter = nlpar,
+      # dist_key defines identical priors; include lb/ub if they matter
+      dist_key = paste(prior, lb, ub, sep = "||")
+    )
+  
+  # 2) Generate draws once per unique dist_key
+  draws_by_dist <-
+    sim_tbl0 %>%
+    dplyr::distinct(dist_key, .dist_obj) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(
-      draws = list(as.numeric(distributional::generate(.dist_obj, 
-                                                       times = draw_samples)))
+      draws = list(
+        as.numeric(
+          distributional::generate(.dist_obj, times = draw_samples)
+        )
+      )
     ) %>%
     dplyr::ungroup()
+  
+  # 3) Join draws back to every row, then restore the old shape
+  sim_tbl <-
+    sim_tbl0 %>%
+    dplyr::left_join(
+      draws_by_dist %>%
+        dplyr::select(dist_key, draws),
+      by = "dist_key"
+    ) %>%
+    dplyr::select(.row_id, class, parameter, .dist_obj, draws) %>%
+    dplyr::arrange(.row_id)
   
   if (!is.null(transform_rules)) {
     transform_rules <- transform_rules %>%
@@ -956,13 +990,17 @@ prior_summary_table <- function(model,
       values_from = ci
     )
   
-  range_method_arg <- list(
-    method = "r",
-    na.rm  = TRUE,
-    seed = seed
-  )
+  if(is.null(range_method_arg)) {
+    range_method_arg <- list()
+  } else if (!is.list(range_method_arg)) {
+    stop2c("range_method_arg must be a named list to 
+           pass arguments to the range_method()")
+  }
   
-  
+  if(is.null(range_method_arg[['method']])) range_method_arg[['method']] <- "r"
+  if(is.null(range_method_arg[['na.rm']])) range_method_arg[['na.rm']] <- TRUE
+  if(is.null(range_method_arg[['seed']])) range_method_arg[['seed']] <- seed
+
   if (isTRUE(add_range)) {
   range_tbl <-
     draws_long %>%
@@ -987,25 +1025,6 @@ prior_summary_table <- function(model,
     range_tbl <- NULL
   }
   
-  
-  # range_tbl <-
-  #   draws_long %>%
-  #   dplyr::group_by(.row_id) %>%
-  #   dplyr::summarise(
-  #     xmin_range = min(.value, na.rm = TRUE),
-  #     xmax_range = max(.value, na.rm = TRUE),
-  #     .groups = "drop"
-  #   ) %>%
-  #   dplyr::mutate(
-  #     range = paste0(
-  #       sprintf("%0.2f", xmin_range),
-  #       ", ",
-  #       sprintf("%0.2f", xmax_range)
-  #     )
-  #   ) %>%
-  #   dplyr::select(.row_id, range)
-  
-  
   prior_object_range_ci <-
     prior_parsed %>%
     dplyr::left_join(ci_tbl_wide, by = ".row_id")
@@ -1015,7 +1034,6 @@ prior_summary_table <- function(model,
       prior_object_range_ci %>%
       dplyr::left_join(range_tbl, by = ".row_id")
   }
-  
   
   prior_object_range_ci <-
     prior_object_range_ci %>% 
@@ -1430,9 +1448,11 @@ prior_summary_table <- function(model,
 
 
 
-#' Checks if argument is a \code{bgmfit} object
+#' Checks if object is of class \code{bgmfit}
 #'
 #' @param x An \R object
+#' 
+#' @inherit berkeley author
 #'
 #' @export
 is.bgmfit <- function(x) {
@@ -1478,6 +1498,8 @@ is.bgmfit <- function(x) {
 #' # Returns: list(x = 1:5, data = df, y = 1:10)
 #' 
 #' @seealso [match.call()], [eval()], [globalenv()]
+#' 
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
@@ -1619,13 +1641,21 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
 
 
 
-#' An internal function to convert dollar form to bracket form argument
+#' Convert \code{'$'} notation to bracket notation
 #'
-#' @param expr An expression such as \code{'list$name'}
-#' @return A list comprised of function arguments.
+#' Internal helper to rewrite expressions of the form \code{"list$name"}
+#' into bracket notation (for example, \code{list[["name"]]}), typically
+#' for safer programmatic evaluation.
+#'
+#' @param expr A character string or expression, such as \code{"list$name"}.
+#'
+#' @return A list representing the corresponding function call and arguments.
+#' 
+#' @inherit berkeley author
+#'
 #' @keywords internal
 #' @noRd
-#'
+#' 
 dollar_to_double_bracket <- function(expr) {
   obj_expr <- expr[[2]]
   idx_expr <- expr[[3]]
@@ -1651,13 +1681,20 @@ remove_empty_string_from_vector <- function(x) {
 }
 
 
-#' An internal function to check whether called via do.call
+#' Check whether a function was called via \code{do.call}
 #'
-#' @param x A string
-#' @return A list comprised of function arguments.
+#' Internal helper to determine whether a function was invoked using
+#' \code{do.call}, typically used in metaprogramming contexts.
+#'
+#' @param x A character string.
+#'
+#' @return A list representing the corresponding function call and arguments.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
 #' @noRd
-#'
+#' 
 called_via_do_call <- function() {
   calls <- sys.calls()
   any(vapply(calls, function(cl) identical(cl[[1L]], quote(do.call)), 
@@ -1665,13 +1702,20 @@ called_via_do_call <- function() {
 }
 
 
-#' An internal function to check whether called via CustomDoCall
+#' Check whether a function was called via \code{CustomDoCall}
 #'
-#' @param x A string
-#' @return A list comprised of function arguments.
+#' Internal helper to determine whether a function was invoked using
+#' \code{CustomDoCall}, typically used in custom metaprogramming contexts.
+#'
+#' @param x A character string.
+#'
+#' @return A list representing the corresponding function call and arguments.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
 #' @noRd
-#'
+#' 
 called_via_CustomDoCall <- function() {
   calls <- sys.calls()
   any(vapply(calls, function(cl) identical(cl[[1L]], quote(CustomDoCall)), 
@@ -1682,26 +1726,37 @@ called_via_CustomDoCall <- function() {
 
 
 
-#' An internal function to remove excess spaces
+#' Remove excess spaces from a string
 #'
-#' @param x A string
-#' @return A list comprised of function arguments.
+#' Internal helper to collapse multiple consecutive spaces into a single space
+#' within a character string.
+#'
+#' @param x A character string.
+#'
+#' @return A character string with excess spaces removed.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
 #' @noRd
-#'
 clean_text_spaces <- function(x) {
   trimws(gsub("\\s+", " ", x))
 }
 
 
-#' An internal function to get arguments from the function 
+#' Extract function arguments
+#'
+#' Internal helper to extract and standardise arguments from a function call.
 #'
 #' @param arguments A list of default function arguments.
 #' @param xcall A character string specifying the name of the calling function.
-#' @return A list comprised of function arguments.
+#'
+#' @return A list of function arguments.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
 #' @noRd
-#'
 get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
   `%!in%` <- Negate(`%in%`)
   if(is.null(xclass)) {
@@ -1741,13 +1796,19 @@ get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
 
 
 
-#' An internal function to deparse a symbol and remove spaces
+#' Deparse a symbol and remove spaces
 #'
-#' @param deparseobj A symbol
-#' @keywords internal
+#' Internal helper to convert a symbol to a character string and remove
+#' any excess spaces.
+#'
+#' @param deparseobj A symbol.
+#'
 #' @return A character string.
-#' @noRd
 #'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
 deparse_0 <- function(deparseobj) {
   deparseobj <- paste(deparse(deparseobj), collapse = "")
   deparseobj <- gsub("[[:space:]]", "", deparseobj)
@@ -1757,15 +1818,23 @@ deparse_0 <- function(deparseobj) {
 
 
 
-#' An internal function to check pipe in the string 
+#' Check for a pipe character in a string
 #'
-#' @param x A symbol or string
-#' @param return_name A logical, \code{TRUE} return the string, \code{FALSE}
-#' logical
+#' Internal helper to detect the pipe character (\code{"|"}) in a symbol or
+#' character string.
+#'
+#' @param x A symbol or character string.
+#' @param return_name Logical; if \code{TRUE}, return the original string
+#'   (when a pipe is found); if \code{FALSE}, return a logical indicating
+#'   whether a pipe was found.
+#'
+#' @return A character string (if \code{return_name = TRUE}) or a logical
+#'   (if \code{return_name = FALSE}).
+#'   
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A character string.
 #' @noRd
-#'
 check_forpipe <- function(x, return = 'name') {
   data_name_str   <- x
   if(is.symbol(data_name_str)) {
@@ -1798,26 +1867,37 @@ check_forpipe <- function(x, return = 'name') {
 
 
 
-#' An internal function to substitute and deparse a symbol argument
+#' Substitute and deparse a symbol argument
 #'
-#' @param deparseobj A symbol
-#' @keywords internal
+#' Internal helper to substitute a symbol (typically via \code{substitute()})
+#' and then convert it to a character string (via \code{deparse()}).
+#'
+#' @param deparseobj A symbol.
+#'
 #' @return A character string.
-#' @noRd
 #'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
 deparse_0s <- function(deparseobj) {
   deparseobj <- paste(deparse(substitute(deparseobj)), collapse = "")
   deparseobj
 }
 
 
-#' An internal function to remove spaces from the string
+#' Remove spaces from a string
 #'
-#' @param deparseobj A character string
+#' Internal helper to remove all spaces from a character string.
+#'
+#' @param deparseobj A character string.
+#'
+#' @return A character string with spaces removed.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A character string.
 #' @noRd
-#'
 gsub_space <- function(deparseobj) {
   deparseobj <- gsub("[[:space:]]", "", deparseobj)
   deparseobj
@@ -1825,32 +1905,43 @@ gsub_space <- function(deparseobj) {
 
 
 
-#' An internal function to remove spaces from the string
+#' Remove spaces from a string
 #'
-#' @param deparseobj A character string
+#' Internal helper to remove all spaces from a character string.
+#'
+#' @param deparseobj A character string.
+#'
+#' @return A character string with spaces removed.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A character string.
 #' @noRd
-#'
 gsub_quote1 <- function(deparseobj) {
   gsub("\"", "", deparseobj)
 }
 
 
 
-#' An internal function to get arguments from the global environments
+#' Get arguments from the global environment
 #'
-#' @param mcallarg A \code{mcall()} argument
-#' @param envir An environment for function evaluation.
-#' @param search_envir An environment to search for objects used as argument.
-#' @param exceptions A character vector indicating the exceptions.
-#' @param ... Additional arguments
-#' @keywords internal
-#' @return A list comprised of function arguments.
+#' Internal helper to extract function arguments from the global environment
+#' and related environments.
+#'
+#' @param mcallarg An argument from a \code{mcall()} call.
+#' @param envir An environment used for function evaluation.
+#' @param search_envir An environment in which to search for objects used as
+#'   arguments.
+#' @param exceptions A character vector indicating exceptions.
+#' @param ... Additional arguments.
+#' 
+#' @inherit berkeley author
+#'
+#' @return A list of function arguments.
+#'
 #' @keywords internal
 #' @noRd
-#'
-
+#' 
 mcall_dictionary <- function(mcallarg, 
                              envir = NULL, 
                              xenvir = NULL, 
@@ -1911,13 +2002,19 @@ mcall_dictionary <- function(mcallarg,
 
 
 
-#' An internal function to expose function after optimization
+#' Expose function after optimization
+#'
+#' Internal helper to expose a function after model optimization.
 #'
 #' @param model An object of class \code{bgmfit}.
-#' @keywords internal
-#' @return A list comprised of exposed functions.
-#' @noRd
 #'
+#' @return A list of exposed functions.
+#' 
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 expose_optimize_fit <- function(model,
                                 subset_list = NULL,
                                 expose_function = T) {
@@ -1954,13 +2051,19 @@ expose_optimize_fit <- function(model,
 
 
 
-#' An internal function to models after optimization
+#' Process models after optimization
+#'
+#' Internal helper to process models after optimization.
 #'
 #' @param model An object of class \code{bgmfit}.
-#' @keywords internal
-#' @return A list comprised of plot objects.
-#' @noRd
 #'
+#' @return A list of plot objects.
+#' 
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 plot_optimize_fit <- function(model,
                               subset_list = NULL,
                               what = "plot",
@@ -2028,15 +2131,21 @@ plot_optimize_fit <- function(model,
 
 
 
-#' An internal function to evaluate arguments ending with _str suffix
+#' Evaluate arguments ending with the \code{_str} suffix
 #'
-#' @param tsx An argument with _str suffix.
+#' Internal helper to evaluate arguments that end with the \code{_str} suffix
+#' and convert them to character strings using the provided data.
+#'
+#' @param tsx An argument with the \code{_str} suffix.
 #' @param data A data frame.
-#' @keywords internal
-#' @return A list comprised of character strings.
-#' @noRd
 #'
-
+#' @return A list of character strings.
+#' 
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 get_gr_str_coef_id <- function(tsx,
                                data) {
   
@@ -2115,16 +2224,23 @@ get_gr_str_coef_id <- function(tsx,
 
 
 
-#' An internal function to get corr structure from || syntax for
-#'  arguments ending with _str suffix
+#' Extract correlation structure from \code{||} syntax for \code{_str} arguments
 #'
-#' @param str_id_all_list An argument with _str suffix for \code{id}.
-#' @param str_corr_all_list An argument with _str suffix for \code{gr_cor}.
-#' @param str_corr_tf_all_list An argument with _str suffix for \code{corr}.
+#' Internal helper to extract correlation structure from the \code{||} syntax
+#' for arguments ending with the \code{_str} suffix.
+#'
+#' @param str_id_all_list An argument with the \code{_str} suffix for \code{id}.
+#' @param str_corr_all_list An argument with the \code{_str} suffix for
+#'   \code{gr_cor}.
+#' @param str_corr_tf_all_list An argument with the \code{_str} suffix for
+#'   \code{corr}.
+#'
+#' @return A list of character strings.
+#' 
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A list comprised of character strings.
 #' @noRd
-#'
 get_str_corr_tf_function_new_better <- function(str_id_all_list,
                                                 str_corr_all_list,
                                                 str_corr_tf_all_list) {
@@ -2157,14 +2273,19 @@ get_str_corr_tf_function_new_better <- function(str_id_all_list,
 }
 
 
-
-#' An internal function to append priors to the bpriors
+#' Append priors to \code{bpriors}
+#'
+#' Internal helper to append prior information to the \code{bpriors} object.
 #'
 #' @param tempx A prior object.
-#' @keywords internal
-#' @return A prior object.
-#' @noRd
 #'
+#' @return A prior object.
+#' 
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 extract_prior_str_lv <- function(tempx) {
   if(!is.list(tempx) & !is.vector(tempx)) {
     out_prior_str <- tempx
@@ -2198,17 +2319,23 @@ extract_prior_str_lv <- function(tempx) {
 
 
 
-#' An internal function to restore parantheses in formuale objects
+#' Restore parentheses in formula objects
 #'
-#' @param strx A formual object.
-#' @param exclude_first A logical to indicate whether to exclude the fixed part
-#'   from adding opening and closing parenthesis. In NULL, then it is set to
-#'   \code{TRUE} for \code{sigma} otherwise \code{FALSE} Could be \code{TRUE}
-#'   globally but need to ' check for that.
+#' Internal helper to restore parentheses in formula objects.
+#'
+#' @param strx A formula object.
+#' @param exclude_first Logical indicating whether to exclude the fixed part
+#'   from adding opening and closing parentheses. If \code{NULL}, it is set to
+#'   \code{TRUE} for \code{sigma} and \code{FALSE} otherwise. This could be
+#'   \code{TRUE} globally, but needs to be checked.
+#'
+#' @return A character string.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A character strings.
 #' @noRd
-#'
+#' 
 restore_paranthese_grgr_str_form <- function(strx, exclude_first = NULL) {
   if(is.null(exclude_first)) {
     if(grepl("sigma~", strx)) {
@@ -2269,13 +2396,19 @@ restore_paranthese_grgr_str_form <- function(strx, exclude_first = NULL) {
 }
 
 
-#' An internal function to get random effect formula arguments
+#' Get random effect formula arguments
 #'
-#' @param x A character string of random effect formula.
+#' Internal helper to extract random effect formula arguments.
+#'
+#' @param x A character string of a random effect formula.
+#'
+#' @return A list of character strings.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A list comprised of character strings.
 #' @noRd
-#'
+#' 
 get_x_random2 <- function(x) {
   x <- gsub("[[:space:]]", "", x)
   x <- strsplit(x, ")+" )[[1]]
@@ -2300,14 +2433,20 @@ get_x_random2 <- function(x) {
 
 
 
-#' An internal function to get random effect formula arguments
+#' Get random effect formula arguments
 #'
-#' @param x A character string of random effect formula.
-#' @param gsubit A character string to indicate split location.
+#' Internal helper to extract random effect formula arguments.
+#'
+#' @param x A character string of a random effect formula.
+#' @param gsubit A character string indicating the split location.
+#'
+#' @return A list of character strings.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A list comprised of character strings.
 #' @noRd
-#'
+#' 
 get_x_random2_new <- function(x, gsubit = NULL) {
   x <- gsub("[[:space:]]", "", x)
   if(is.null(gsubit)) {
@@ -2334,13 +2473,20 @@ get_x_random2_new <- function(x, gsubit = NULL) {
 
 
 
-#' An internal function to get random effect formula arguments with tilde sign
+#' Get random effect formula arguments with tilde sign
 #'
-#' @param x A character string of random effect formula.
+#' Internal helper to extract random effect formula arguments that include
+#' the tilde sign.
+#'
+#' @param x A character string of a random effect formula.
+#'
+#' @return A list of character strings.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A list comprised of character strings.
 #' @noRd
-#'
+#' 
 get_x_random2_asitis <- function(x) {
   x <- gsub("[[:space:]]", "", x)
   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
@@ -2354,13 +2500,20 @@ get_x_random2_asitis <- function(x) {
 
 
 
-#' An internal function to get object enclosed within the parenthesis
+#' Get object enclosed within parentheses
+#'
+#' Internal helper to extract the object enclosed within parentheses from a
+#' character string.
 #'
 #' @param x A character string.
-#' @keywords internal
-#' @return A list comprised of character strings.
-#' @noRd
 #'
+#' @return A list of character strings.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 get_o_paranthesis <- function(x) {
   if(!grepl("lf\\(", x)) {
     x <- gsub("^lf\\(", "", x)
@@ -2375,14 +2528,20 @@ get_o_paranthesis <- function(x) {
 }
 
 
-#' An internal function to get object enclosed within the parenthesis without
-#'  parenthesis.
+#' Get object enclosed within parentheses (without the parentheses)
+#'
+#' Internal helper to extract the object enclosed within parentheses from a
+#' character string, returning the content without the surrounding parentheses.
 #'
 #' @param x A character string.
-#' @keywords internal
-#' @return A list comprised of character strings.
-#' @noRd
 #'
+#' @return A list of character strings.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 get_o_paranthesis2 <- function(x) {
   x <- gsub("^\\(", "", x)
   x <- gsub(")$", "", x)
@@ -2391,13 +2550,19 @@ get_o_paranthesis2 <- function(x) {
 }
 
 
-#' An internal function to get covariates from the formula.
+#' Get covariates from the formula
+#'
+#' Internal helper to extract covariates from a formula.
 #'
 #' @param x A character string.
-#' @keywords internal
-#' @return A vector comprised of character strings.
-#' @noRd
 #'
+#' @return A character vector of covariate names.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 getcovlist <- function(x) {
   if (is.character(x))
     x <- x
@@ -2413,14 +2578,21 @@ getcovlist <- function(x) {
 }
 
 
-#' An internal function to parse and evaluate a character string.
+#' Parse and evaluate a character string
+#'
+#' Internal helper to parse and evaluate a character string in a given
+#' environment.
 #'
 #' @param x A character string.
 #' @param envir An environment for call evaluation.
-#' @keywords internal
-#' @return An evaluated object.
-#' @noRd
 #'
+#' @return An evaluated object.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 ept <- function(x, envir = NULL) {
   if(is.null(envir)) {
     envir <- parent.frame()
@@ -2429,18 +2601,26 @@ ept <- function(x, envir = NULL) {
 }
 
 
-#' An internal function to get parameter names from the stancode.
+
+
+#' Get parameter names from the Stan code
 #'
-#' @param code A character string of stancode.
-#' @param full A logical (default \code{TRUE}) indicating whether to get full
-#' names.
+#' Internal helper to extract parameter names from a Stan code string.
+#'
+#' @param code A character string containing Stan code.
+#' @param full Logical (default \code{TRUE}) indicating whether to return full
+#'   parameter names.
 #' @param section A character string specifying the Stan block
-#' (default \code{parameters})
+#'   (default \code{"parameters"}).
 #' @param what A character string specifying the name of a particular parameter.
-#' @keywords internal
-#' @return A list comprised of character strings.
-#' @noRd
 #'
+#' @return A list of character strings.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 get_par_names_from_stancode <- function(code,
                                         full = TRUE,
                                         section =  'parameters',
@@ -2481,14 +2661,20 @@ get_par_names_from_stancode <- function(code,
 
 
 
-#' An internal function to get/set the number of cores
+#' Get or set the number of cores
 #'
-#' @param cores.arg A character string specifying cores argument from the
-#' function.
+#' Internal helper to get or set the number of cores for parallel computation.
+#'
+#' @param cores.arg A character string specifying the cores argument from the
+#'   function.
+#'
+#' @return A list of integers.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return A list comprised of integers.
 #' @noRd
-#'
+#' 
 get.cores <- function(cores.arg) {
   cores_ <- eval(cores.arg, envir = parent.frame())
   if (!is.null(cores_)) {
@@ -2522,17 +2708,23 @@ get.cores <- function(cores.arg) {
 
 
 
-#' An internal function to set up future arguments
+#' Set up future arguments
 #'
-#' @param future A logical
-#' @param future_session A character string
-#' @param oldfutureplan A character string 
-#' @param setincores An integer 
-#' @param verbose A logical
-#' @keywords internal
+#' Internal helper to set up arguments for the \pkg{future} package.
+#'
+#' @param future Logical indicating whether to use \pkg{future}.
+#' @param future_session A character string specifying the future session.
+#' @param oldfutureplan A character string specifying the previous future plan.
+#' @param setincores An integer specifying the number of cores.
+#' @param verbose Logical indicating whether to print verbose output.
+#'
 #' @return A list.
-#' @noRd
 #'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 get_future_plan_args <- function(future, 
                                  future_session, 
                                  oldfutureplan,
@@ -2630,15 +2822,21 @@ get_future_plan_args <- function(future,
 } 
 
 
-#' An internal function to validate the response variable
+#' Validate the response variable
+#'
+#' Internal helper to validate the response variable in a fitted model.
 #'
 #' @param model An object of class \code{bgmfit}.
 #' @param resp A character string specifying the name of the response variable.
-#' Default \code{NULL}.
-#' @keywords internal
-#' @return An error if evaluation fails.
-#' @noRd
+#'   Default \code{NULL}.
 #'
+#' @return An error if evaluation fails.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 validate_response <- function(model,
                               resp = NULL) {
   uvarby <- model$model_info$univariate_by$by
@@ -2699,14 +2897,20 @@ validate_response <- function(model,
 
 
 
-#' An internal function to set up the priors when fitting a model with 3 or
-#' more levels of hierarchy.
+#' Set up priors for models with 3 or more hierarchy levels
+#'
+#' Internal helper to set up priors when fitting a model with three or more
+#' levels of hierarchy.
 #'
 #' @param new_prior_list A prior object.
-#' @keywords internal
-#' @return A prior object.
-#' @noRd
 #'
+#' @return A prior object.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 setup_higher_priors <- function(new_prior_list) {
   . <- NULL;
   o_l <- list()
@@ -2798,19 +3002,26 @@ setup_higher_priors <- function(new_prior_list) {
 
 
 
-#' An internal function to rename patterns in a character vector.
-#' This is adapted from the brms package.
+#' Rename patterns in a character vector
 #'
-#' @param x a character vector to be renamed
-#' @param pattern the regular expressions in x to be replaced
-#' @param replacement the replacements
-#' @param fixed same as for 'gsub'
-#' @param check_dup: logical; check for duplications in x after renaming
-#' @param ... passed to 'gsub'
+#' Internal helper to rename patterns in a character vector. This is adapted
+#' from the \pkg{brms} package.
+#'
+#' @param x A character vector to be renamed.
+#' @param pattern The regular expressions in \code{x} to be replaced.
+#' @param replacement The replacements.
+#' @param fixed Same as for \code{gsub}.
+#' @param check_dup Logical indicating whether to check for duplications in
+#'   \code{x} after renaming.
+#' @param ... Arguments passed to \code{gsub}.
+#'
+#' @return A renamed character vector of the same length as \code{x}.
+#'
+#' @inherit berkeley author
+#'
 #' @keywords internal
-#' @return renamed character vector of the same length as x
 #' @noRd
-#'
+#' 
 rename <- function(x,
                    pattern = NULL,
                    replacement = NULL,
@@ -2846,16 +3057,21 @@ rename <- function(x,
   out
 }
 
-
-#' An internal function to get call levels
-#' 
-#' @param scallstatus A system call \code{sys.status()}
-#' @param xclass A character string (default \code{NULL}) indicating the
-#'   s3method class
-#' @keywords internal
-#' @return A language object
-#' @noRd
+#' Get call levels
 #'
+#' Internal helper to extract call levels from a system call status.
+#'
+#' @param scallstatus A system call object from \code{sys.status()}.
+#' @param xclass A character string (default \code{NULL}) indicating the
+#'   S3 method class.
+#'
+#' @return A language object.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 get_xcall_byclass <- function(scallstatus, xclass = NULL) {
   if(is.null(xclass)) xclass <- '.bgmfit' 
   for (i in 1:length(scallstatus)) {
@@ -2872,17 +3088,23 @@ get_xcall_byclass <- function(scallstatus, xclass = NULL) {
 } 
 
 
-#' An internal function to get call levels
-#' 
-#' @param xcall A character string setting the first calling function
-#' @param scall A system call \code{sys.calls()}
-#' @param xstr A character string
-#' @param xclass A character string (default \code{NULL}) indicating the
-#'   s3method class
-#' @keywords internal
-#' @return A language object
-#' @noRd
+#' Get call levels
 #'
+#' Internal helper to extract call levels from a system call.
+#'
+#' @param xcall A character string setting the first calling function.
+#' @param scall A system call object from \code{sys.calls()}.
+#' @param xstr A character string.
+#' @param xclass A character string (default \code{NULL}) indicating the
+#'   S3 method class.
+#'
+#' @return A language object.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 get_xcall__ <- function(xcall, scall, xstr, xclass = NULL) {
   scall <- scall[[length(scall)]]
   if(is.null(xclass)) xclass <- 'bgmfit'
@@ -2910,13 +3132,20 @@ get_xcall__ <- function(xcall, scall, xstr, xclass = NULL) {
 
 
 
-#' An internal function to convert first letter to upper case
-#' 
-#' @param x A character string  
-#' @keywords internal
-#' @return A character string
-#' @noRd
+#' Convert first letter to upper case
 #'
+#' Internal helper to convert the first letter of a character string to upper
+#' case.
+#'
+#' @param x A character string.
+#'
+#' @return A character string with the first letter in upper case.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 firstup <- function(x) {
   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
   x
@@ -2924,14 +3153,20 @@ firstup <- function(x) {
 
 
 
-#' An internal function to split vector at factor indices
+#' Split vector at factor indices
+#'
+#' Internal helper to split a vector at specified factor indices.
 #'
 #' @param x A vector.
 #' @param pos A vector of indices.
-#' @keywords internal
-#' @return A vector.
-#' @noRd
 #'
+#' @return A list of vector segments.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 splitAt2 <- function(x, pos) {
   x <- droplevels(x)
   out <- c()
@@ -2944,37 +3179,67 @@ splitAt2 <- function(x, pos) {
 
 
 
-#' An internal function to Negate R's in function
-#' @param `%in%` R's in function
-#' @keywords internal
-#' @return An R function.
-#' @noRd
+#' Negate R's `%in%` operator in a function
 #'
+#' Internal helper to create a negated version of R's `%in%` operator.
+#'
+#' @param `%in%` The R `%in%` operator.
+#'
+#' @return An R function that implements the negated operator.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 `%!in%` <- Negate(`%in%`)
 
 
-#' An internal function to evaluate NULL and length zero arguments
-#' @param x A symbol (argument)
-#' @param y A symbol (argument)
-#' @keywords internal
-#' @return An R function.
-#' @noRd
+#' Evaluate NULL and length-zero arguments
 #'
+#' Internal helper to check whether arguments are \code{NULL} or have length
+#' zero.
+#'
+#' @param x A symbol (argument).
+#' @param y A symbol (argument).
+#'
+#' @return An R function.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 '%||%' <- function(x, y) {
   if (is.null(x)) x <- y
   x
 }
 
 
-#' An internal function to customize R's stop function
-#' @param ... An argument
-#' @keywords internal
-#' @return A string (error message) from R's warning2c() function.
-#' @noRd
+#' Customize R's \code{stop} function
 #'
+#' Internal helper to customize R's \code{stop} function for error handling.
+#'
+#' @param ... Arguments passed to the customized \code{stop} function.
+#'
+#' @return A character string (error message) from R's \code{warning2c()}
+#'   function.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+#' 
 stop2 <- function(...) {
   stop(..., call. = FALSE)
 }
+
+
+
+
+
+
+
 
 #' An internal function to customize R's stop function.
 #' 
@@ -2985,6 +3250,7 @@ stop2 <- function(...) {
 #' @param ... An argument
 #' @param call. A logical indicating if the call should become part of the error
 #'   message.
+#'   @inherit berkeley author
 #' @keywords internal
 #' @return A string (error message) from R's warning2c() function.
 #' @noRd
