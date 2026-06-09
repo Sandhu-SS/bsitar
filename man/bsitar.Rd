@@ -66,12 +66,12 @@ bsitar(
   univariate_by = list(by = NA, cor = "un", terms = "subset"),
   multivariate = list(mvar = FALSE, cor = "un", rescor = TRUE, rcorr_by = NULL, rcorr_gr
     = NULL, rcorr_method = NULL, rcorr_prior = NULL),
-  a_prior_beta = normal(ymean, ysd, autoscale = FALSE),
+  a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
   b_prior_beta = normal(0, 2, autoscale = FALSE),
   c_prior_beta = normal(0, 1, autoscale = FALSE),
   d_prior_beta = normal(0, 1, autoscale = FALSE),
   s_prior_beta = normal(lm, lm, autoscale = FALSE),
-  a_cov_prior_beta = normal(0, 50, autoscale = FALSE),
+  a_cov_prior_beta = normal(0, 20, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 2, autoscale = FALSE),
   c_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1342,7 +1342,10 @@ The other variants of scale parameters are: \cr \code{s_prior_beta =
 obtained from the linear model fit and \code{X} is the design matrix. \cr
 \code{s_prior_beta = normal(lm,lm3)}) for which the scale parameter is
 defined as \code{lm_se} where \code{lm_se} is the vector of standard error
-obtained from the linear model fit.}
+obtained from the linear model fit. In most cases, \code{s_prior_beta =
+ normal(lm, lm)} works well and could be further refined by changing the
+\code{autoscale} such as \code{s_prior_beta = normal(lm, lm, autoscale =
+ TRUE)} depending on that data.}
 
 \item{a_cov_prior_beta}{Specify priors for the covariate(s) included in the
 fixed effect parameter, \code{a} (default \code{normal(0, 5.0, autoscale =

@@ -12,12 +12,12 @@
 #'   the fit criteria will be added.
 #'   
 #' @param return_model A logical (default \code{TRUE}) to indicate whether to
-#'   return the model object or just assign the criteria to the model. When
-#'   \code{return_model = NULL}, then \code{return_model} is automatically
-#'   assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when
-#'   \code{test_mode = TRUE}. Note that when \code{test_mode = TRUE}, the model
-#'   object will be returned along with the criteria.
-#'   
+#'   return the model object or just assign the criteria to the model. Mainly
+#'   for internal use.
+#'
+#' @param return_criteria A logical (default \code{FALSE}) to indicate whether
+#'   to return the criterion. Mainly for internal use.
+#' 
 #' @param ... Further arguments passed on to the functions from the \pkg{brms}
 #' 
 #' @inheritParams growthparameters.bgmfit
@@ -69,6 +69,7 @@ add_model_criterion.bgmfit <- function(model,
                                        cores = 1,
                                        model_deriv = NULL,
                                        return_model = TRUE,
+                                       return_criteria = FALSE,
                                        verbose = FALSE,
                                        expose_function = FALSE,
                                        usesavedfuns = NULL,
@@ -76,6 +77,7 @@ add_model_criterion.bgmfit <- function(model,
                                        envir = NULL,
                                        ...) {
     
+  if(return_criteria) return_model <- FALSE
   if(is.null(envir)) {
     if(!is.null(model$model_info$exefuns[[1]])) {
       envir <- environment(model$model_info$exefuns[[1]])
@@ -225,10 +227,19 @@ add_model_criterion.bgmfit <- function(model,
                                check_trace_back = NULL,
                                envir = parent.frame())
 
-  
   suppressWarnings({
     . <- CustomDoCall(brms::add_criterion, calling.args)
   })
+  
+  if(!is.null(calling.args$summary)) {
+    if(calling.args$summary) {
+      if("bayes_R2" %in% calling.args$criterion) {
+        .[['criteria']][["bayes_R2"]] <- 
+          brms::posterior_summary(.[['criteria']][["bayes_R2"]] , 
+                                  probs = probs, robust = robust)
+      }
+    } 
+  }
   
   check_test_mode <- paste0(model_name, "[['test_mode']]")
   
@@ -301,6 +312,8 @@ add_model_criterion.bgmfit <- function(model,
   
   if(return_model) {
     return(.)
+  } else if(return_criteria) {
+    return(.[['criteria']])
   } else {
     return(invisible(NULL))
   }

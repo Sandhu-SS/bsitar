@@ -243,8 +243,7 @@ priors_to_textdata <- function(model,
                                digits = 2,
                                viewer = FALSE,
                                sort_dpar = TRUE,
-                               raw = FALSE
-) {
+                               raw = FALSE) {
   arguments <- as.list(match.call())[-1]
   if (missing(model)) {
     model <- NULL
@@ -443,8 +442,8 @@ priors_to_textdata <- function(model,
 #'   \item If a single function is supplied, it is applied to every targeted
 #'   class/parameter combination.
 #'   \item If a list of functions with length equal to
-#'   \code{length(transform_parameter)} is supplied, the functions are matched to
-#'   parameters and recycled across all selected classes.
+#'   \code{length(transform_parameter)} is supplied, the functions are matched
+#'   to parameters and recycled across all selected classes.
 #'   \item If a list of functions with length equal to
 #'   \code{length(transform_class) * length(transform_parameter)} is supplied,
 #'   the functions are matched directly to the fully expanded class/parameter
@@ -503,8 +502,8 @@ priors_to_textdata <- function(model,
 #'   parsed priors.
 #' @param transform_parameter Optional character vector of parameter values to
 #'   transform. These are expanded with \code{transform_class} using a Cartesian
-#'   product. Any supplied value must exist among the available parameters in the
-#'   parsed priors.
+#'   product. Any supplied value must exist among the available parameters in
+#'   the parsed priors.
 #' @param transform_fun Optional function or list of functions controlling the
 #'   transformation to apply. Accepted forms are:
 #'   \itemize{
@@ -649,6 +648,7 @@ prior_summary_table <- function(model,
   xmin_range <- NULL;
   range_vec <- NULL;
   zz <- NULL;
+  dist_key <- NULL;
   
   insight::check_if_installed("distributional", prompt = FALSE)
   insight::check_if_installed("flexlsx", prompt = FALSE)
@@ -840,8 +840,10 @@ prior_summary_table <- function(model,
       transform_rules$fun <- transform_fun
     }
     
-    matched_rows <- unique(paste(prior_parsed$class, prior_parsed$nlpar, sep = "___"))
-    requested_rows <- unique(paste(transform_rules$class, transform_rules$parameter, sep = "___"))
+    matched_rows <- unique(paste(prior_parsed$class, prior_parsed$nlpar, 
+                                 sep = "___"))
+    requested_rows <- unique(paste(transform_rules$class, 
+                                   transform_rules$parameter, sep = "___"))
     missing_combos <- setdiff(requested_rows, matched_rows)
     
     if (length(missing_combos) > 0) {
@@ -870,8 +872,9 @@ prior_summary_table <- function(model,
     )
     
     if(verbose) {
-      message(
-        "Applying transformations to prior draws for the following class/parameter combinations:\n",
+      message2c(
+        "Applying transformations to prior draws for the 
+        following class/parameter combinations:\n",
         paste(transform_map_msg, collapse = "\n")
       )
     }
@@ -943,8 +946,9 @@ prior_summary_table <- function(model,
             }
             
             if (length(transform_result) != length(draws)) {
-              stop(
-                "Each transform_fun must return a numeric vector of the same length as its input. ",
+              stop2c(
+                "Each transform_fun must return a numeric vector of the 
+                same length as its input. ",
                 "Problem encountered for class = '", class,
                 "', parameter = '", parameter, "'."
               )
@@ -1100,8 +1104,10 @@ prior_summary_table <- function(model,
     )
   
   if ("tag" %in% names(prior_object_range_ci_out)) {
-    tag_all_empty <- all(is.na(prior_object_range_ci_out$tag) |
-                           trimws(as.character(prior_object_range_ci_out$tag)) == "")
+    tag_all_empty <- all(
+      is.na(prior_object_range_ci_out$tag) |
+        trimws(as.character(prior_object_range_ci_out$tag)) == ""
+      )
     if (isTRUE(tag_all_empty)) {
       prior_object_range_ci_out <- prior_object_range_ci_out %>%
         dplyr::select(-tag)
@@ -1168,7 +1174,7 @@ prior_summary_table <- function(model,
             paste0(
               "class = '", transform_rules$class[i],
               "', parameter = '", transform_rules$parameter[i],
-              "' transformed as ", format_transform_fun(transform_rules$fun[[i]])
+              "' transformed as ",format_transform_fun(transform_rules$fun[[i]])
             )
           },
           character(1)
@@ -3819,7 +3825,8 @@ edit_scode_ncp_to_cp <- function(stancode,
 #'  \code{deriv = 1} estimates velocity curve whereas \code{deriv = 2} is to
 #'  get acceleration curve.
 #' @param probs The percentiles to be computed by the quantile function.
-#' @param summary A logical to indicate whether to summarize the posterior draws.
+#' @param summary A logical to indicate whether to summarize the posterior
+#'   draws.
 #' @param robust If FALSE (the default) the mean is used as the measure of
 #' central tendency and the standard deviation as the measure of variability.
 #' If TRUE, the median and the median absolute deviation (MAD) are applied
@@ -3872,7 +3879,6 @@ mapderivqr <- function(model,
   validate_response(model, resp)
 
   list_c <- list()
-
   xvar_      <- paste0('xvar', resp_rev_)
   sigmaxvar_ <- paste0('sigma', xvar_)
   cov_       <- paste0('cov', resp_rev_)
@@ -4205,12 +4211,6 @@ get_d1_from_d0 <- function(y,
   out_d <- data.frame(x = out$x, y = out$y)
   return(out_d)
 }
-
-
-
-
-
-
 
 
 

@@ -24,6 +24,7 @@
   cores = 1,
   model_deriv = NULL,
   return_model = TRUE,
+  return_criteria = FALSE,
   verbose = FALSE,
   expose_function = FALSE,
   usesavedfuns = NULL,
@@ -123,11 +124,11 @@ distance curve (i.e., fitted values), such as \code{loo_validation()} and
 \code{plot_ppc()}.}
 
 \item{return_model}{A logical (default \code{TRUE}) to indicate whether to
-return the model object or just assign the criteria to the model. When
-\code{return_model = NULL}, then \code{return_model} is automatically
-assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when
-\code{test_mode = TRUE}. Note that when \code{test_mode = TRUE}, the model
-object will be returned along with the criteria.}
+return the model object or just assign the criteria to the model. Mainly
+for internal use.}
+
+\item{return_criteria}{A logical (default \code{FALSE}) to indicate whether
+to return the criterion. Mainly for internal use.}
 
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}

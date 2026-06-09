@@ -388,12 +388,21 @@ fitted_draws.bgmfit <-
     } else if(indirectcall) {
       calling.args <- full.args
     }
-    
+
     calling.args$object <- full.args$model
     if(is.null(calling.args$newdata)) {
       if(!is.null(newdata)) calling.args$newdata <- newdata
     }
 
+    # if(growthparameters_calling)
+    calling.args <- 
+      sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                 arguments = calling.args, 
+                                 check_formalArgs = NULL,
+                                 check_formalArgs_exceptions = c('object'),
+                                 check_trace_back = NULL,
+                                 envir = parent.frame())
+    
     if(growthparameters_calling) {
       if(!is.null(calling.args$re_formula_opt)) {
         if(calling.args$re_formula_opt == "V") {
@@ -463,13 +472,15 @@ fitted_draws.bgmfit <-
       } 
     } 
     
-    calling.args <- 
-      sanitize_CustomDoCall_args(what = "CustomDoCall", 
-                                 arguments = calling.args, 
-                                 check_formalArgs = NULL,
-                                 check_formalArgs_exceptions = c('object'),
-                                 check_trace_back = NULL,
-                                 envir = parent.frame())
+    # if(growthparameters_calling)
+    
+    # calling.args <- 
+    #   sanitize_CustomDoCall_args(what = "CustomDoCall", 
+    #                              arguments = calling.args, 
+    #                              check_formalArgs = NULL,
+    #                              check_formalArgs_exceptions = c('object'),
+    #                              check_trace_back = NULL,
+    #                              envir = parent.frame())
     
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE

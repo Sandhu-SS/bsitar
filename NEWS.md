@@ -7,6 +7,10 @@
 
 - Added ``compare_models()``, a new helper function for comparing one or more fitted models using common Bayesian model fit criteria such as LOO and WAIC. The function provides a convenient interface for evaluating relative model performance across candidate models, making it easier to assess expected out-of-sample predictive fit and support model selection workflows within the package. By allowing users to compare multiple models in a single step, ``compare_models()`` streamlines routine model comparison and improves consistency in reporting fit-based evaluation results.
 
+- Added `prior_sensitivity()` to run prior and likelihood power-scaling sensitivity analysis for `bsitar` models using the `priorsense` workflow directly on the fitted model or on an augmented draws object. Included optional derived-quantity support in `prior_sensitivity()` via `add_draws = TRUE`, including log-likelihood, log-prior when available, `jointloglik`, Bayesian R-squared, and posterior expected predictions for representative `newdata` values. Also includes an integrated plotting framework to `prior_sensitivity()` via the `plot` argument, allowing direct generation of `priorsense` density, ECDF, quantity, or combined diagnostic plots from the main workflow.
+An additional function `prior_sensitivity_conflict()` is used to screen sensitivity results for parameters showing possible prior-data conflict or prior-only sensitivity requiring further inspection.
+
+
 
 # bsitar 0.3.3
 
