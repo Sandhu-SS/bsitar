@@ -3,77 +3,46 @@
 #' Prior sensitivity analysis workflow for \pkg{bsitar} models
 #'
 #' Run a \pkg{priorsense} power-scaling sensitivity analysis for a fitted
-#' \code{bsitar} model that returns a \code{brmsfit} object, or for a
-#' \code{brmsfit} directly. Optionally, append derived quantities to a
-#' posterior draws object in the same style as the \pkg{priorsense}
-#' airquality workflow and immediately return a requested diagnostic plot.
+#' \code{bsitar} model. Optionally, append derived quantities to a posterior
+#' draws object in the same style as the recommended \pkg{priorsense} workflow.
+#' Also support returning diagnostic plot(s).
 #'
 #' This function is intended as a package-level convenience wrapper around
 #' [priorsense::powerscale_sensitivity()] and the associated plotting tools.
-#' Since \pkg{priorsense} already supports \code{brmsfit} objects directly,
-#' the default implementation uses the fitted \pkg{brms} object itself,
-#' which is the most stable route for routine package use.
 #'
-#' If \code{add_draws = TRUE}, the function also constructs an augmented
-#' draws object using posterior draws, log-likelihood, optional log-prior,
-#' joint log-likelihood, optional Bayesian R-squared, and optional posterior
-#' expected predictions for representative covariate values. This follows the
-#' general workflow demonstrated in the \pkg{priorsense} vignette, where
-#' derived quantities are bound to the draws object before sensitivity
-#' analysis.
+#' If requested, the function also constructs an augmented draws object using
+#' fit criterion \code{see include_criterion}, joint log-likelihood \code{see
+#' include_criterion}, or posterior expected predictions for representative
+#' covariate values \code{see include_predictor}. This follows the general
+#' workflow recommended in the \pkg{priorsense} package.
 #'
 #' @param model A fitted model object from \code{bsitar}.
-#' 
-#' @param variable Optional character vector of parameter or quantity names
-#'   to assess. Passed to [priorsense::powerscale_sensitivity()] and, when
-#'   plotting, to the corresponding \pkg{priorsense} plotting function.
-#'   
-#' @param component Character vector indicating which component(s) to assess.
-#'   Typically one or both of \code{"prior"} and \code{"likelihood"}.
-#'   Passed to [priorsense::powerscale_sensitivity()].
-#'   
-#' @param prior_selection Passed to [priorsense::powerscale_sensitivity()]
-#'   for selecting prior terms to power-scale.
-#'   
-#' @param likelihood_selection Passed to
-#'   [priorsense::powerscale_sensitivity()] for selecting likelihood terms
-#'   to power-scale.
-#'   
-#' @param resample Logical; passed to [priorsense::powerscale_sensitivity()].
-#' 
-#' @param moment_match Logical; if \code{TRUE}, passed to
-#'   [priorsense::powerscale_sensitivity()] to request moment matching when
-#'   supported. This can improve unstable importance-sampling estimates in some
-#'   cases, at additional computational cost.
-#'   
-#' @param add_draws Logical; if \code{TRUE}, build and store an augmented draws
-#'   object with additional derived quantities. If \code{FALSE} (default), rely
-#'   on the native \code{brmsfit} support in \pkg{priorsense}.
-#'   
-#' @param include_criterion Logical; if \code{TRUE}, append Bayesian R-squared
-#'   draws using [brms::bayes_R2()].
-#'   
-#' @param include_jointlik Logical; if \code{TRUE} and \code{add_draws = TRUE},
-#'   append a \code{joint log likelihood} quantity using
-#'   [priorsense::predictions_as_draws()] with the customized
-#'   \code{jointlik_fun} function.
-#'   
-#' @param include_predictor A character string or a named list to append a
-#'   \code{expected values at predictor values} quantity using
-#'   [priorsense::predictions_as_draws()] with the customized
-#'   [brms::posterior_epred()].
-#'    
-#' @param name_predictor A character string or \code{NULL} (default). if
-#'   \code{name_predictor = NULL}, then \code{name_predictor} set internally as
-#'   \code{xvar}.
-#' 
-#' @param newdata Optional \code{data.frame} of representative predictor values
-#'   used to compute posterior expected predictions with
-#'   [brms::posterior_epred()] when \code{add_draws = TRUE}. Ignored.
 #'
-#' @param prediction_names Optional character vector of names for prediction
-#'   quantities added from \code{newdata}. If \code{NULL}, names are created as
-#'   \code{"pred_1"}, \code{"pred_2"}, and so on.
+#' @param variable Optional character vector of parameter or quantity names to
+#'   assess. Passed to [priorsense::powerscale_sensitivity()] and, when
+#'   plotting, to the corresponding \pkg{priorsense} plotting function.
+#' 
+#' @param include_criterion Logical; if \code{TRUE}, appends one or more of the
+#'   following fit criteria using [add_model_criterion()]: \code{"bayes_R2"},
+#'   \code{"loo_R2"}, \code{"jointlik"}, or \code{"margliklik"}.
+#'
+#' @param include_jointlik Logical; if \code{TRUE}, appends a \code{joint log-
+#'   likelihood} quantity using [priorsense::predictions_as_draws()] with the
+#'   custom \code{jointlik_fun} function. If \code{include_criterion} contains
+#'   \code{"jointlik"}, \code{include_jointlik} is automatically set to
+#'   \code{TRUE}.
+#'
+#' @param include_predictor A character string or named list specifying
+#'   predictor-based quantities to append as \code{expected values at predictor
+#'   values}, using [priorsense::predictions_as_draws()] with a custom call to
+#'   [brms::posterior_epred()].
+#'
+#' @param name_predictor A character string or \code{NULL} (default). If
+#'   \code{NULL}, \code{name_predictor} is set internally to \code{xvar}. Note
+#'   that \code{prediction_names} are generated internally as
+#'   \code{paste0(name_predictor, include_predictor)}. These
+#'   \code{prediction_names} can then be included as \code{plot_variable} or to
+#'   get potential conflicts by running the [prior_conflict()].
 #'   
 #' @param plot One of \code{NULL}, \code{FALSE}, \code{"dens"}, \code{"ecdf"},
 #'   \code{"quantities"}, or \code{"both"}. If \code{NULL} or \code{FALSE}, no
@@ -92,43 +61,49 @@
 #'   [priorsense::powerscale_plot_dens()] and
 #'   [priorsense::powerscale_plot_ecdf()].
 #'   
-#' @param return_ps Optional logical indicating whether to return a simple
-#'   sensitivity object from the [priorsense::powerscale_sensitivity()] or a
-#'   structured list with class attributes. Note that \code{return_ps} should be
-#'   \code{FALSE} (default) in case user later want to call
-#'   [prior_sensitivity_conflict()].
+#' @param return_table Optional logical indicating whether to return the raw
+#'   sensitivity object from [priorsense::powerscale_sensitivity()] or a
+#'   structured list with class attributes. Set \code{return_table = FALSE} (the
+#'   default) if you plan to call [prior_conflict()] later.
 #'   
+#' @param return_conflict Optional logical indicating whether to return the raw
+#'   sensitivity results \code{return_conflict = FALSE} from
+#'   [priorsense::powerscale_sensitivity()] or the \code{conflict}
+#'   \code{return_conflict = TRUE} as evaluated using the [prior_conflict()].
+#'   The \code{return_table} behavior is same whether \code{return_conflict =
+#'   TRUE} or \code{return_conflict = FALSE}.
+#'   
+#' @param digits Optional integer to pass on to [base::round()] applied to the
+#'   numeric variables returned from the [priorsense::powerscale_sensitivity()].
+#'   When \code{digits = NULL} (default), \code{digits} is ignored.
+#' 
 #' @param ... Additional arguments passed to
 #'   [priorsense::powerscale_sensitivity()].
 #'   
 #' @inheritParams add_model_criterion
 #' @inheritParams fitted_draws
 #' @inheritParams priorsense::powerscale_sensitivity
+#' @inheritParams prior_conflict
 #'
 #' @details
 #' The wrapper supports two closely related workflows.
 #'
-#' \strong{Default workflow (\code{add_draws = FALSE}):}
-#' \pkg{priorsense} is run directly on the extracted \code{brmsfit}, which
-#' is the most robust and package-friendly path because \pkg{brms} already
-#' implements [brms::create_priorsense_data.brmsfit()] for this purpose.
-#'
-#' \strong{Extended workflow (\code{add_draws = TRUE}):}
-#' a posterior draws object is created with [posterior::as_draws_df()] and
-#' optionally extended with:
+#' \strong{Extended workflow:} A posterior draws object is created with
+#' [posterior::as_draws_df()] and can optionally be extended with:
 #' \itemize{
-#'   \item pointwise log-likelihood draws via
-#'         [priorsense::log_lik_draws()],
-#'   \item log-prior draws via [priorsense::log_prior_draws()] if available,
-#'   \item Bayesian R-squared via [brms::bayes_R2()],
-#'   \item a \code{jointlik} quantity via \code{jointlik_fun},
+#'   \item point wise log-likelihood draws via [priorsense::log_lik_draws()]
+#'   (currently ignored),
+#'   \item log-prior draws via [priorsense::log_prior_draws()]
+#'   (currently ignored),
+#'   \item fit criteria via [add_model_criterion()]. See
+#'   \code{include_criterion} for details.
+#'   \item a \code{jointlik} quantity computed with \code{jointlik_fun},
 #'   \item posterior expected predictions via [brms::posterior_epred()].
 #' }
 #'
-#' This extended draws object can be useful when sensitivity is to be
-#' explored not only for parameters but also for model-level summaries and
-#' predictive quantities, consistent with the \pkg{priorsense} vignette
-#' workflow.
+#' This extended draws object can be useful when sensitivity is to be explored
+#' not only for parameters but also for model-level summaries and predictive
+#' quantities, consistent with the \pkg{priorsense} workflow.
 #'
 #' In the \pkg{priorsense} framework, sensitivity to both prior and
 #' likelihood perturbations can indicate possible prior-data conflict,
@@ -136,12 +111,16 @@
 #' sensitivity can suggest that the likelihood is only weakly informative
 #' for that quantity.
 #'
-#' @return
-#' An object of class \code{"prior_sensitivity"}, a list with components:
+#' @return 
+#' If \code{return_table = TRUE}, a table of sensitivity values for each specified
+#' variable is returned. If \code{return_table = FALSE}, a
+#' \code{"prior_sensitivity"} object is returned as a list with the following
+#' components:
 #' \describe{
-#'   \item{fit}{The extracted \code{bsitar} object.}
-#'   \item{post_draws}{The augmented draws object if
-#'     \code{add_draws = TRUE}, otherwise \code{NULL}.}
+#'   \item{model}{The extracted \code{bsitar} object.}
+#'   \item{post_draws}{The augmented draws object if any of 
+#'   \code{include_criterion}, \code{include_jointlik}, or 
+#'   \code{include_predictor} are specified, otherwise \code{NULL}.}
 #'   \item{sensitivity}{The object returned by
 #'     [priorsense::powerscale_sensitivity()].}
 #'   \item{plot}{A plot object, or list of plot objects when
@@ -158,7 +137,7 @@
 #' [priorsense::powerscale_plot_ecdf()],
 #' [priorsense::powerscale_plot_quantities()],
 #' [priorsense::predictions_as_draws()],
-#' [prior_sensitivity_conflict()]
+#' [prior_conflict()]
 #'
 #' @examples
 #' \donttest{
@@ -185,13 +164,20 @@
 #' ps2$plot
 #'
 #' # Extended workflow with derived predictive quantities
+#' # In `variable` and `plot_variable`, the custom variables `bayes_R2`,
+#' # `jointlik`, `agemin`, and `agemax` are requested via the `criterion`
+#' # and `include_predictor` arguments. Here, the predictor of interest is
+#' # `age`, so `min` and `max` are prefixed with `age`, giving `agemin`
+#' # and `agemax`. The predictor `age` is automatically inferred from the
+#' # `model` object, but it can also be specified explicitly using `xvar`.
+#' 
 #' ps3 <- prior_sensitivity(
 #'   model = model,
-#'   variable = c("sigma"),
+#'   variable = c("sigma", "bayes_R2", "jointlik", "agemin", "agemax"),
 #'   criterion = c('bayes_R2', "jointlik"),
 #'   include_predictor = c("min", "max"),
-#'   plot = "quantities",
-#'   plot_variable = c("sigma", "jointlik", "agemin", "agemax")
+#'   plot = "ecdf",
+#'   plot_variable = c("sigma", "bayes_R2", "jointlik", "agemin", "agemax")
 #' )
 #' }
 #' 
@@ -215,27 +201,31 @@ prior_sensitivity.bgmfit <- function(
     prior_selection = NULL,
     likelihood_selection = NULL,
     num_args = NULL,
-    newdata = NULL,
-    add_draws = TRUE,
-    include_criterion = FALSE,
-    include_jointlik = TRUE,
+    include_criterion = NULL,
+    include_jointlik = NULL,
     include_predictor = NULL,
     name_predictor = NULL,
-    prediction_names = NULL,
     plot = NULL,
     plot_variable = NULL,
     plot_print = FALSE,
     plot_return = FALSE,
     facet = NULL,
-    return_ps = FALSE,
+    empty = "-",
+    print = FALSE,
+    return_table = FALSE,
+    return_file = NULL,
+    flex_table = FALSE,
+    return_conflict = FALSE,
+    digits = NULL,
+    path = NULL,
+    title = NULL,
+    align = "center",
+    sheet_name = "table",
     criterion = "bayes_R2",
-    return_model = FALSE,
-    return_criteria = TRUE,
     pointwise = FALSE,
     model_name = NULL,
     overwrite = FALSE,
     force_save = FALSE,
-    file = NULL,
     resp = NULL,
     dpar = NULL,
     ndraws = NULL,
@@ -337,7 +327,10 @@ prior_sensitivity.bgmfit <- function(
   add_model_criterion_args[['deriv']] <- 0
   add_model_criterion_args[['model_deriv']] <- TRUE
   add_model_criterion_args[['difx']] <- NULL
+  add_model_criterion_args[['file']] <- NULL
   add_model_criterion_args[['newdata_fixed']] <- TRUE
+  add_model_criterion_args[['return_model']] <- FALSE
+  add_model_criterion_args[['return_criteria']] <- TRUE
   
   fitted_draws_args <- 
     sanitize_CustomDoCall_args(what = "CustomDoCall", 
@@ -596,69 +589,102 @@ prior_sensitivity.bgmfit <- function(
     ...
   )
   
-  plot_obj <- NULL
-  if (!is.null(plot)) {
-    if (is.null(plot_variable)) {
-      stop2c("A plotting variable must be supplied via 
+
+  
+  suppressWarnings({
+    suppressMessages({
+      
+      plot_obj <- NULL
+      if (!is.null(plot)) {
+        if (is.null(plot_variable)) {
+          stop2c("A plotting variable must be supplied via 
              `plot_variable` or `variable`.")
-    }
-    
-    if(is.null(facet)) facet <- 'variable'
-    
-    if(call_include_predictor | include_jointlik | include_criterion) {
-      plot_input <- post_draws
-    } else {
-      plot_input <- model
-    }
-    
-    if (identical(plot, "dens")) {
-      plot_obj <- priorsense::powerscale_plot_dens(
-        plot_input,
-        variable = plot_variable,
-        facet_rows = facet
-      )
-    }
-    
-    if (identical(plot, "ecdf")) {
-      plot_obj <- priorsense::powerscale_plot_ecdf(
-        plot_input,
-        variable = plot_variable,
-        facet_rows = facet
-      )
-    }
-    
-    if (identical(plot, "quantities")) {
-      plot_obj <- priorsense::powerscale_plot_quantities(
-        plot_input,
-        variable = plot_variable
-      )
-    }
-    
-    if (identical(plot, "both")) {
-      plot_obj <- list(
-        dens = priorsense::powerscale_plot_dens(
-          plot_input,
-          variable = plot_variable,
-          facet_rows = facet
-        ),
-        ecdf = priorsense::powerscale_plot_ecdf(
-          plot_input,
-          variable = plot_variable,
-          facet_rows = facet
-        )
-      )
+        }
+        
+        if(is.null(facet)) facet <- 'variable'
+        
+        if(call_include_predictor | include_jointlik | include_criterion) {
+          plot_input <- post_draws
+        } else {
+          plot_input <- model
+        }
+        
+        if (identical(plot, "dens")) {
+          plot_obj <- priorsense::powerscale_plot_dens(
+            plot_input,
+            variable = plot_variable,
+            facet_rows = facet
+          )
+        }
+        
+        if (identical(plot, "ecdf")) {
+          plot_obj <- priorsense::powerscale_plot_ecdf(
+            plot_input,
+            variable = plot_variable,
+            facet_rows = facet
+          )
+        }
+        
+        if (identical(plot, "quantities")) {
+          plot_obj <- priorsense::powerscale_plot_quantities(
+            plot_input,
+            variable = plot_variable
+          )
+        }
+        
+        if (identical(plot, "both")) {
+          plot_obj <- list(
+            dens = priorsense::powerscale_plot_dens(
+              plot_input,
+              variable = plot_variable,
+              facet_rows = facet
+            ),
+            ecdf = priorsense::powerscale_plot_ecdf(
+              plot_input,
+              variable = plot_variable,
+              facet_rows = facet
+            )
+          )
+        }
+      }
+      
+      
+      if(!is.null(plot_obj)) {
+        if(plot_print) print(plot_obj)
+        if(plot_return) print(plot_obj)
+      }
+      
+    })
+  })
+  
+  
+
+  if(!is.null(digits)) {
+    sens <- sens %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), 
+                                  ~ round(.x, digits)))
+  }
+  
+  if(!return_conflict) {
+    if(print) print(sens)
+    if(return_table) {
+      if(!flex_table) {
+        return(sens)
+      } else if( flex_table) {
+        sens_flex <- flextable::as_flextable(sens, max_row = nrow(sens))
+        if (!is.null(title)) {
+          sens_flex <- flextable::set_caption(sens_flex, caption = title)
+        }
+        return(sens_flex)
+      }
     }
   }
   
   
-  if(!is.null(plot_obj)) {
-    if(plot_print) print(plot_obj)
-    if(plot_return) print(plot_obj)
-  }
   
-  if(return_ps) return(sens)
   
-  out <- 
+  
+  out_list <- 
     structure(
       list(
         model = model,
@@ -672,7 +698,62 @@ prior_sensitivity.bgmfit <- function(
       class = c("prior_sensitivity", "bgmfit")
     )
   
-  return(out)
+  
+  
+  
+  if(return_conflict) {
+    out_list <- prior_conflict(out_list,  print = FALSE)
+  }
+  
+  if(!return_table) {
+    return(out_list)
+  }
+ 
+  out_flex <- list_to_flextable(out_list, align = align, empty = empty)
+  
+  if (!is.null(title)) {
+    out_flex <- flextable::set_caption(out_flex, caption = title)
+  }
+  
+  if(print) print(out_flex$body$dataset)
+  
+  out <- export_flextable(ft = out_flex,
+                          return_file = return_file,
+                          path = path,
+                          title = title,
+                          align = align,
+                          sheet_name = sheet_name)
+  
+  if(is.null(return_file)) {
+    #
+  } else {
+    return_table <- FALSE
+  }
+  
+  
+  if(return_table) {
+    if(!flex_table) {
+      return(out$body$dataset)
+    } else if( flex_table) {
+      if (!is.null(title)) {
+        out <- flextable::set_caption(out, caption = title)
+      }
+      return(out)
+    }
+  }
+  
+  if(!return_table) {
+    export_flextable(ft = out_flex,
+                     return_file = return_file,
+                     path = path,
+                     title = title,
+                     align = align,
+                     sheet_name = sheet_name)
+  }
+  
+  
+  
+  
 }
 
 

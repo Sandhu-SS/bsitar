@@ -1,6 +1,164 @@
 
 
 
+#' Export or return a flextable object
+#'
+#' Export a \code{flextable} object to Word, HTML, image, or Excel output,
+#' or return the input \code{flextable} unchanged when no file output is requested.
+#'
+#' This function is a lightweight wrapper around the \code{flextable} export
+#' helpers for Word, HTML, and image output. For Excel output, it uses
+#' the \code{openxlsx2} package to write the underlying tabular data to an
+#' \code{.xlsx} workbook, because spreadsheet export is handled differently
+#' from \code{flextable} document and image rendering.
+#'
+#' @param ft A \code{flextable} object to return or export.
+#' @param return_file Optional character string specifying the output type.
+#'   Supported values are \code{"word"}, \code{"docx"}, \code{"html"},
+#'   \code{"png"}, \code{"pdf"}, \code{"svg"}, and \code{"xlsx"}.
+#'   If \code{NULL}, the function returns \code{ft} unchanged.
+#' @param path Optional output file path. If \code{NULL}, a default file name is
+#'   created from \code{return_file}, such as \code{"table_output.docx"} or
+#'   \code{"table_output.xlsx"}.
+#' @param title Optional title used in exported output where supported.
+#'   For Word and HTML output, named flextable objects can be used as
+#'   document titles or section titles.
+#' @param align Alignment used for Word export. Must be one of
+#'   \code{"left"}, \code{"center"}, or \code{"right"}. This argument is
+#'   passed to [flextable::save_as_docx()].
+#' @param sheet_name Character string giving the worksheet name for Excel
+#'   output. Default is \code{"table"}.
+#'
+#' @details
+#' \code{flextable} provides dedicated export functions for several output
+#' formats, including Word, HTML, and image rendering. These formats use
+#' the \code{flextable} object directly and preserve table styling in the
+#' rendered output.
+#'
+#' Excel output is handled separately through \code{openxlsx2}, which provides
+#' a workbook API based on [openxlsx2::wb_workbook()], worksheet creation,
+#' data insertion, and file saving. This makes it suitable for writing the
+#' underlying rectangular table data to \code{.xlsx} files in a modern
+#' spreadsheet workflow.
+#'
+#' The current \code{openxlsx2} API favors workbook-based workflows and newer
+#' helper functions such as [openxlsx2::wb_add_data()].
+#'
+#' @return
+#' If \code{return_file = NULL}, the input \code{flextable} object is returned.
+#'
+#' Otherwise, the function writes a file to disk and returns the normalized
+#' path to the generated file as a character string.
+#'
+#' @inherit berkeley author
+#'
+#' @keywords internal
+#' @noRd
+export_flextable <- function(
+    ft,
+    return_file = NULL,
+    path = NULL,
+    title = NULL,
+    align = "center",
+    data = NULL,
+    sheet_name = "table"
+) {
+  
+  if (is.null(return_file)) {
+    return(ft)
+  }
+  
+  align <- match.arg(align, c("left", "center", "right"))
+  return_file <- tolower(return_file)
+  
+  if (is.null(path)) {
+    ext <- switch(
+      return_file,
+      word = ".docx",
+      docx = ".docx",
+      html = ".html",
+      png  = ".png",
+      pdf  = ".pdf",
+      svg  = ".svg",
+      xlsx = ".xlsx",
+      stop("Unsupported return_file. Use one of: word, docx, html, png, pdf, svg, xlsx")
+    )
+    path <- paste0("table_output", ext)
+  }
+  
+  if (return_file %in% c("word", "docx")) {
+    vals <- list(ft)
+    if (!is.null(title)) names(vals) <- title
+    flextable::save_as_docx(values = vals, path = path, align = align)
+    return(normalizePath(path))
+  }
+  
+  if (return_file == "html") {
+    vals <- list(ft)
+    if (!is.null(title)) names(vals) <- title
+    flextable::save_as_html(
+      values = vals,
+      path = path,
+      title = if (is.null(title)) "Table" else title
+    )
+    return(normalizePath(path))
+  }
+  
+  if (return_file %in% c("png", "pdf", "svg")) {
+    flextable::save_as_image(ft, path = path)
+    return(normalizePath(path))
+  }
+  
+  if (return_file == "xlsx") {
+    tab <- ft$body$dataset
+    
+    wb <- openxlsx2::wb_workbook()
+    wb$add_worksheet(sheet_name)
+    
+    start_row <- 1
+    if (!is.null(title)) {
+      wb$add_data(
+        sheet = sheet_name,
+        x = data.frame(title = title),
+        dims = "A1",
+        col_names = FALSE
+      )
+      start_row <- 3
+    }
+    
+    wb$add_data(
+      sheet = sheet_name,
+      x = tab,
+      dims = paste0("A", start_row),
+      col_names = TRUE
+    )
+    
+    openxlsx2::wb_save(wb, file = path, overwrite = TRUE)
+    return(normalizePath(path))
+  }
+  
+}
+
+
+# convert list_to_flextable
+
+list_to_flextable <- function(x, align = "left", empty = "-") {
+  align <- match.arg(align, c("left", "center", "right"))
+  tab <- as.data.frame(
+    lapply(x, function(z) {
+      if (is.null(z) || length(z) == 0) {
+        empty
+      } else {
+        paste(z, collapse = ", ")
+      }
+    }),
+    stringsAsFactors = FALSE
+  )
+  flextable::flextable(tab) %>% 
+    flextable::align(align = align, part = "all")
+}
+
+
 #' An internal function to edit stancode for tripple logistic model
 #' 
 #' @param stancode A string character of stan code

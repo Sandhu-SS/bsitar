@@ -2,11 +2,11 @@
 # Skip test for local R CMD Check but run on GitHub
 
 if(skip_test_local_rcmd_check) {
-  #  skip_local_run_ci()
+   skip_local_run_ci()
 }
 
 if(set_skip_run_ci) {
-  # skip_run_ci()
+  skip_run_ci()
 }
 
 
@@ -17,23 +17,21 @@ if(set_skip_run_ci) {
 test_that("test-hypothesis_test", {
   skip_on_cran()
 
+  model <- berkeley_exfit
   
   testthat::test_that("prior_sensitivity validates plot argument", {
     fake_fit <- structure(list(), class = "bgmfit")
     
-    testthat::skip_if_not_installed("priorsense")
-    testthat::skip_if_not_installed("brms")
-    
-    # expect_error(
-    #   prior_sensitivity(fake_fit, plot = "bad-plot-type"),
-    #   NA
-    # )
+    expect_error(
+      prior_sensitivity(fake_fit, plot = "bad-plot-type"),
+      "argument is of length zero"
+    )
   })
   
   
   
   
-  testthat::test_that("prior_sensitivity_conflict returns expected names", {
+  testthat::test_that("prior_conflict returns expected names", {
     x <- list(
       sensitivity = data.frame(
         variable = c("a", "a", "b", "b"),
@@ -45,7 +43,7 @@ test_that("test-hypothesis_test", {
     )
     class(x) <- c("prior_sensitivity", "bgmfit")
     
-    out <- prior_sensitivity_conflict(x)
+    out <- prior_conflict(x, return_list = TRUE)
     
     testthat::expect_named(
       out,
@@ -62,13 +60,56 @@ test_that("test-hypothesis_test", {
   
   
   
+  testthat::test_that("prior_sensitivity validates class list", {
+    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+                             return_table = FALSE)
+
+    expect_equal(TRUE, is.list(out)
+    )
+  })
+  
+  testthat::test_that("prior_sensitivity validates class data.frame", {
+    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+                             return_table = TRUE)
+    
+    expect_equal(TRUE, inherits(out, "data.frame"))
+  })
+
+  
+  testthat::test_that("prior_sensitivity validates class flextable", {
+    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+                             return_table = TRUE, flex_table = TRUE)
+    
+    expect_equal(TRUE, inherits(out, "flextable"))
+  })
   
   
   
-}) # test_that("test-marginals-slopes-bycov-byvariable", {
-
-
-
+  testthat::test_that("prior_sensitivity validates class list", {
+    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+                             return_table = FALSE, return_conflict = TRUE)
+    
+    expect_equal(TRUE, is.list(out)
+    )
+  })
+  
+  testthat::test_that("prior_sensitivity validates class data.frame", {
+    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+                             return_table = TRUE, flex_table = FALSE, return_conflict = TRUE)
+    
+    expect_equal(TRUE, inherits(out, "data.frame"))
+  })
+  
+  
+  testthat::test_that("prior_sensitivity validates class flextable", {
+    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+                             return_table = TRUE, flex_table = TRUE, return_conflict = TRUE)
+    
+    expect_equal(TRUE, inherits(out, "flextable"))
+  })
+  
+  
+}) 
 
 
 
