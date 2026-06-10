@@ -11,13 +11,53 @@ if(set_skip_run_ci) {
 
 
 ###############################################################################
-# Test marginals vs marginaleffects
+# Test prior_sensitivity
 ###############################################################################
 
 test_that("test-hypothesis_test", {
   skip_on_cran()
 
-  model <- berkeley_exfit
+  ##############################################################################
+  # set model -> save_and_use_models = TRUE
+  ##############################################################################
+  
+  if(save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "univariate_fit_cov.rds")) 
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "multivariate_fit_cov.rds"))  
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(save_and_use_models) {
+  
+  
+  ##############################################################################
+  # set model -> save_and_use_models = FALSE
+  ##############################################################################
+  
+  if(!save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = univariate_fit_cov
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = multivariate_fit_cov
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(!save_and_use_models) {
+  
+  
+  
+  # Use berkeley_exfit
+  fit <- berkeley_exfit
   
   testthat::test_that("prior_sensitivity validates plot argument", {
     fake_fit <- structure(list(), class = "bgmfit")
@@ -43,7 +83,7 @@ test_that("test-hypothesis_test", {
     )
     class(x) <- c("prior_sensitivity", "bgmfit")
     
-    out <- prior_conflict(x, return_list = TRUE)
+    out <- prior_conflict(x, return_table = FALSE)
     
     testthat::expect_named(
       out,
@@ -61,7 +101,7 @@ test_that("test-hypothesis_test", {
   
   
   testthat::test_that("prior_sensitivity validates class list", {
-    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+    out <- prior_sensitivity(model = fit, variable = "b_a_Intercept", 
                              return_table = FALSE)
 
     expect_equal(TRUE, is.list(out)
@@ -69,7 +109,7 @@ test_that("test-hypothesis_test", {
   })
   
   testthat::test_that("prior_sensitivity validates class data.frame", {
-    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+    out <- prior_sensitivity(model = fit, variable = "b_a_Intercept", 
                              return_table = TRUE)
     
     expect_equal(TRUE, inherits(out, "data.frame"))
@@ -77,7 +117,7 @@ test_that("test-hypothesis_test", {
 
   
   testthat::test_that("prior_sensitivity validates class flextable", {
-    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+    out <- prior_sensitivity(model = fit, variable = "b_a_Intercept", 
                              return_table = TRUE, flex_table = TRUE)
     
     expect_equal(TRUE, inherits(out, "flextable"))
@@ -86,7 +126,7 @@ test_that("test-hypothesis_test", {
   
   
   testthat::test_that("prior_sensitivity validates class list", {
-    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+    out <- prior_sensitivity(model = fit, variable = "b_a_Intercept", 
                              return_table = FALSE, return_conflict = TRUE)
     
     expect_equal(TRUE, is.list(out)
@@ -94,7 +134,7 @@ test_that("test-hypothesis_test", {
   })
   
   testthat::test_that("prior_sensitivity validates class data.frame", {
-    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+    out <- prior_sensitivity(model = fit, variable = "b_a_Intercept", 
                              return_table = TRUE, flex_table = FALSE, return_conflict = TRUE)
     
     expect_equal(TRUE, inherits(out, "data.frame"))
@@ -102,7 +142,7 @@ test_that("test-hypothesis_test", {
   
   
   testthat::test_that("prior_sensitivity validates class flextable", {
-    out <- prior_sensitivity(model, variable = "b_a_Intercept", 
+    out <- prior_sensitivity(model = fit, variable = "b_a_Intercept", 
                              return_table = TRUE, flex_table = TRUE, return_conflict = TRUE)
     
     expect_equal(TRUE, inherits(out, "flextable"))

@@ -229,8 +229,7 @@ For Word and HTML output, named \code{flextable} objects can be used as
 document titles or section titles.}
 
 \item{align}{Alignment used for Word export. Must be one of
-\code{"left"}, \code{"center"}, or \code{"right"}. This argument is
-passed to \code{\link[flextable:save_as_docx]{flextable::save_as_docx()}}.}
+\code{"left"}, \code{"center"}, or \code{"right"}.}
 
 \item{sheet_name}{Character string giving the worksheet name for Excel
 output. Default is \code{"table"}.}
@@ -517,8 +516,8 @@ derivatives like velocity curves.}
 \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}}.}
 }
 \value{
-If \code{return_table = TRUE}, a table of sensitivity values for each specified
-variable is returned. If \code{return_table = FALSE}, a
+If \code{return_table = TRUE}, a table of sensitivity values for each
+specified variable is returned. If \code{return_table = FALSE}, a
 \code{"prior_sensitivity"} object is returned as a list with the following
 components:
 \describe{
@@ -532,7 +531,6 @@ components:
 \code{plot = "both"}, otherwise \code{NULL}.}
 \item{plot_type}{The requested plot type, if any.}
 \item{plot_variable}{The plotted variable, if any.}
-\item{newdata}{The supplied \code{newdata}.}
 \item{call}{The matched function call.}
 }
 }
@@ -552,30 +550,55 @@ include_criterion}, or posterior expected predictions for representative
 covariate values \code{see include_predictor}. This follows the general
 workflow recommended in the \pkg{priorsense} package.
 
-The wrapper supports two closely related workflows.
+This wrapper supports two closely related workflows for prior sensitivity
+analysis.
 
-\strong{Extended workflow:} A posterior draws object is created with
-\code{\link[posterior:draws_df]{posterior::as_draws_df()}} and can optionally be extended with:
+\strong{Standard workflow:} The function calls
+\code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} directly on the fitted \code{bsitar}
+model and returns the sensitivity results. This is the simpler approach when
+you only need sensitivity assessments for the model parameters themselves.
+
+\strong{Extended workflow:} A posterior draws object is created using
+\code{\link[posterior:draws_df]{posterior::as_draws_df()}} and can optionally be extended with additional
+derived quantities. This extended draws object is useful user you wants to
+explore prior sensitivity not only for model parameters but also for
+model-level summaries and predictive quantities. The posterior draws object
+can be extended with the following quantities:
 \itemize{
-\item point wise log-likelihood draws via \code{\link[priorsense:log_lik_draws]{priorsense::log_lik_draws()}}
-(currently ignored),
-\item log-prior draws via \code{\link[priorsense:log_prior_draws]{priorsense::log_prior_draws()}}
-(currently ignored),
-\item fit criteria via \code{\link[=add_model_criterion]{add_model_criterion()}}. See
-\code{include_criterion} for details.
-\item a \code{jointlik} quantity computed with \code{jointlik_fun},
-\item posterior expected predictions via \code{\link[brms:posterior_epred.brmsfit]{brms::posterior_epred()}}.
+\item \strong{Fit criteria} via \code{\link[=add_model_criterion]{add_model_criterion()}}. Use the
+\code{include_criterion} argument to specify which criteria to append.
+Available options include \code{"bayes_R2"}, \code{"loo_R2"},
+\code{"jointlik"}, and \code{"margliklik"}.
+\item \strong{Joint log-likelihood (\code{jointlik})} quantity computed
+using the custom \code{jointlik_fun} function. This captures the
+joint likelihood of all observations under each posterior draw.
+\item \strong{Posterior expected predictions} via
+\code{\link[brms:posterior_epred.brmsfit]{brms::posterior_epred()}}. Use the \code{include_predictor} argument
+to specify predictor values for which to compute expected predictions.
+\item \strong{Point-wise log-likelihood draws} via
+\code{\link[priorsense:log_lik_draws]{priorsense::log_lik_draws()}} (currently ignored in this implementation)
+\item \strong{Log-prior draws} via \code{\link[priorsense:log_prior_draws]{priorsense::log_prior_draws()}}
+(currently ignored in this implementation)
 }
 
-This extended draws object can be useful when sensitivity is to be explored
-not only for parameters but also for model-level summaries and predictive
-quantities, consistent with the \pkg{priorsense} workflow.
+\strong{Interpretation of sensitivity patterns:} In the \pkg{priorsense}
+framework, the pattern of sensitivity to prior and likelihood perturbations
+provides diagnostic information about the model:
 
-In the \pkg{priorsense} framework, sensitivity to both prior and
-likelihood perturbations can indicate possible prior-data conflict,
-whereas strong prior sensitivity with relatively weak likelihood
-sensitivity can suggest that the likelihood is only weakly informative
-for that quantity.
+\itemize{
+\item \strong{Prior-data conflict:} When sensitivity to \strong{both}
+prior perturbations \strong{and} likelihood perturbations is strong,
+this may indicate a prior-data conflict. The prior information is
+inconsistent with what the data suggest.
+\item \strong{Weakly informative likelihood:} When sensitivity to prior
+perturbations is \strong{strong} but sensitivity to likelihood
+perturbations is \strong{weak}, this suggests that the likelihood is
+only weakly informative for that quantity. The data provide limited
+information relative to the prior.
+}
+
+These diagnostics help you assess whether your prior choices are appropriate
+and whether certain quantities are well-identified by the data.
 }
 \examples{
 \donttest{
@@ -612,11 +635,20 @@ ps2$plot
 ps3 <- prior_sensitivity(
   model = model,
   variable = c("sigma", "bayes_R2", "jointlik", "agemin", "agemax"),
-  criterion = c('bayes_R2', "jointlik"),
+  criterion = c("bayes_R2", "jointlik"),
   include_predictor = c("min", "max"),
   plot = "ecdf",
   plot_variable = c("sigma", "bayes_R2", "jointlik", "agemin", "agemax")
 )
+
+# Note that user can also get conflict by call `prior_conflict()` from within 
+# the `prior_sensitivity()` by setting return_conflict = TRUE
+conflict <- prior_sensitivity(
+  model = model,
+  variable = c("b_a_Intercept", "sigma"),
+  return_conflict = TRUE, return_table = TRUE
+)
+
 }
 
 }

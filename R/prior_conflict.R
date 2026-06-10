@@ -2,7 +2,7 @@
 
 #' Flag parameters with possible prior-data conflict
 #'
-#' Screen a \code{prior_sensitivity} result for parameters showing notable prior
+#' Screen \code{prior_sensitivity} results for parameters showing notable prior
 #' conflict, likelihood conflict, or both. Parameters flagged for both forms of
 #' sensitivity may indicate possible prior-data conflict in the \pkg{priorsense}
 #' framework, while parameters flagged primarily for prior sensitivity may
@@ -17,8 +17,6 @@
 #' @param empty A string that is used to replace \code{NULL} values.
 #' 
 #' @param print A logical to print the object.
-#' 
-#' @param return_list A logical indicating whether to return the list.
 #' 
 #' @param return_table A logical indicating whether to return the table 
 #' \code{return_table = TRUE} or the list \code{return_table = FALSE}.
@@ -40,8 +38,7 @@
 #'   document titles or section titles.
 #'   
 #' @param align Alignment used for Word export. Must be one of
-#'   \code{"left"}, \code{"center"}, or \code{"right"}. This argument is
-#'   passed to [flextable::save_as_docx()].
+#'   \code{"left"}, \code{"center"}, or \code{"right"}. 
 #'   
 #' @param sheet_name Character string giving the worksheet name for Excel
 #'   output. Default is \code{"table"}.
@@ -63,7 +60,7 @@
 #'
 #' @return A list with components:
 #' A \code{flextable} if \code{return_table = TRUE} or a list when
-#' \code{return_list = TRUE}
+#' \code{return_table = FALSE}
 #' \describe{
 #'   \item{prior_flagged}{Character vector of variables flagged for
 #'     prior sensitivity.}
@@ -91,7 +88,17 @@
 #'   variable = c("b_a_Intercept", "sigma")
 #' )
 #' 
-#' chk <- prior_conflict(ps,  print = TRUE)
+#' conflict <- prior_conflict(ps)
+#' print(conflict)
+#' 
+#' # Note that you can call prior_conflict() from within the prior_sensitivity()
+#' # with return_conflict = TRUE that resturns the same results as above, 
+#' conflict2 <- prior_sensitivity(
+#'   model = model,
+#'   variable = c("b_a_Intercept", "sigma"),
+#'   return_conflict = TRUE, return_table = TRUE
+#' )
+#' stopifnot(identical(conflict, conflict2))
 #' }
 #'
 #' @rdname prior_conflict
@@ -102,7 +109,6 @@ prior_conflict.bgmfit <- function(x,
                                               threshold_lik = 0.05,
                                               empty = "-",
                                               print = FALSE,
-                                              return_list = FALSE,
                                               return_table = TRUE,
                                               return_file = NULL,
                                   flex_table = FALSE,
@@ -143,39 +149,50 @@ prior_conflict.bgmfit <- function(x,
   
   
   
-  out <- list(
+  out_list <- list(
     prior_flagged = prior_flagged,
     likelihood_flagged = likelihood_flagged,
-    prior_likelihood_flagged = prior_likelihood_flagged
-  )
+    prior_likelihood_flagged = prior_likelihood_flagged)
   
-  if(return_list) return(out)
+  if(!return_table) {
+    return(out_list)
+  }
   
-  out <- list_to_flextable(out, align = align, empty = empty)
+  out_flex <- list_to_flextable(out_list, align = align, empty = empty)
   
   if (!is.null(title)) {
-    out <- flextable::set_caption(out, caption = title)
+    out_flex <- flextable::set_caption(out_flex, caption = title)
   }
   
-  if(print) print(out$body$dataset)
+  if(print) print(out_flex$body$dataset)
+  
+  out <- export_flextable(ft = out_flex,
+                          return_file = return_file,
+                          path = path,
+                          title = title,
+                          align = align,
+                          sheet_name = sheet_name)
+  
+  if(is.null(return_file)) {
+    #
+  } else {
+    return_table <- FALSE
+  }
+  
   
   if(return_table) {
-    if(!flex_table) return(out$body$dataset)
-    if( flex_table) return(out)
+    if(!flex_table) {
+      return(out$body$dataset)
+    } else if( flex_table) {
+      if (!is.null(title)) {
+        out <- flextable::set_caption(out, caption = title)
+      }
+      return(out)
+    }
   }
-    
-    
-  if(is.null(return_file)) {
-    out <- export_flextable(ft = out,
-                            return_file = return_file,
-                            path = path,
-                            title = title,
-                            align = align,
-                            sheet_name = sheet_name)
-    
-    return(out)
-  } else {
-    export_flextable(ft = out,
+  
+  if(!return_table) {
+    export_flextable(ft = out_flex,
                      return_file = return_file,
                      path = path,
                      title = title,

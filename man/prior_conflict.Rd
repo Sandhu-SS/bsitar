@@ -11,7 +11,6 @@
   threshold_lik = 0.05,
   empty = "-",
   print = FALSE,
-  return_list = FALSE,
   return_table = TRUE,
   return_file = NULL,
   flex_table = FALSE,
@@ -35,8 +34,6 @@ prior_conflict(x, ...)
 
 \item{print}{A logical to print the object.}
 
-\item{return_list}{A logical indicating whether to return the list.}
-
 \item{return_table}{A logical indicating whether to return the table
 \code{return_table = TRUE} or the list \code{return_table = FALSE}.}
 
@@ -57,8 +54,7 @@ For Word and HTML output, named \code{flextable} objects can be used as
 document titles or section titles.}
 
 \item{align}{Alignment used for Word export. Must be one of
-\code{"left"}, \code{"center"}, or \code{"right"}. This argument is
-passed to \code{\link[flextable:save_as_docx]{flextable::save_as_docx()}}.}
+\code{"left"}, \code{"center"}, or \code{"right"}.}
 
 \item{sheet_name}{Character string giving the worksheet name for Excel
 output. Default is \code{"table"}.}
@@ -68,7 +64,7 @@ output. Default is \code{"table"}.}
 \value{
 A list with components:
 A \code{flextable} if \code{return_table = TRUE} or a list when
-\code{return_list = TRUE}
+\code{return_table = FALSE}
 \describe{
 \item{prior_flagged}{Character vector of variables flagged for
 prior sensitivity.}
@@ -79,7 +75,7 @@ both prior and likelihood sensitivity}
 }
 }
 \description{
-Screen a \code{prior_sensitivity} result for parameters showing notable prior
+Screen \code{prior_sensitivity} results for parameters showing notable prior
 conflict, likelihood conflict, or both. Parameters flagged for both forms of
 sensitivity may indicate possible prior-data conflict in the \pkg{priorsense}
 framework, while parameters flagged primarily for prior sensitivity may
@@ -113,7 +109,17 @@ ps <- prior_sensitivity(
   variable = c("b_a_Intercept", "sigma")
 )
 
-chk <- prior_conflict(ps,  print = TRUE)
+conflict <- prior_conflict(ps)
+print(conflict)
+
+# Note that you can call prior_conflict() from within the prior_sensitivity()
+# with return_conflict = TRUE that resturns the same results as above, 
+conflict2 <- prior_sensitivity(
+  model = model,
+  variable = c("b_a_Intercept", "sigma"),
+  return_conflict = TRUE, return_table = TRUE
+)
+stopifnot(identical(conflict, conflict2))
 }
 
 }
