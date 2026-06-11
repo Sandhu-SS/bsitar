@@ -466,29 +466,10 @@ priors_to_textdata <- function(model,
 #' transformation mapping note receives the next letter after the Range note.
 #'
 #' @param model A fitted \code{bsitar} model object.
-#' @param tab_title A character string used as the table title/header line. If
-#'   \code{""}, defaults to \code{"Prior_summary"}. If \code{NULL}, no header
-#'   line is added.
 #' @param set_width A numeric vector of interval masses to report, such as
 #'   \code{0.95} or \code{c(0.95, 0.99)}. Each value creates one CI column.
 #' @param set_digits An integer giving the number of digits used when extracting
 #'   priors from \code{priors_to_textdata()}.
-#' @param main_dir A character string giving the base directory used when saving
-#'   output files.
-#' @param tab_dir A character string naming the subdirectory under
-#'   \code{main_dir} used for saved tables.
-#' @param save_table Controls whether the table is saved. Use \code{NULL} or
-#'   \code{FALSE} to avoid saving, \code{TRUE} or \code{"xlsx"} to save as xlsx,
-#'   and \code{"docx"} to save as a Word document.
-#' @param return_table Logical. If \code{TRUE}, returns the flextable object. If
-#'   \code{NULL}, defaults to \code{!save_it}, i.e. returns the table when not
-#'   saving and returns invisibly when saving.
-#' @param output_file Optional output filename, with or without extension. If no
-#'   directory is supplied, the file is written to
-#'   \code{file.path(main_dir, tab_dir)}.
-#' @param set_table_dir Logical. If \code{TRUE}, sets the working directory to
-#'   \code{file.path(main_dir, tab_dir)} for the duration of the function and
-#'   restores the previous working directory on exit.
 #' @param draw_samples Integer number of simulated draws used per prior
 #'   distribution to compute both the reported CI columns and the empirical
 #'   range column. Note that the default value is \code{100000} to approximate
@@ -522,6 +503,8 @@ priors_to_textdata <- function(model,
 #' @param seed Integer random seed used before drawing simulated values from the
 #'   parsed prior distributions.
 #' @param verbose Logical. If \code{TRUE}, prints information.
+#' 
+#' @inheritParams prior_conflict
 #'
 #' @returns
 #' A \code{flextable} object when \code{return_table = TRUE}. Otherwise returns
@@ -607,15 +590,23 @@ priors_to_textdata <- function(model,
 #' @noRd
 #' 
 prior_summary_table <- function(model,
-                                tab_title = "",
                                 set_width = c(0.95, 0.9999),
                                 set_digits = 1,
-                                main_dir = getwd(),
-                                tab_dir = "tables",
-                                save_table = NULL,
-                                return_table = NULL,
-                                output_file = NULL,
-                                set_table_dir = FALSE,
+                                empty = "-",
+                                print = FALSE,
+                                return_table = TRUE,
+                                return_file = NULL,
+                                flex_table = FALSE,
+                                path = NULL,
+                                title = NULL,
+                                align = "center",
+                                sheet_name = "table",
+                                # main_dir = getwd(),
+                                # tab_dir = "tables",
+                                # save_table = NULL,
+                                # return_table = NULL,
+                                # output_file = NULL,
+                                # set_table_dir = FALSE,
                                 draw_samples = 100000,
                                 add_range = FALSE,
                                 transform_class = NULL,
@@ -650,42 +641,28 @@ prior_summary_table <- function(model,
   zz <- NULL;
   dist_key <- NULL;
   
-  insight::check_if_installed("distributional", prompt = FALSE)
   insight::check_if_installed("flexlsx", prompt = FALSE)
   insight::check_if_installed("flextable", prompt = FALSE)
+  insight::check_if_installed("distributional", prompt = FALSE)
   insight::check_if_installed("ggdist", prompt = FALSE)
   
   ggplot2::theme_set(ggdist::theme_ggdist())
   
-  if (is.null(tab_title)) {
+  if(is.null(title)) title <- ""
+  
+  
+  if (is.null(title)) {
     tab_name <- NULL
-  } else if (identical(tab_title, "")) {
+  } else if (identical(title, "")) {
     tab_name <- "Prior_summary"
   } else {
-    tab_name <- tab_title
+    tab_name <- title
   }
-  
+ 
   if (!is.logical(add_range) || length(add_range) != 1 || is.na(add_range)) {
     stop("add_range must be a single TRUE or FALSE value.")
   }
-  
-  fun_dir <- function(output_dir, setdir = TRUE) {
-    if (!dir.exists(output_dir)) {
-      dir.create(output_dir, recursive = TRUE)
-    } else {
-      message("Dir already exists!")
-    }
-    
-    if (isTRUE(setdir)) {
-      old_wd <- getwd()
-      setwd(output_dir)
-      message("Directory set to ", output_dir)
-      return(old_wd)
-    }
-    
-    invisible(NULL)
-  }
-  
+ 
   format_transform_fun <- function(f) {
     if (!is.function(f)) {
       return("<not a function>")
@@ -701,13 +678,7 @@ prior_summary_table <- function(model,
     
     txt
   }
-  
-  old_wd <- NULL
-  if (isTRUE(set_table_dir)) {
-    old_wd <- fun_dir(file.path(main_dir, tab_dir), setdir = TRUE)
-    on.exit(setwd(old_wd), add = TRUE)
-  }
-  
+
   prior_object <-
     priors_to_textdata(
       model,
@@ -741,13 +712,28 @@ prior_summary_table <- function(model,
       zz = paste0(class, coef, nlpar, dpar, group, resp)
     )
   
+  
   if('sigma' %in% transform_parameter) {
-    prior_parsed <- prior_parsed %>% 
-      dplyr::mutate(nlpar = 
-                      dplyr::if_else(dpar != "" & nlpar == "", 
-                                     dpar, nlpar))
+    
+    if(any('sigma' %in% prior_parsed[['class']])) {
+      prior_parsed <- prior_parsed %>%
+        dplyr::mutate(nlpar =
+                        dplyr::if_else(class == "sigma",
+                                       "sigma", nlpar))
+      prior_parsed <- prior_parsed %>%
+        dplyr::mutate(class =
+                        dplyr::if_else(nlpar == "sigma",
+                                       "b", class))
+    } else if(any('sigma' %in% prior_parsed[['dpar']])) {
+      prior_parsed <- prior_parsed %>%
+        dplyr::mutate(nlpar =
+                        dplyr::if_else(dpar != "" & nlpar == "",
+                                       dpar, nlpar))
+    }
+    
+   
   }
-
+  
   available_classes <- sort(unique(prior_parsed$class))
   available_parameters <- sort(unique(prior_parsed$nlpar))
   
@@ -1004,27 +990,27 @@ prior_summary_table <- function(model,
   if(is.null(range_method_arg[['method']])) range_method_arg[['method']] <- "r"
   if(is.null(range_method_arg[['na.rm']])) range_method_arg[['na.rm']] <- TRUE
   if(is.null(range_method_arg[['seed']])) range_method_arg[['seed']] <- seed
-
+  
   if (isTRUE(add_range)) {
-  range_tbl <-
-    draws_long %>%
-    dplyr::group_by(.row_id) %>%
-    dplyr::summarise(
-      range_vec = list(
-        do.call(range_method, c(list(x = .value), range_method_arg))
-      ),
-      .groups = "drop"
-    ) %>%
-    dplyr::mutate(
-      xmin_range = vapply(range_vec, `[`, numeric(1), 1),
-      xmax_range = vapply(range_vec, `[`, numeric(1), 2),
-      range = paste0(
-        sprintf("%0.2f", xmin_range),
-        ", ",
-        sprintf("%0.2f", xmax_range)
-      )
-    ) %>%
-    dplyr::select(.row_id, range)
+    range_tbl <-
+      draws_long %>%
+      dplyr::group_by(.row_id) %>%
+      dplyr::summarise(
+        range_vec = list(
+          do.call(range_method, c(list(x = .value), range_method_arg))
+        ),
+        .groups = "drop"
+      ) %>%
+      dplyr::mutate(
+        xmin_range = vapply(range_vec, `[`, numeric(1), 1),
+        xmax_range = vapply(range_vec, `[`, numeric(1), 2),
+        range = paste0(
+          sprintf("%0.2f", xmin_range),
+          ", ",
+          sprintf("%0.2f", xmax_range)
+        )
+      ) %>%
+      dplyr::select(.row_id, range)
   } else {
     range_tbl <- NULL
   }
@@ -1107,7 +1093,7 @@ prior_summary_table <- function(model,
     tag_all_empty <- all(
       is.na(prior_object_range_ci_out$tag) |
         trimws(as.character(prior_object_range_ci_out$tag)) == ""
-      )
+    )
     if (isTRUE(tag_all_empty)) {
       prior_object_range_ci_out <- prior_object_range_ci_out %>%
         dplyr::select(-tag)
@@ -1381,74 +1367,53 @@ prior_summary_table <- function(model,
     flextable::hline_top(border = NULL, part = "body") %>%
     flextable::hline_top(border = NULL, part = "footer")
   
-  save_tab_xlsx <- FALSE
-  save_tab_docx <- FALSE
+  out_flex <- summary_1
   
-  if (is.null(save_table)) {
-    save_it <- FALSE
-  } else if (is.logical(save_table)) {
-    save_it <- save_table
-    if (save_it) save_tab_xlsx <- TRUE
-  } else if (is.character(save_table)) {
-    if (save_table == "docx") {
-      save_it <- TRUE
-      save_tab_docx <- TRUE
-    } else if (save_table == "xlsx") {
-      save_it <- TRUE
-      save_tab_xlsx <- TRUE
-    } else {
-      save_it <- FALSE
-    }
+  if (!is.null(title)) {
+    out_flex <- flextable::set_caption(out_flex, caption = title)
+  }
+  
+  if(print) print(out_flex$body$dataset)
+  
+  out <- export_flextable(ft = out_flex,
+                          return_file = return_file,
+                          path = path,
+                          title = title,
+                          align = align,
+                          sheet_name = sheet_name)
+  
+  if(is.null(return_file)) {
+    #
   } else {
-    save_it <- FALSE
+    return_table <- FALSE
   }
   
-  if (save_it) {
-    if (is.null(output_file)) {
-      output_file <- if (is.null(tab_name)) "Prior summary" else tab_name
-    }
-    
-    if (!is.null(output_file)) {
-      out_path <- if (dirname(output_file) == ".") {
-        file.path(main_dir, tab_dir, output_file)
-      } else {
-        output_file
+  
+  if(return_table) {
+    if(!flex_table) {
+      return(out$body$dataset)
+    } else if( flex_table) {
+      if (!is.null(title)) {
+        out <- flextable::set_caption(out, caption = title)
       }
-      
-      if (!dir.exists(dirname(out_path))) {
-        dir.create(dirname(out_path), recursive = TRUE)
-      }
-      
-      out_path_docx <- if (grepl("\\.docx$", out_path, ignore.case = TRUE)) {
-        out_path
-      } else {
-        paste0(out_path, ".docx")
-      }
-      
-      if (save_tab_docx) {
-        flextable::save_as_docx(summary_1, path = out_path_docx)
-      }
-      
-      if (save_tab_xlsx) {
-        wb <- openxlsx2::wb_workbook()$add_worksheet("table")
-        wb <- flexlsx::wb_add_flextable(wb, "table", summary_1)
-        out_path_xlsx <- sub("\\.docx$", ".xlsx", out_path_docx,
-                             ignore.case = TRUE)
-        wb$save(out_path_xlsx)
-      }
+      return(out)
     }
   }
   
-  if (is.null(return_table)) {
-    return_table <- !save_it
+  if(!return_table) {
+    export_flextable(ft = out_flex,
+                     return_file = return_file,
+                     path = path,
+                     title = title,
+                     align = align,
+                     sheet_name = sheet_name)
   }
   
-  if (isTRUE(return_table)) {
-    return(summary_1)
-  }
   
   invisible(NULL)
 }
+
+
 
 
 

@@ -33,7 +33,7 @@
   facet = NULL,
   empty = "-",
   print = FALSE,
-  return_table = FALSE,
+  return_table = NULL,
   return_file = NULL,
   flex_table = FALSE,
   return_conflict = FALSE,
@@ -198,8 +198,10 @@ available.}
 
 \item{return_table}{Optional logical indicating whether to return the raw
 sensitivity object from \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} or a
-structured list with class attributes. Set \code{return_table = FALSE} (the
-default) if you plan to call \code{\link[=prior_conflict]{prior_conflict()}} later.}
+structured list with class attributes. Set \code{return_table = FALSE} if
+you plan to call \code{\link[=prior_conflict]{prior_conflict()}} later. Note that when
+\code{return_table = NULL} (the default), then it is internally set as
+\code{TRUE} when \code{return_conflict = FALSE}.}
 
 \item{return_file}{Optional character string specifying the output type.
 Supported values are \code{"word"}, \code{"docx"}, \code{"html"},

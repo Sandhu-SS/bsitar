@@ -2659,10 +2659,23 @@ evaluate_hypothesis_fun <- function(data,
     }
   } 
   
+  if(!is.null(hypothesis_args[['by']])) {
+    if(is.logical(hypothesis_args[['by']])) {
+      if(!is.null(hypothesis_args[['hypothesis']])) {
+        if(!hypothesis_args[['by']]) {
+           # hypothesis_args[['by']] <- NULL
+          stop2c("you have set 'hypothesis' as ", hypothesis_args[['hypothesis']],
+                " but 'by' argument is FALSE/NULL. Either set 'hypothesis'
+                as 'NULL' or provide 'by' argument")
+        }
+      }
+    }
+  }
+  
   hypothesis_group <- get_hypothesis_group_fun(hypothesis_args[['hypothesis']])
-  hypothesis_by <- hypothesis_args[['by']]
+  hypothesis_by            <- hypothesis_args[['by']]
   hypothesis_groupby       <- c('hypothesis', hypothesis_group)
-  hypothesis_groupby   <- intersect(hypothesis_groupby, names(data))
+  hypothesis_groupby       <- intersect(hypothesis_groupby, names(data))
   drawid_parameter         <- c('drawid', 'parameter')
   drawid_parameter_draw_by <- c(drawid_parameter, 'draw')
   drawid_parameter_draw_by <- c(drawid_parameter_draw_by, hypothesis_by)

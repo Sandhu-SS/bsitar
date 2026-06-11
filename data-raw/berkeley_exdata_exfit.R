@@ -24,8 +24,8 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                          control = list(adapt_delta = 0.9, max_treedepth = 15),
                          save_pars = save_pars(all = TRUE),
                          # sample_prior = "only",
-                         # init = 0,
-                         # init_r = 0,
+                         # init = random,
+                         # init_r = 0.1,
                          sample_prior = "yes",
                          normalize = TRUE, seed = 123)
 

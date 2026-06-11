@@ -63,8 +63,10 @@
 #'   
 #' @param return_table Optional logical indicating whether to return the raw
 #'   sensitivity object from [priorsense::powerscale_sensitivity()] or a
-#'   structured list with class attributes. Set \code{return_table = FALSE} (the
-#'   default) if you plan to call [prior_conflict()] later.
+#'   structured list with class attributes. Set \code{return_table = FALSE} if
+#'   you plan to call [prior_conflict()] later. Note that when
+#'   \code{return_table = NULL} (the default), then it is internally set as
+#'   \code{TRUE} when \code{return_conflict = FALSE}.
 #'   
 #' @param return_conflict Optional logical indicating whether to return the raw
 #'   sensitivity results \code{return_conflict = FALSE} from
@@ -244,7 +246,7 @@ prior_sensitivity.bgmfit <- function(
     facet = NULL,
     empty = "-",
     print = FALSE,
-    return_table = FALSE,
+    return_table = NULL,
     return_file = NULL,
     flex_table = FALSE,
     return_conflict = FALSE,
@@ -696,6 +698,7 @@ prior_sensitivity.bgmfit <- function(
   
   if(!return_conflict) {
     if(print) print(sens)
+    if(is.null(return_table)) return_table <- TRUE
     if(return_table) {
       if(!flex_table) {
         return(sens)
@@ -728,6 +731,8 @@ prior_sensitivity.bgmfit <- function(
                                flex_table = FALSE, print = FALSE)
   }
  
+  if(is.null(return_table)) return_table <- TRUE
+  
   if(!return_table) {
     return(out_list)
   } 

@@ -104,12 +104,15 @@ flagged variables.
 
 model <- getNsObject(berkeley_exfit)
 
+# Note return_table = FALSE which ensures correct output is returned from
+# the prior_sensitivity()
 ps <- prior_sensitivity(
   model = model,
-  variable = c("b_a_Intercept", "sigma")
+  variable = c("b_a_Intercept", "sigma"),
+  return_table = FALSE
 )
 
-conflict <- prior_conflict(ps)
+conflict <- prior_conflict(ps, return_table = TRUE)
 print(conflict)
 
 # Note that you can call prior_conflict() from within the prior_sensitivity()
