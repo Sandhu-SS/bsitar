@@ -1182,185 +1182,93 @@ levels in \code{rcorr_by}. For \code{rcorr_method = 'cde'}, uniform priors
 \code{rcorr_prior} is ignored when \code{rescor = FALSE}.
 }}
 
-\item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
-(default \code{normal(ymean, ysd, autoscale = FALSE)}). The following key
-points are applicable for all prior specifications. For full details, see
-\code{\link[brms:set_prior]{brms::prior()}}:
+\item{a_prior_beta}{Prior specification for the fixed effect parameter
+\code{a} (default: \code{normal(ymean, ysd, autoscale = FALSE)}). A
+robust alternative to the default setting is to use \code{lm} rather
+than \code{ymean}. This is because even when the predictor \code{xvar}
+is mean-centered, the intercept parameter \code{a} does not always
+correspond exactly to the overall sample mean. The \code{@details}
+section provides full details on prior specifications for the
+\pkg{bsitar} package.}
+
+\item{b_prior_beta}{Prior specification for the fixed effect parameter
+\code{b} (default: \code{normal(0, 2.0, autoscale = FALSE)}). The
+\code{@details} section provides full details on prior specifications
+for the \pkg{bsitar} package.}
+
+\item{c_prior_beta}{Prior specification for the fixed effect parameter
+\code{c} (default: \code{normal(0, 1.0, autoscale = FALSE)}). The
+\code{@details} section provides full details on prior specifications for
+the \pkg{bsitar} package.}
+
+\item{d_prior_beta}{Prior specification for the fixed effect parameter
+\code{d} (default: \code{normal(0, 1.0, autoscale = FALSE)}). For full
+details on prior specifications, please refer to \code{a_prior_beta}.
+\emph{Note:} To set the scale for location-scale priors, users can specify
+the standard deviation (\code{xsd}) or the median absolute deviation
+(\code{xmad}) of the predictor variable \code{x}.}
+
+\item{s_prior_beta}{Prior specification for the fixed effect parameter
+\code{s} (spline coefficients) (default: \code{normal(lm, lm,
+  autoscale = FALSE)}). For general guidelines on prior specifications,
+please refer to \code{a_prior_beta}. Key points specific to \code{s}
+include:
 \itemize{
-\item Allowed distributions: \code{normal}, \code{student_t},
-\code{cauchy}, \code{lognormal}, \code{uniform}, \code{exponential},
-\code{gamma}, and \code{inv_gamma} (inverse gamma).
+\item \strong{Data-driven \code{lm} priors:} When using \code{lm} for
+location-scale priors (e.g., \code{normal(lm, lm)}), the location
+parameter is derived from spline coefficients obtained via a simple
+linear model fit. The scale parameter is derived from the standard
+deviation of the spline design matrix.
 
-\item For each distribution, upper and lower bounds can be set via
-\code{lb} and \code{ub} (default \code{NA}).
+\item \strong{Hierarchical priors (\code{sethp}):} The \code{sethp}
+argument (default: \code{FALSE}) enables hierarchical prior
+specifications. Setting \code{sethp = TRUE} modifies the prior from
+\code{s ~ normal(0, lm)} to \code{s ~ normal(0, 'hp')}, where
+\code{hp ~ normal(0, lm)}. The scale for the hierarchical prior is
+inherited from \code{s}, but you can also explicitly pass a
+distribution. For example, \code{normal(0, lm, sethp = cauchy)}
+translates to \code{s ~ normal(0, lm)} and \code{hp ~ cauchy(0, lm)}.
 
-\item Location-scale based distributions (such as \code{normal},
-\code{student_t}, \code{cauchy}, and \code{lognormal}) have an
-\code{autoscale} option (default \code{FALSE}). This option multiplies the
-scale parameter by a numeric value. While \pkg{brms} typically uses a
-scaling factor of 1.0 or 2.5, the \pkg{bsitar} package allows any real
-number to be used (e.g., \code{autoscale = 5.0}).
-
-\item For location-scale distributions, \code{fxl} (\code{function
-  location}) and \code{fxs} (\code{function scale}) are available to apply
-transformations to the location and scale parameters. For example, setting
-\code{normal(2, 5, fxl = 'log', fxs = 'sqrt')} translates to
-\code{normal(log(2), sqrt(5))}.
-
-\item \code{fxls} (\code{function location scale}) transforms both location
-and scale parameters. The transformation applies when both parameters are
-involved, as in the log-transformation for normal priors:
-\code{log_location = log(location / sqrt(scale^2 / location^2 + 1))},
-\code{log_scale = sqrt(log(scale^2 / location^2 + 1))}. This can be
-specified as a character string or a list of functions.
-
-\item For strictly positive distributions like \code{exponential},
-\code{gamma}, and \code{inv_gamma}, the lower bound (\code{lb}) is
-automatically set to zero.
-
-\item For uniform distributions, the option \code{addrange} widens the
-prior range symmetrically. For example, \code{uniform(a, b, addrange = 5)}
-adjusts the range to \code{uniform(a-5, b+5)}.
-
-\item For exponential distributions, the rate parameter is evaluated as the
-inverse of the specified value. For instance, \code{exponential(10.0)} is
-internally treated as \code{exponential(1.0 / 10.0)} =
-\code{exponential(0.1)}.
-
-\item Users do not need to specify each option explicitly, as missing
-options will automatically default to their respective values. For example,
-\code{a_prior_beta = normal(location = 5, scale = 1)} is equivalent to
-\code{a_prior_beta = normal(5, 1)}.
-
-\item For \code{univariate_by} and \code{multivariate} models, priors can
-either be the same for all submodels (e.g., \code{a_prior_beta = normal(5,
-  1)}) or different for each submodel (e.g., \code{a_prior_beta =
-  list(normal(5, 1), normal(10, 5))}).
-
-\item For location-scale distributions, the location parameter can be
-specified as the mean (\code{ymean}) or median (\code{ymedian}) of the
-response variable, and the scale parameter can be specified as the standard
-deviation (\code{ysd}) or median absolute deviation (\code{ymad}).
-Alternatively, coefficients from a simple linear model can be used (e.g.,
-\code{lm(y ~ age)}).
-
-Example prior specifications include:
-\code{a_prior_beta = normal(ymean, ysd)},
-\code{a_prior_beta = normal(ymedian, ymad)},
-\code{a_prior_beta = normal(lm, ysd)}.
-
-Note that options such as \code{ymean}, \code{ymedian}, \code{ysd},
-\code{ymad}, and \code{lm} are available only for the fixed effect
-parameter \code{a}, not for other parameters like \code{b}, \code{c}, or
-\code{d}.
-}}
-
-\item{b_prior_beta}{Specify priors for the fixed effect parameter, \code{b}.
-The default prior is \code{normal(0, 2.0, autoscale = FALSE)}. For full
-details on prior specification, please refer to \code{a_prior_beta}.
-
-\itemize{
-\item Allowed distributions include \code{normal}, \code{student_t},
-\code{cauchy}, \code{lognormal}, \code{uniform}, \code{exponential},
-\code{gamma}, and \code{inv_gamma}. \item You can set upper and lower
-bounds (\code{lb}, \code{ub}) as needed (default is \code{NA}). \item The
-\code{autoscale} option controls scaling of the prior’s scale parameter. By
-default, this is set to \code{FALSE}. \item Further customization and
-transformations can be applied, similar to the \code{a_prior_beta}
-specification.
-}}
-
-\item{c_prior_beta}{Specify priors for the fixed effect parameter, \code{c}.
-The default prior is \code{normal(0, 1.0, autoscale = FALSE)}. For full
-details on prior specification, please refer to \code{a_prior_beta}.
-
-\itemize{
-\item Allowed distributions include \code{normal}, \code{student_t},
-\code{cauchy}, \code{lognormal}, \code{uniform}, \code{exponential},
-\code{gamma}, and \code{inv_gamma}. \item Upper and lower bounds
-(\code{lb}, \code{ub}) can be set as necessary (default is \code{NA}).
-\item The \code{autoscale} option is also available for scaling the prior's
-scale parameter (default \code{FALSE}). \item Similar to
-\code{a_prior_beta}, further transformations or customization can be
-applied.
-}}
-
-\item{d_prior_beta}{Specify priors for the fixed effect parameter, \code{d}.
-The default prior is \code{normal(0, 1.0, autoscale = FALSE)}. For full
-details on prior specification, please refer to \code{a_prior_beta}. Note
-that to set the scale of location-scale based priors, the user can set
-scale as standard deviation \code{'xsd'} or the median absolute deviation
-\code{'xmad'} of the predictor variable \code{'x'}.
-
-\itemize{
-\item Allowed distributions include \code{normal}, \code{student_t},
-\code{cauchy}, \code{lognormal}, \code{uniform}, \code{exponential},
-\code{gamma}, and \code{inv_gamma}. \item The option to set upper and lower
-bounds (\code{lb}, \code{ub}) is available (default is \code{NA}). \item
-\code{autoscale} allows scaling of the prior’s scale parameter and is
-\code{FALSE} by default. \item For more advanced transformations or
-customization, similar to \code{a_prior_beta}, these options are available.
-}}
-
-\item{s_prior_beta}{Specify priors for the fixed effect parameter, \code{s}
-(i.e., spline coefficients). The default prior is \code{normal('lm', 'lm',
-  autoscale = FALSE)}. The general approach is similar to the one described
-for other fixed effect parameters (see \code{a_prior_beta} for details).
-Key points to note:
-\itemize{
-\item When using location-scale based priors with 'lm' (e.g.,
-\code{s_prior_beta = normal(lm, 'lm')}), the location parameter is set from
-the spline coefficients obtained from the simple linear model fit, and the
-scale parameter is based on the standard deviation of the spline design
-matrix. The location and scale parameters are typically set to \code{lm}
-(default), and \code{autoscale} is set to \code{FALSE}. \item For
-location-scale based priors, the option \code{sethp} (logical, default
-\code{FALSE}) is available to define hierarchical priors. Setting
-\code{sethp = TRUE} alters the prior setup to use hierarchical priors:
-\code{s ~ normal(0, 'lm')} becomes \code{s ~ normal(0, 'hp')}, where
-\code{'hp'} is defined as \code{hp ~ normal(0, 'lm')}. The scale for the
-hierarchical prior is automatically taken from the \code{s} parameter, and
-it can also be defined
-using the same \code{sethp} option. For example, \code{s_prior_beta =
-  normal(0, 'lm', sethp = cauchy)} will result in \code{s ~ normal(0, 'lm')},
-\code{hp ~ cauchy(0, 'lm')
-  }.
-\item For \code{uniform} priors, you can use the option \code{addrange} to
-symmetrically expand the prior range.
+\item \strong{Uniform distributions:} The \code{addrange} argument
+can be used to symmetrically expand the prior range.
 }
-It has been observed that location-scale based prior distributions (such as
-\code{normal}, \code{student_t}, and \code{cauchy}) typically work well for
-spline coefficients.
 
-Note that the scale parameter for above \code{s_prior_beta = normal(lm, lm)}
-(which is same as \code{s_prior_beta = normal(lm,lm1)}) is derived from the
-standard deviation of the outcome and the spline design matrix as \cr
-\code{sd(y)/sd(X)} where \code{y} is the outcome and \code{X} design matrix.
-The other variants of scale parameters are: \cr \code{s_prior_beta =
- normal(lm,lm2)}) for which the scale parameter is defined as:
-\code{lm_se/sd(X)} where \code{lm_se} is the vector of standard error
-obtained from the linear model fit and \code{X} is the design matrix. \cr
-\code{s_prior_beta = normal(lm,lm3)}) for which the scale parameter is
-defined as \code{lm_se} where \code{lm_se} is the vector of standard error
-obtained from the linear model fit. In most cases, \code{s_prior_beta =
- normal(lm, lm)} works well and could be further refined by changing the
-\code{autoscale} such as \code{s_prior_beta = normal(lm, lm, autoscale =
- TRUE)} depending on that data.}
-
-\item{a_cov_prior_beta}{Specify priors for the covariate(s) included in the
-fixed effect parameter, \code{a} (default \code{normal(0, 5.0, autoscale =
-  FALSE)}). The approach for specifying priors is similar to
-\code{a_prior_beta}, with a few differences:
+\strong{Scale Parameter Variants for \code{lm}} When the scale parameter is
+set to \code{lm}, it defaults to \code{lm1}. The available variants
+calculate the scale differently (where \code{y} is the outcome, \code{X} is
+the design matrix, and \code{lm_se} is the standard error vector from the
+linear model fit):
 \itemize{
-\item The options \code{'ymean'}, \code{'ymedian'}, \code{'ysd'}, and
-\code{'ymad'} are not allowed for \code{a_cov_prior_beta}. \item The
-\code{'lm'} option for the location parameter allows the covariate
-coefficient(s) to be obtained from a simple linear model fit to the data.
-Note that the \code{'lm'} option is only allowed for
-\code{a_cov_prior_beta} and not for covariates in other fixed or random
-effect parameters. \item Separate priors can be specified for submodels
-when fitting \code{univariate_by} and \code{a_prior_beta} models (see
-\code{a_prior_beta} for details).
+\item \strong{\code{lm} or \code{lm1}:} \code{sd(y) / sd(X)}
+\item \strong{\code{lm2}:} \code{lm_se / sd(X)}
+\item \strong{\code{lm3}:} \code{lm_se}
+}
+
+\emph{Note:} Location-scale priors (such as \code{normal},
+\code{student_t}, and \code{cauchy}) generally perform well for spline
+coefficients. In most cases, the default \code{normal(lm, lm)} is
+highly effective and can be further refined by setting \code{autoscale =
+  TRUE} depending on the specific data structure.}
+
+\item{a_cov_prior_beta}{Prior specification for covariate effects included
+in the fixed effect parameter \code{a} (default:
+\code{normal(0, 5.0, autoscale = FALSE)}). The general approach to prior
+specification is similar to \code{a_prior_beta}, with the following
+differences:
+\itemize{
+\item \strong{Restricted data-driven options:} The options
+\code{'ymean'}, \code{'ymedian'}, \code{'ysd'}, and \code{'ymad'} are
+not available for \code{a_cov_prior_beta}.
+
+\item \strong{\code{lm} for location:} The \code{lm} option can be
+used for the location parameter, allowing covariate coefficients to be
+derived from a simple linear model fitted to the data. This option is
+available only for \code{a_cov_prior_beta} and not for covariates in
+other fixed or random effect parameters.
+
+\item \strong{Submodel-specific priors:} Separate priors can be specified
+for individual sub models when fitting \code{univariate_by} or
+\code{multivariate} models; see \code{a_prior_beta} for details.
 }}
 
 \item{b_cov_prior_beta}{Specify priors for the covariate(s) included in the
@@ -1382,7 +1290,7 @@ allow covariates in the spline design matrix. If covariates are specified
 (see \code{s_formula}), the approach to setting priors for the covariates
 in parameter \code{s} is the same as for \code{a} (see
 \code{a_cov_prior_beta}). For location-scale based priors, the option
-\code{'lm'} sets the location parameter based on spline coefficients
+\code{lm} sets the location parameter based on spline coefficients
 obtained from fitting a simple linear model to the data.}
 
 \item{a_prior_sd}{Specify priors for the random effect parameter, \code{a}.
@@ -1410,7 +1318,7 @@ for details.}
 random effect parameter, \code{a}. (default \code{normal(0, 5.0, autoscale
   = FALSE)}). The approach is the same as described for
 \code{a_cov_prior_beta}, except that no pre-defined options (e.g.,
-\code{'lm'}) are allowed.}
+\code{lm}) are allowed.}
 
 \item{b_cov_prior_sd}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{b}. (default \code{normal(0, 1.0, autoscale
@@ -1586,14 +1494,14 @@ unconstrained parameter space.}
 \item \code{'prior'}: Uses values drawn from the prior distribution. \item
 \code{'ymean'}: Initializes with the mean of the response variable. \item
 \code{'ymedian'}: Initializes with the median of the response variable.
-\item \code{'lm'}: Initializes with the coefficients from a simple linear
+\item \code{lm}: Initializes with the coefficients from a simple linear
 model fitted to the data.
 }
 
-Note that options \code{'ymean'}, \code{'ymedian'}, and \code{'lm'} are only
+Note that options \code{'ymean'}, \code{'ymedian'}, and \code{lm} are only
 available for the fixed effect parameter \code{a}. For \code{univariate_by}
 and \code{multivariate} models, initial values can be the same across
-submodels (e.g., \code{a_init_beta = '0'}) or different for each submodel
+sub models (e.g., \code{a_init_beta = '0'}) or different for each sub model
 (e.g., \code{list(a_init_beta = '0', a_init_beta = 'lm')}).}
 
 \item{b_init_beta}{Initial values for the fixed effect parameter, \code{b}
@@ -2400,10 +2308,92 @@ defined by a factor variable (e.g., sex).
 shared random effects.
 }
 
-The \pkg{bsitar} package offers full flexibility in specifying predictors,
-degrees of freedom for design matrices, priors, and initial values. The
-package also allows users to specify options in a user-friendly manner (e.g.,
-\code{univariate_by = sex} is equivalent to \code{univariate_by = 'sex'}).
+The \pkg{bsitar} package provides full flexibility in specifying predictors,
+degrees of freedom for design matrices, priors, and initial values. It also
+supports unquoted argument evaluation for convenience (e.g.,
+\code{univariate_by = sex} is treated equivalently to
+\code{univariate_by = 'sex'}).
+
+\strong{Priors}
+The following guidelines apply to all prior specifications. For full details,
+see \code{\link[brms:set_prior]{brms::prior()}}:
+\itemize{
+\item \strong{Allowed distributions:} \code{normal}, \code{student_t},
+\code{cauchy}, \code{lognormal}, \code{uniform}, \code{exponential},
+\code{gamma}, and \code{inv_gamma}.
+
+\item \strong{Bounds:} Upper and lower bounds can be defined for any
+distribution using \code{lb} and \code{ub} (default: \code{NA}). Strictly
+positive distributions (\code{exponential}, \code{gamma}, \code{inv_gamma})
+automatically set their lower bound to zero.
+
+\item \strong{Scaling:} Location-scale distributions (\code{normal},
+\code{student_t}, \code{cauchy}, \code{lognormal}) support an
+\code{autoscale} argument (default: \code{FALSE}) that multiplies the scale
+parameter by a numeric value. While \pkg{brms} typically restricts scaling
+factors to 1.0 or 2.5, \pkg{bsitar} accepts any real number (e.g.,
+\code{autoscale = 5.0}).
+
+\item \strong{Transformations:} For location-scale distributions,
+\code{fxl} (function location) and \code{fxs} (function scale) apply
+transformations to their respective parameters. For example, \code{normal(2, 5, fxl = 'log',
+  fxs = 'sqrt')} translates to \code{normal(log(2), sqrt(5))}.
+Alternatively, \code{fxls} (function location scale) simultaneously
+transforms both parameters when they are interdependent (e.g., log-normal
+transformations). This can be passed as a character string or list of
+functions.
+
+\item \strong{Uniform distributions:} The \code{addrange} argument
+symmetrically widens the prior range. For instance, \code{uniform(a, b, 
+  addrange = 5)} adjusts the bounds to \code{uniform(a - 5, b + 5)}.
+
+\item \strong{Exponential distributions:} The specified rate parameter is
+internally inverted. Therefore, \code{exponential(10.0)} is evaluated as
+\code{exponential(1.0 / 10.0)} = \code{exponential(0.1)}.
+
+\item \strong{Syntax defaults:} Missing arguments automatically default to
+their standard positional values. For example, \code{normal(location = 5, 
+  scale = 1)} simplifies to \code{normal(5, 1)}.
+
+\item \strong{Multivariate/Univariate-by models:} Priors can be applied
+globally across all submodels (e.g., \code{normal(5, 1)}) or specified
+individually via a list (e.g., \code{list(normal(5, 1), normal(10, 5))}).
+
+\item \strong{Data-driven parameters:} For location-scale distributions,
+parameters can be derived directly from the response variable. The location
+can be set to the mean (\code{ymean}) or median (\code{ymedian}), and the
+scale to the standard deviation (\code{ysd}) or median absolute deviation
+(\code{ymad}). Alternatively, coefficients from a simple linear model
+(\code{lm(y ~ age)}) can be used. Examples include \code{normal(ymean,
+  ysd)} or \code{normal(lm, ysd)}.
+
+\emph{Note:} Data-driven options (\code{ymean}, \code{ymedian}, \code{ysd},
+\code{ymad}, and \code{lm}) are exclusive to the fixed effect parameter
+\code{a} and cannot be used for \code{b}, \code{c}, or \code{d}.
+}
+
+\strong{Initials} Initial values for the fixed effect parameter \code{a}
+(default: \code{'random'}). Available options include:
+\itemize{
+\item \strong{\code{'0'}:} Initializes the parameter to zero.
+\item \strong{\code{'random'}:} Initializes with random values within a
+specified range.
+\item \strong{\code{'prior'}:} Draws initial values directly from the prior
+distribution.
+\item \strong{\code{'ymean'}:} Initializes using the mean of the response
+variable.
+\item \strong{\code{'ymedian'}:} Initializes using the median of the
+response variable.
+\item \strong{\code{'lm'}:} Initializes using coefficients from a simple
+linear model fitted to the data.
+}
+
+\emph{Note:} Data-driven initial values (\code{'ymean'}, \code{'ymedian'},
+and \code{'lm'}) are exclusive to the fixed effect parameter \code{a}. For
+\code{univariate_by} and \code{multivariate} models, initial values can be
+applied globally across all submodels (e.g., \code{a_init_beta = '0'}) or
+specified individually via a list (e.g., \code{a_init_beta = list('0',
+'lm')}).
 }
 \note{
 The package is under continuous development, and new models,
