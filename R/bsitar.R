@@ -2512,6 +2512,7 @@ bsitar <- function(x,
                    ...) {
   
   mcall <- match.call()
+  
   no_default_args <- c("x", "y", "id", "data", "...")
   if(is.null(global_args)) {
     global_args <- FALSE
@@ -2540,7 +2541,7 @@ bsitar <- function(x,
     } else {
       set_eval_globals_in_mcall <- TRUE
       set_eval_globals_in_mcall_names <- names(mcall)
-      set_exceptions <- c("data", "...")
+      set_exceptions <- c("data", "...") # "save_pars",
       set_exceptions <- c(set_exceptions, 'family')
       mcall <- eval_globals_in_mcall(mcall, exceptions = set_exceptions) 
     }
@@ -2656,9 +2657,19 @@ bsitar <- function(x,
       newcall_checks <- c(newcall_checks, 'threads')
     }
   }
-  
+ 
   newcall <- check_brms_args(mcall, newcall_checks)
-  mcall <- mcall_ <- newcall
+  
+  if(is.list(newcall$threads)) {
+    newcall$threads <- as.call(c(quote(brms::threading),
+                          do.call(brms::threading, newcall$threads))) 
+  }
+  if(is.list(newcall$save_pars)) {
+    newcall$save_pars <- as.call(c(quote(brms::save_pars),
+                                 do.call(brms::save_pars, newcall$save_pars))) 
+  }
+  
+  mcall   <- mcall_ <- newcall
   
   dots_allias <- list(...)
   collect_dot_names <- c()
@@ -11382,7 +11393,13 @@ bsitar <- function(x,
         
         cores_   <- eval(setarguments$cores)
         threads_ <- eval(setarguments$threads)
-      
+        
+        if(is.list(threads_)) {
+          threads_ <- as.call(c(quote(brms::threading),
+                                do.call(brms::threading, threads_)
+          )) 
+        }
+        
         if(is.null(cores_) & is.null(getOption('mc.cores'))) {
           max.cores <- 1
           }
@@ -12452,7 +12469,7 @@ bsitar <- function(x,
     brm_args[['prior']] <- brm_args[['prior']] %>% 
       dplyr::filter(class != 'sigma')
   }
-
+  
   scode_final  <- CustomDoCall(brms::make_stancode, brm_args)
   sdata        <- CustomDoCall(brms::make_standata, brm_args)
   if(parameterization == 'cp') {

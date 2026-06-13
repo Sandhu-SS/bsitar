@@ -49,35 +49,19 @@
   force_save = FALSE,
   resp = NULL,
   dpar = NULL,
-  ndraws = NULL,
-  draw_ids = NULL,
   re_formula = NULL,
   allow_new_levels = FALSE,
   sample_new_levels = "uncertainty",
   incl_autocor = TRUE,
-  numeric_cov_at = NULL,
-  levels_id = NULL,
-  avg_reffects = NULL,
-  aux_variables = NULL,
-  grid_add = NULL,
   summary = FALSE,
   robust = FALSE,
-  transform_draws = NULL,
   scale = c("response", "linear"),
   probs = c(0.025, 0.975),
-  xrange = NULL,
-  xrange_search = NULL,
-  idata_method = NULL,
   verbose = FALSE,
-  fullframe = NULL,
-  dummy_to_factor = NULL,
   expose_function = FALSE,
   usesavedfuns = NULL,
   clearenvfuns = NULL,
-  funlist = NULL,
   xvar = NULL,
-  idvar = NULL,
-  itransform = NULL,
   envir = NULL,
   ...
 )
@@ -269,12 +253,6 @@ variable when processing posterior draws for \code{univariate_by} and
 \item{dpar}{Optional name of a predicted distributional parameter.
 If specified, expected predictions of this parameters are returned.}
 
-\item{ndraws}{A positive integer indicating the number of posterior draws to
-use in estimation. If \code{NULL} (default), all draws are used.}
-
-\item{draw_ids}{An integer specifying the specific posterior draw(s) to use
-in estimation (default \code{NULL}).}
-
 \item{re_formula}{Option to indicate whether or not to include
 individual/group-level effects in the estimation. When \code{NA} (default),
 individual-level effects are excluded, and population average growth
@@ -311,48 +289,6 @@ where a new level is assigned all of the posterior draws of the same
 specified via \code{autocor} should be included in the predictions.
 Defaults to \code{TRUE}.}
 
-\item{numeric_cov_at}{An optional (named list) argument to specify the value
-of continuous covariate(s). The default \code{NULL} option sets the
-continuous covariate(s) to their mean. Alternatively, a named list can be
-supplied to manually set these values. For example, \code{numeric_cov_at =
-  list(xx = 2)} will set the continuous covariate variable 'xx' to 2. The
-argument \code{numeric_cov_at} is ignored when no continuous covariates are
-included in the model.}
-
-\item{levels_id}{An optional argument to specify the \code{ids} for the
-hierarchical model (default \code{NULL}). It is used only when the model is
-applied to data with three or more levels of hierarchy. For a two-level
-model, \code{levels_id} is automatically inferred from the model fit. For
-models with three or more levels, \code{levels_id} is inferred from the
-model fit under the assumption that hierarchy is specified from the lowest
-to the uppermost level, i.e., \code{id} followed by \code{study}, where
-\code{id} is nested within \code{study}. However, it is not guaranteed that
-\code{levels_id} is sorted correctly, so it is better to set it manually
-when fitting a model with three or more levels of hierarchy.}
-
-\item{avg_reffects}{An optional argument (default \code{NULL}) to calculate
-(marginal/average) curves and growth parameters, such as APGV and PGV. If
-specified, it must be a named list indicating the \code{over} (typically a
-level 1 predictor, such as age), \code{feby} (fixed effects, typically a
-factor variable), and \code{reby} (typically \code{NULL}, indicating that
-parameters are integrated over the random effects). For example,
-\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age')}.}
-
-\item{aux_variables}{An optional argument to specify the variable(s) that can
-be passed to the \code{ipts} argument (see below). This is useful when
-fitting location-scale models and measurement error models. If
-post-processing functions throw an error such as \code{variable 'x' not
-  found in either 'data' or 'data2'}, consider using \code{aux_variables}.}
-
-\item{grid_add}{An optional argument to specify the variable(s) that can be
-passed to the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}. This is useful when fitting
-location-scale models and measurement error models. If
-post-processing functions throw an error such as \code{variable 'x' not
-  found in either 'data' or 'data2'}, consider using \code{grid_add}.
-Note that unlike \code{aux_variables} which are passed to the internal data
-functions such as \code{'get.newdata'}, the \code{grid_add} are passed to
-the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}.}
-
 \item{summary}{A logical value indicating whether only the estimate should be
 computed (\code{TRUE}), or whether the estimate along with SE and CI should
 be returned (\code{FALSE}, default). Setting \code{summary} to \code{FALSE}
@@ -365,22 +301,6 @@ standard deviation as the measure of variability. If \code{TRUE}, the
 median and median absolute deviation (MAD) are applied instead. Ignored if
 \code{summary} is \code{FALSE}.}
 
-\item{transform_draws}{A function applied to individual draws from the
-posterior distribution before computing summaries (default \code{NULL}).
-The argument \code{transform_draws} is derived from the
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
-the \code{transform} argument from the deprecated
-\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
-the \code{transform_draws} argument takes precedence over the
-\code{transform} argument. Note that when \code{transform_draws = NULL}, an
-attempt is made to automatically set \code{transform_draws = 'exp'} for
-\code{dpar = 'sigma'}. User can set  \code{transform_draws = FALSE} to turn
-off this automatic assignment of \code{'exp'} to the
-\code{transform_draws}. It is also important to set \code{transform_draws =
-  FALSE} when computing the first derivative (velocity) for \code{dpar =
-  'sigma'}.}
-
 \item{scale}{Either \code{"response"} or \code{"linear"}.
 If \code{"response"}, results are returned on the scale
 of the response variable. If \code{"linear"},
@@ -391,65 +311,8 @@ other transformations.}
 \item{probs}{The percentiles to be computed by the \code{quantile}
 function. Only used if \code{summary} is \code{TRUE}.}
 
-\item{xrange}{An integer to set the predictor range (e.g., age) when
-executing the interpolation via \code{ipts}. By default, \code{NULL} sets
-the individual-specific predictor range. Setting \code{xrange = 1} applies
-the same range for individuals within the same higher grouping variable
-(e.g., study). Setting \code{xrange = 2} applies an identical range across
-the entire sample. Alternatively, a numeric vector (e.g., \code{xrange =
-  c(6, 20)}) can be provided to set the range within the specified values.}
-
-\item{xrange_search}{A vector of length two or a character string
-\code{'range'} to set the range of the predictor variable (\code{x}) within
-which growth parameters are searched. This is useful when there is more
-than one peak and the user wants to summarize the peak within a specified
-range of the \code{x} variable. The default value is \code{xrange_search =
-  NULL}.}
-
-\item{idata_method}{A character string specifying the interpolation method
-(default \code{NULL}). The number of interpolation points is controlled by
-the \code{ipts} argument.
-
-Available options:
-\itemize{
-\item \code{'m1'}: Adapted from the \pkg{iapvbs} package (documented
-\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}). This
-method internally constructs the data frame based on the model
-configuration. \emph{Note:} This method may fail if the model includes
-covariates (especially in \code{univariate_by} models).
-\item \code{'m2'}: Based on the \pkg{JMbayes} package (documented
-\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}).
-This method uses the exact data frame from the model fit
-(\code{fit$data}) and is generally more robust.
-}
-
-If \code{idata_method = NULL}, \code{'m2'} is automatically selected.
-It is recommended to use \code{'m2'} if \code{'m1'} encounters errors
-with covariate-dependent models.}
-
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}
-
-\item{fullframe}{A logical value indicating whether to return a
-\code{fullframe} object in which \code{newdata} is bound to the summary
-estimates. Note that \code{fullframe} cannot be used with \code{summary =
-  FALSE}, and it is only applicable when \code{idata_method = 'm2'}. A
-typical use case is when fitting a \code{univariate_by} model. This option
-is mainly for internal use.}
-
-\item{dummy_to_factor}{A named list (default \code{NULL}) to convert dummy
-variables into a factor variable. The list must include the following
-elements:
-\itemize{
-\item \code{factor.dummy}: A character vector of dummy variables to be
-converted to factors.
-\item \code{factor.name}: The name for the newly created factor variable
-(default is \code{'factor.var'} if \code{NULL}).
-\item \code{factor.level}: A vector specifying the factor levels.
-If \code{NULL}, levels are taken from \code{factor.dummy}.
-If \code{factor.level} is provided, its length must match
-\code{factor.dummy}.
-}}
 
 \item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
 Controls whether Stan functions are exposed for post-processing.
@@ -478,35 +341,11 @@ Stan functions from the environment (\code{TRUE}) or not (\code{FALSE}). If
 \code{usesavedfuns}: \code{TRUE} if \code{usesavedfuns = TRUE}, or
 \code{FALSE} if \code{usesavedfuns = FALSE}.}
 
-\item{funlist}{A list (default \code{NULL}) specifying function names. This
-is rarely needed, as required functions are typically retrieved
-automatically. A use case for \code{funlist} is when \code{sigma_formula},
-\code{sigma_formula_gr}, or \code{sigma_formula_gr_str} use an external
-function (e.g., \code{poly(age)}). The \code{funlist} should include
-function names defined in the \code{globalenv()}. For functions needing
-both distance and velocity curves (e.g., \code{plot_curves(..., opt =
-  'dv')}), \code{funlist} must include two functions: one for the distance
-curve and one for the velocity curve.}
-
 \item{xvar}{A character string (default \code{NULL}) specifying the
 \code{'x'} variable. Rarely used because \code{xvar} is inferred
 internally. A use case is when conflicting variables exist (e.g.,
 \code{sigma_formula}) and user wants to set a specific variable as
 \code{'x'}.}
-
-\item{idvar}{A character string (default \code{NULL}) specifying the
-\code{'id'} variable. Rarely used because \code{idvar} is inferred
-internally.}
-
-\item{itransform}{A character string (default \code{NULL}) indicating the
-variables names that are reverse transformed. Options are  \code{c("x",
-  "y", "sigma")}. The \code{itransform} is primarily used to get the
-\code{xvar} variable at original scale i.e., \code{itransform = 'x'}. To
-turn of all transformations, use \code{itransform = ""}. when
-\code{itransform = NULL}, the appropriate transformation for \code{xvar} is
-selected automatically. Note that when no match for \code{xvar} is found in
-the \code{data,frame}, the \code{itransform} will be ignored within the
-calling function, \code{'prepare_transformations()'}.}
 
 \item{envir}{The environment used for function evaluation. The default is
 \code{NULL}, which sets the environment to \code{parent.frame()}. Since
@@ -518,7 +357,7 @@ derivatives like velocity curves.}
 \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}}.}
 }
 \value{
-If \code{return_table = TRUE}, a table of sensitivity values for each
+When \code{return_table = TRUE}, a table of sensitivity values for each
 specified variable is returned. If \code{return_table = FALSE}, a
 \code{"prior_sensitivity"} object is returned as a list with the following
 components:
@@ -537,23 +376,24 @@ components:
 }
 }
 \description{
-Run a \pkg{priorsense} power-scaling sensitivity analysis for a fitted
-\code{bsitar} model. Optionally, append derived quantities to a posterior
-draws object in the same style as the recommended \pkg{priorsense} workflow.
-Also support returning diagnostic plot(s).
+Perform power-scaling sensitivity analysis for a fitted \code{bsitar} model.
+Supports appending derived quantities to a posterior draws object as the
+recommended \pkg{priorsense} workflow. Furthermore, \code{prior_sensitivity}
+also allows visualization of sensitivity analysis plot(s).
 }
 \details{
-This function is intended as a package-level convenience wrapper around
-\code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} and the associated plotting tools.
+The \strong{prior_sensitivity} function is intended as a package-level
+convenience wrapper around \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} and the
+associated plotting tools.
 
 If requested, the function also constructs an augmented draws object using
-fit criterion \code{see include_criterion}, joint log-likelihood \code{see
-include_criterion}, or posterior expected predictions for representative
-covariate values \code{see include_predictor}. This follows the general
-workflow recommended in the \pkg{priorsense} package.
+fit criterion (see argument \code{include_criterion}), joint log-likelihood
+(see argument \code{include_jointlik}), or posterior expected predictions for
+representative covariate values (see argument \code{include_predictor}). This
+follows the general workflow recommended in the \pkg{priorsense} package.
 
-This wrapper supports two closely related workflows for prior sensitivity
-analysis.
+The \strong{prior_sensitivity} supports two closely related workflows for
+prior sensitivity analysis.
 
 \strong{Standard workflow:} The function calls
 \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} directly on the fitted \code{bsitar}
@@ -561,36 +401,42 @@ model and returns the sensitivity results. This is the simpler approach when
 you only need sensitivity assessments for the model parameters themselves.
 
 \strong{Extended workflow:} A posterior draws object is created using
-\code{\link[posterior:draws_df]{posterior::as_draws_df()}} and can optionally be extended with additional
-derived quantities. This extended draws object is useful user you wants to
-explore prior sensitivity not only for model parameters but also for
-model-level summaries and predictive quantities. The posterior draws object
-can be extended with the following quantities:
+\code{\link[posterior:draws_df]{posterior::as_draws_df()}} which allows computing the additional derived
+quantities. This extended draws object is useful when user wants to explore
+prior sensitivity not only for model parameters but also for model-based fit
+criteria and predictive quantities. The posterior draws object can be
+extended with the following quantities:
 \itemize{
 \item \strong{Fit criteria} via \code{\link[=add_model_criterion]{add_model_criterion()}}. Use the
 \code{include_criterion} argument to specify which criteria to append.
 Available options include \code{"bayes_R2"}, \code{"loo_R2"},
-\code{"jointlik"}, and \code{"margliklik"}.
+\code{"jointlik"}, and \code{"margliklik"}. Note that for
+\code{"margliklik"}, the model should have fitted using \code{save_pars =
+    save_pars(all = TRUE)}. See \code{\link[=bsitar]{bsitar()}} for details on the
+\code{save_pars} argument.
 \item \strong{Joint log-likelihood (\code{jointlik})} quantity computed
 using the custom \code{jointlik_fun} function. This captures the
-joint likelihood of all observations under each posterior draw.
+joint likelihood of all observations under each posterior draw. See
+\code{include_jointlik} argument for details.
 \item \strong{Posterior expected predictions} via
 \code{\link[brms:posterior_epred.brmsfit]{brms::posterior_epred()}}. Use the \code{include_predictor} argument
 to specify predictor values for which to compute expected predictions.
+See \code{include_predictor} argument for details.
 \item \strong{Point-wise log-likelihood draws} via
-\code{\link[priorsense:log_lik_draws]{priorsense::log_lik_draws()}} (currently ignored in this implementation)
+\code{\link[priorsense:log_lik_draws]{priorsense::log_lik_draws()}} (currently ignored)
 \item \strong{Log-prior draws} via \code{\link[priorsense:log_prior_draws]{priorsense::log_prior_draws()}}
-(currently ignored in this implementation)
+(currently ignored)
 }
 
-\strong{Interpretation of sensitivity patterns:} In the \pkg{priorsense}
-framework, the pattern of sensitivity to prior and likelihood perturbations
-provides diagnostic information about the model:
+\strong{Interpretation of sensitivity analysis results:} In the
+\pkg{priorsense} framework, the pattern of sensitivity to prior and
+likelihood perturbations provides diagnostic information about the Prior-data
+conflict and the strength of likelihood:
 
 \itemize{
 \item \strong{Prior-data conflict:} When sensitivity to \strong{both}
 prior perturbations \strong{and} likelihood perturbations is strong,
-this may indicate a prior-data conflict. The prior information is
+it indicates a prior-data conflict. The prior information is
 inconsistent with what the data suggest.
 \item \strong{Weakly informative likelihood:} When sensitivity to prior
 perturbations is \strong{strong} but sensitivity to likelihood
@@ -599,7 +445,7 @@ only weakly informative for that quantity. The data provide limited
 information relative to the prior.
 }
 
-These diagnostics help you assess whether your prior choices are appropriate
+These diagnostics help user to assess whether prior choices are appropriate
 and whether certain quantities are well-identified by the data.
 }
 \examples{

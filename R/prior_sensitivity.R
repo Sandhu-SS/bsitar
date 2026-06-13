@@ -2,19 +2,11 @@
 
 #' Prior sensitivity analysis workflow for \pkg{bsitar} models
 #'
-#' Run a \pkg{priorsense} power-scaling sensitivity analysis for a fitted
-#' \code{bsitar} model. Optionally, append derived quantities to a posterior
-#' draws object in the same style as the recommended \pkg{priorsense} workflow.
-#' Also support returning diagnostic plot(s).
-#'
-#' This function is intended as a package-level convenience wrapper around
-#' [priorsense::powerscale_sensitivity()] and the associated plotting tools.
-#'
-#' If requested, the function also constructs an augmented draws object using
-#' fit criterion \code{see include_criterion}, joint log-likelihood \code{see
-#' include_criterion}, or posterior expected predictions for representative
-#' covariate values \code{see include_predictor}. This follows the general
-#' workflow recommended in the \pkg{priorsense} package.
+#' @description
+#' Perform power-scaling sensitivity analysis for a fitted \code{bsitar} model.
+#' Supports appending derived quantities to a posterior draws object as the
+#' recommended \pkg{priorsense} workflow. Furthermore, \code{prior_sensitivity}
+#' also allows visualization of sensitivity analysis plot(s).
 #'
 #' @param model A fitted model object from \code{bsitar}.
 #'
@@ -88,8 +80,18 @@
 #' @inheritParams prior_conflict
 #'
 #' @details
-#' This wrapper supports two closely related workflows for prior sensitivity
-#' analysis.
+#' The \strong{prior_sensitivity} function is intended as a package-level
+#' convenience wrapper around [priorsense::powerscale_sensitivity()] and the
+#' associated plotting tools.
+#'
+#' If requested, the function also constructs an augmented draws object using
+#' fit criterion (see argument \code{include_criterion}), joint log-likelihood
+#' (see argument \code{include_jointlik}), or posterior expected predictions for
+#' representative covariate values (see argument \code{include_predictor}). This
+#' follows the general workflow recommended in the \pkg{priorsense} package.
+#'
+#' The \strong{prior_sensitivity} supports two closely related workflows for
+#' prior sensitivity analysis.
 #'
 #' \strong{Standard workflow:} The function calls
 #' [priorsense::powerscale_sensitivity()] directly on the fitted \code{bsitar}
@@ -97,36 +99,42 @@
 #' you only need sensitivity assessments for the model parameters themselves.
 #'
 #' \strong{Extended workflow:} A posterior draws object is created using
-#' [posterior::as_draws_df()] and can optionally be extended with additional
-#' derived quantities. This extended draws object is useful user you wants to
-#' explore prior sensitivity not only for model parameters but also for
-#' model-level summaries and predictive quantities. The posterior draws object
-#' can be extended with the following quantities:
+#' [posterior::as_draws_df()] which allows computing the additional derived
+#' quantities. This extended draws object is useful when user wants to explore
+#' prior sensitivity not only for model parameters but also for model-based fit
+#' criteria and predictive quantities. The posterior draws object can be
+#' extended with the following quantities:
 #' \itemize{
 #'   \item \strong{Fit criteria} via [add_model_criterion()]. Use the
 #'     \code{include_criterion} argument to specify which criteria to append.
 #'     Available options include \code{"bayes_R2"}, \code{"loo_R2"},
-#'     \code{"jointlik"}, and \code{"margliklik"}.
+#'     \code{"jointlik"}, and \code{"margliklik"}. Note that for
+#'     \code{"margliklik"}, the model should have fitted using \code{save_pars =
+#'     save_pars(all = TRUE)}. See [bsitar()] for details on the
+#'     \code{save_pars} argument.
 #'   \item \strong{Joint log-likelihood (\code{jointlik})} quantity computed
 #'     using the custom \code{jointlik_fun} function. This captures the
-#'     joint likelihood of all observations under each posterior draw.
+#'     joint likelihood of all observations under each posterior draw. See
+#'     \code{include_jointlik} argument for details.
 #'   \item \strong{Posterior expected predictions} via
 #'     [brms::posterior_epred()]. Use the \code{include_predictor} argument
 #'     to specify predictor values for which to compute expected predictions.
+#'     See \code{include_predictor} argument for details.
 #'   \item \strong{Point-wise log-likelihood draws} via
-#'     [priorsense::log_lik_draws()] (currently ignored in this implementation)
+#'     [priorsense::log_lik_draws()] (currently ignored)
 #'   \item \strong{Log-prior draws} via [priorsense::log_prior_draws()]
-#'     (currently ignored in this implementation)
+#'     (currently ignored)
 #' }
 #'
-#' \strong{Interpretation of sensitivity patterns:} In the \pkg{priorsense}
-#' framework, the pattern of sensitivity to prior and likelihood perturbations
-#' provides diagnostic information about the model:
+#' \strong{Interpretation of sensitivity analysis results:} In the
+#' \pkg{priorsense} framework, the pattern of sensitivity to prior and
+#' likelihood perturbations provides diagnostic information about the Prior-data
+#' conflict and the strength of likelihood:
 #'
 #' \itemize{
 #'   \item \strong{Prior-data conflict:} When sensitivity to \strong{both}
 #'     prior perturbations \strong{and} likelihood perturbations is strong,
-#'     this may indicate a prior-data conflict. The prior information is
+#'     it indicates a prior-data conflict. The prior information is
 #'     inconsistent with what the data suggest.
 #'   \item \strong{Weakly informative likelihood:} When sensitivity to prior
 #'     perturbations is \strong{strong} but sensitivity to likelihood
@@ -135,10 +143,10 @@
 #'     information relative to the prior.
 #' }
 #'
-#' These diagnostics help you assess whether your prior choices are appropriate
+#' These diagnostics help user to assess whether prior choices are appropriate
 #' and whether certain quantities are well-identified by the data.
 #'
-#' @return If \code{return_table = TRUE}, a table of sensitivity values for each
+#' @return When \code{return_table = TRUE}, a table of sensitivity values for each
 #' specified variable is returned. If \code{return_table = FALSE}, a
 #' \code{"prior_sensitivity"} object is returned as a list with the following
 #' components:
@@ -262,35 +270,19 @@ prior_sensitivity.bgmfit <- function(
     force_save = FALSE,
     resp = NULL,
     dpar = NULL,
-    ndraws = NULL,
-    draw_ids = NULL,
     re_formula = NULL,
     allow_new_levels = FALSE,
     sample_new_levels = "uncertainty",
     incl_autocor = TRUE,
-    numeric_cov_at = NULL,
-    levels_id = NULL,
-    avg_reffects = NULL,
-    aux_variables = NULL,
-    grid_add = NULL,
     summary = FALSE,
     robust = FALSE,
-    transform_draws = NULL,
     scale = c("response", "linear"),
     probs = c(0.025, 0.975),
-    xrange = NULL,
-    xrange_search = NULL,
-    idata_method = NULL,
     verbose = FALSE,
-    fullframe = NULL,
-    dummy_to_factor = NULL, 
     expose_function = FALSE,
     usesavedfuns = NULL,
     clearenvfuns = NULL,
-    funlist = NULL,
     xvar = NULL,
-    idvar = NULL,
-    itransform = NULL,
     envir = NULL,
     ...) {
   
@@ -321,10 +313,6 @@ prior_sensitivity.bgmfit <- function(
     } else {
       envir <- envir
     }
-  }
-  
-  if(is.null(ndraws)) {
-    ndraws <- brms::ndraws(model)
   }
   
   fitted_draws_args <-list()
@@ -623,8 +611,6 @@ prior_sensitivity.bgmfit <- function(
     ...
   )
   
-
-  
   suppressWarnings({
     suppressMessages({
       
@@ -752,12 +738,9 @@ prior_sensitivity.bgmfit <- function(
                           align = align,
                           sheet_name = sheet_name)
   
-  if(is.null(return_file)) {
-    #
-  } else {
+  if(!is.null(return_file)) {
     return_table <- FALSE
-  }
-  
+  } 
   
   if(return_table) {
     if(!flex_table) {

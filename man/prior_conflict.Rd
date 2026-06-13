@@ -62,9 +62,8 @@ output. Default is \code{"table"}.}
 \item{...}{Ignored.}
 }
 \value{
-A list with components:
-A \code{flextable} if \code{return_table = TRUE} or a list when
-\code{return_table = FALSE}
+A list when \code{return_table = FALSE} or a \code{flextable} if
+\code{return_table = TRUE}
 \describe{
 \item{prior_flagged}{Character vector of variables flagged for
 prior sensitivity.}
@@ -75,11 +74,12 @@ both prior and likelihood sensitivity}
 }
 }
 \description{
-Screen \code{prior_sensitivity} results for parameters showing notable prior
-conflict, likelihood conflict, or both. Parameters flagged for both forms of
-sensitivity may indicate possible prior-data conflict in the \pkg{priorsense}
-framework, while parameters flagged primarily for prior sensitivity may
-reflect weak likelihood informativeness.
+Screen \code{\link[=prior_sensitivity]{prior_sensitivity()}} results for parameters showing notable
+prior-data conflict, likelihood conflict, or both. Parameters flagged for
+both forms of sensitivity may indicate possible prior-data conflict in the
+\pkg{priorsense} framework, while parameters flagged primarily for prior
+sensitivity may reflect weak likelihood informativeness. See
+\code{\link[=prior_sensitivity]{prior_sensitivity()}} for details.
 }
 \details{
 This helper is designed as a lightweight screening step after
@@ -93,6 +93,10 @@ potential concern.
 \code{plot = "ecdf"}, or \code{plot = "quantities"} for the
 flagged variables.
 }
+
+Else, user can call \code{\link[=prior_conflict]{prior_conflict()}} directly from within the
+\code{\link[=prior_sensitivity]{prior_sensitivity()}} by setting the argument \code{return_conflicts} as
+\code{TRUE}. See \code{\link[=prior_sensitivity]{prior_sensitivity()}} for details and examples.
 }
 \examples{
 \donttest{

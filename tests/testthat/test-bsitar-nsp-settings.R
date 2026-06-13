@@ -11,7 +11,7 @@ if(skip_test_local_rcmd_check) {
 # Test bsitar with default settings
 ###############################################################################
 
-test_that("bsitar works fully with default settings", {
+test_that("bsitar works fully with nsp settings", {
   skip_on_cran()
   
   test_scode <- bsitar(x = age, y = height, id = id, 

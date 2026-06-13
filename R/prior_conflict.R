@@ -2,12 +2,13 @@
 
 #' Flag parameters with possible prior-data conflict
 #'
-#' Screen \code{prior_sensitivity} results for parameters showing notable prior
-#' conflict, likelihood conflict, or both. Parameters flagged for both forms of
-#' sensitivity may indicate possible prior-data conflict in the \pkg{priorsense}
-#' framework, while parameters flagged primarily for prior sensitivity may
-#' reflect weak likelihood informativeness.
-#'
+#' Screen [prior_sensitivity()] results for parameters showing notable
+#' prior-data conflict, likelihood conflict, or both. Parameters flagged for
+#' both forms of sensitivity may indicate possible prior-data conflict in the
+#' \pkg{priorsense} framework, while parameters flagged primarily for prior
+#' sensitivity may reflect weak likelihood informativeness. See
+#' [prior_sensitivity()] for details.
+#' 
 #' @param x An object returned by [prior_sensitivity()].
 #' 
 #' @param threshold_prior Numeric threshold used to flag prior sensitivity.
@@ -57,10 +58,13 @@
 #'         \code{plot = "ecdf"}, or \code{plot = "quantities"} for the
 #'         flagged variables.
 #' }
-#'
-#' @return A list with components:
-#' A \code{flextable} if \code{return_table = TRUE} or a list when
-#' \code{return_table = FALSE}
+#' 
+#' Else, user can call [prior_conflict()] directly from within the
+#' [prior_sensitivity()] by setting the argument \code{return_conflicts} as
+#' \code{TRUE}. See [prior_sensitivity()] for details and examples.
+#' 
+#' @return A list when \code{return_table = FALSE} or a \code{flextable} if
+#'   \code{return_table = TRUE}
 #' \describe{
 #'   \item{prior_flagged}{Character vector of variables flagged for
 #'     prior sensitivity.}
@@ -150,8 +154,6 @@ prior_conflict.bgmfit <- function(x,
   if(is_emptyx(likelihood_flagged)) likelihood_flagged <- NULL
   if(is_emptyx(prior_likelihood_flagged)) prior_likelihood_flagged <- NULL
   
-  
-  
   out_list <- list(
     prior_flagged = prior_flagged,
     likelihood_flagged = likelihood_flagged,
@@ -176,12 +178,9 @@ prior_conflict.bgmfit <- function(x,
                           align = align,
                           sheet_name = sheet_name)
   
-  if(is.null(return_file)) {
-    #
-  } else {
+  if(!is.null(return_file)) {
     return_table <- FALSE
-  }
-  
+  } 
   
   if(return_table) {
     if(!flex_table) {
@@ -203,7 +202,6 @@ prior_conflict.bgmfit <- function(x,
                      sheet_name = sheet_name)
   }
 
-  
 }
 
 

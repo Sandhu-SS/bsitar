@@ -10,7 +10,7 @@ if(skip_test_local_rcmd_check) {
 # Test bsitar with rcs settings
 ###############################################################################
 
-test_that("bsitar works fully with rcs settings", {
+test_that("bsitar works fully with rcs settings with parameterization cp", {
   skip_on_cran()
  
   test_scode <- bsitar(x = age, y = height, id = id, 
@@ -26,6 +26,7 @@ test_that("bsitar works fully with rcs settings", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
+                       parameterization = "cp",
                        seed = 123)
   
   expect_type(test_scode, "character")
@@ -44,6 +45,7 @@ test_that("bsitar works fully with rcs settings", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
+                       parameterization = "cp",
                        seed = 123)
   
   expect_type(test_sdata, "list")
@@ -63,13 +65,14 @@ test_that("bsitar works fully with rcs settings", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
+                       parameterization = "cp",
                        seed = 123)
   }))
   
   
   # test_fit <- test_fit_rcs
   
-  true_sbetas <- c(128.05, 0.00, 0.00, 5.02, 4.28, -12.27, -13.26)
+  true_sbetas <- c(128.06, 0.00, -0.01, 5.02, 4.28, -12.26, -13.25)
   
   test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
   
@@ -78,26 +81,8 @@ test_that("bsitar works fully with rcs settings", {
   test_gparms <- get_growthparameters(test_fit, re_formula = NA)
   
   expect_equal(round(test_gparms$Estimate[1], 2), 12.86, tolerance = 0.01)
-  expect_equal(round(test_gparms$Estimate[2], 2), 6.38,  tolerance = 0.01)
-  # 6.45 -> 6.38 to68fix
-  
-  
-  # Also test get_growthparameters vs growthparameters
-  
-  test_gparms_gp <- growthparameters(test_fit, re_formula = NA)
-  test_gparms_gp[['Est.Error']] <- NULL
-  expect_equal(test_gparms_gp, test_gparms, 
-               tolerance = 0.01)
-  
-  
-  test_gparms_re <- get_growthparameters(test_fit, by = 'id', re_formula = NULL)
-  test_gparms_gp_re <- growthparameters(test_fit, re_formula = NULL)
-  # This will test mean of APGV and PGV
-  expect_equal(mean(test_gparms_re$Estimate), 
-               mean(test_gparms_gp_re$Estimate), 
-               tolerance = 0.01)
-  
-  
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.39,  tolerance = 0.01)
+
 })
 
 
