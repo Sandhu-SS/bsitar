@@ -2,7 +2,7 @@ Type: Package
 Package: bsitar
 Title: Bayesian Super Imposition by Translation and Rotation Growth Curve
     Analysis
-Version: 0.3.3.995
+Version: 0.3.3.996
 Authors@R:
     person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", 
            role = c("aut", "cre", "cph"),
@@ -81,6 +81,10 @@ Suggests:
     R.rsp (>= 0.46.0), 
     openxlsx2 (>= 1.27.0),
     priorsense (>= 1.2.0), 
+    distributional (>= 0.7.1), 
+    flexlsx,
+    flextable,
+    ggdist
     R.utils,
     parallel,
     MASS,
@@ -101,11 +105,7 @@ Suggests:
     grDevices,
     abind,
     glue,
-    stats,
-    distributional,
-    flexlsx,
-    flextable,
-    ggdist
+    stats
 URL: https://github.com/Sandhu-SS/bsitar
 BugReports: https://github.com/Sandhu-SS/bsitar/issues
 Additional_repositories:
