@@ -12,7 +12,7 @@
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                          df = 3, chains = 2, cores = 2, iter = 2000, 
                          thin = 10, warmup = 1000,
-                         a_prior_beta = normal(lm, ysd, autoscale = TRUE),
+                         a_prior_beta = normal(lm, ysd, autoscale = FALSE),
                          b_prior_beta = normal(0, 2, autoscale = FALSE),
                          c_prior_beta = normal(0, 1, autoscale = FALSE),
                          d_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -26,7 +26,9 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                          save_pars = save_pars(all = TRUE),
                          sample_prior = "yes",
                          normalize = TRUE, 
+                         
                          init = NULL,
+                         
                          seed = 123)
 
 

@@ -77,7 +77,8 @@ jobs:
             distributional,
             flexlsx,
             flextable,
-            ggdist
+            ggdist,
+            modelsummary
 
       # Some issues with processx package, so install it
       - name: Install dependencies

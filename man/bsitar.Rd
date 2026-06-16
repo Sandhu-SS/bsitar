@@ -1755,9 +1755,9 @@ the same way as a single numeric value. If both \code{percent} and
 \code{factor} are supplied, the effective perturbation is their product.
 
 To use the defaults of \code{\link[base:jitter]{base::jitter()}}, supply an empty list
-\code{list()}, which is then completed internally with
-\code{factor = 1, amount = NULL}. See \code{\link[base:jitter]{base::jitter()}} for further details
-on \code{factor} and \code{amount}.}
+\code{list()}, which is then completed internally with \code{factor = 1,
+  amount = NULL}. See \code{\link[base:jitter]{base::jitter()}} for further details on \code{factor}
+and \code{amount}.}
 
 \item{jitter_init_sd}{Named list or numeric value used to add a small amount
 of noise to initial values for the standard deviations of random-effect
@@ -1798,14 +1798,14 @@ fixed effect parameter \code{a}, one can:
 external objects into initialization arguments. The handling of
 \code{init_data} is identical to \code{prior_data} (see above).}
 
-\item{init_custom}{Custom initialization object supplied as a named list.
-The list is passed directly to the underlying \code{init} argument without
+\item{init_custom}{Custom initialization object supplied as a named list. The
+list is passed directly to the underlying \code{init} argument without
 checking dimensions or name matching. If some parameters already have
 parameter-specific initial specifications (e.g., \code{a_init_beta = "0"}),
 \code{init_custom} is applied only to parameters without their own initial
 settings. To override this behavior and use \code{init_custom} for all
-parameters regardless of parameter-specific initials, set
-\code{init = "custom"}.}
+parameters regardless of parameter-specific initials, set \code{init =
+  "custom"}.}
 
 \item{expose_function}{Logical (default \code{FALSE}) indicating whether to
 expose Stan functions used in model fitting.}
@@ -1823,10 +1823,10 @@ return the model formula (see \code{\link[brms:brmsformula]{brms::brmsformula()}
 return the Stan variables (see \code{\link[brms:stanvar]{brms::stanvar()}} for details).}
 
 \item{get_priors}{Logical or character (default \code{FALSE}) controlling
-prior retrieval (see \code{\link[brms:default_prior]{brms::get_prior()}} for details). If
-\code{get_priors = TRUE}, priors corresponding to the final compiled model
-code are returned. To obtain basic default priors instead, use
-\code{get_priors = "default"}.}
+prior retrieval (see \code{\link[brms:default_prior]{brms::get_prior()}} for details). If \code{get_priors
+  = TRUE}, priors corresponding to the final compiled model code are
+returned. To obtain basic default priors instead, use \code{get_priors =
+  "default"}.}
 
 \item{get_priors_eval}{Logical (default \code{FALSE}) indicating whether to
 return the priors as specified by the user.}
@@ -1838,8 +1838,8 @@ return the initial values as specified by the user.}
 validate specified priors (see \code{\link[brms:validate_prior]{brms::validate_prior()}} for details).}
 
 \item{set_self_priors}{Optional object (default \code{NULL}) used to manually
-specify priors. \code{set_self_priors} is passed directly to
-\code{\link[brms:brm]{brms::brm()}} without additional checks.}
+specify priors. \code{set_self_priors} is passed directly to \code{\link[brms:brm]{brms::brm()}}
+without additional checks.}
 
 \item{add_self_priors}{Optional object (default \code{NULL}) used to append
 elements to an existing prior object. Intended for internal use only.}
@@ -1853,8 +1853,8 @@ to enforce the same prior structure across hierarchical levels. Intended
 for internal use only.}
 
 \item{outliers}{Optional specification (default \code{NULL}) for removing
-outliers. This should be a named list passed directly to
-\code{\link[sitar:velout]{sitar::velout()}} and \code{\link[sitar:codeplot]{sitar::zapvelout()}}. Intended for internal use only.}
+outliers. This should be a named list passed directly to \code{\link[sitar:velout]{sitar::velout()}}
+and \code{\link[sitar:codeplot]{sitar::zapvelout()}}. Intended for internal use only.}
 
 \item{unused}{Optional formula defining variables that are unused in the
 model but should still be stored in the model frame, for example when they

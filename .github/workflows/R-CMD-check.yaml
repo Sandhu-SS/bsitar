@@ -103,7 +103,8 @@ jobs:
             distributional,
             flexlsx,
             flextable,
-            ggdist
+            ggdist,
+            modelsummary
 
 
   
