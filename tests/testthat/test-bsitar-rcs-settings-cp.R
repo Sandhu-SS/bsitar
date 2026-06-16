@@ -10,7 +10,7 @@ if(skip_test_local_rcmd_check) {
 # Test bsitar with rcs settings
 ###############################################################################
 
-test_that("bsitar works fully with rcs settings with parameterization cp", {
+test_that("bsitar works with rcs settings and parameterization cp", {
   skip_on_cran()
  
   test_scode <- bsitar(x = age, y = height, id = id, 

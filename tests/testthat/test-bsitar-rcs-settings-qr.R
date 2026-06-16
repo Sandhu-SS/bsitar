@@ -1,25 +1,23 @@
 
-
 # Skip test for local R CMD Check but run on GitHub
 
 if(skip_test_local_rcmd_check) {
   skip_local_run_ci()
 }
- 
+
 
 ###############################################################################
-# Test bsitar with xyadj settings
+# Test bsitar with rcs QR settings
 ###############################################################################
 
-test_that("bsitar works with genquant_xyadj settings", {
+test_that("bsitar works with rcs settings and decomp QR", {
   skip_on_cran()
-  
+ 
   test_scode <- bsitar(x = age, y = height, id = id, 
                        data = test_data_male,  df = 4,
                        stype = list(type = 'rcs', normalize = TRUE),
                        get_stancode = TRUE,
                        get_standata = FALSE, 
-                       genquant_xyadj = TRUE,
                        chains = 1, cores = 1, iter = 10, 
                        backend = "rstan",  
                        sample_prior = "no",
@@ -28,6 +26,8 @@ test_that("bsitar works with genquant_xyadj settings", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
+                       # parameterization = "cp",
+                       decomp = "QR",
                        seed = 123)
   
   expect_type(test_scode, "character")
@@ -38,7 +38,6 @@ test_that("bsitar works with genquant_xyadj settings", {
                        stype = list(type = 'rcs', normalize = TRUE),
                        get_stancode = FALSE,
                        get_standata = TRUE, 
-                       genquant_xyadj = TRUE,
                        chains = 1, cores = 1, iter = 10, 
                        backend = "rstan",  
                        sample_prior = "no",
@@ -47,6 +46,8 @@ test_that("bsitar works with genquant_xyadj settings", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
+                       # parameterization = "cp",
+                       decomp = "QR",
                        seed = 123)
   
   expect_type(test_sdata, "list")
@@ -58,7 +59,6 @@ test_that("bsitar works with genquant_xyadj settings", {
                        stype = list(type = 'rcs', normalize = TRUE),
                        get_stancode = FALSE,
                        get_standata = FALSE,
-                       genquant_xyadj = TRUE,
                        chains = 1, cores = 1, iter = 10,
                        backend = "rstan",
                        sample_prior = "no",
@@ -67,27 +67,26 @@ test_that("bsitar works with genquant_xyadj settings", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
+                       # parameterization = "cp",
+                       decomp = "QR",
                        seed = 123)
   }))
   
   
-  tomeanx_true <- mean(brms::posterior_summary(test_fit, variable = 'tomeanx_true')[,1])
-  tomeanx_false <-mean(brms::posterior_summary(test_fit, variable = 'tomeanx_false')[,1])
-  tomeany_true <-mean(brms::posterior_summary(test_fit, variable = 'tomeany_true')[,1])
-  tomeany_false <-mean(brms::posterior_summary(test_fit, variable = 'tomeany_false')[,1])
-
-  true_tomeanx_true  <- 13.53201
-  true_tomeanx_false <- 13.5299
-  true_tomeany_true  <- 160.0596
-  true_tomeany_false <- 160.0585
+  # test_fit <- test_fit_rcs
   
-
-  expect_equal(tomeanx_true, true_tomeanx_true, tolerance = 0.01)
+  true_sbetas <- c(158.13,  -0.01,   0.02,  15.06,   0.65,  -3.38,  -0.21)
   
-  expect_equal(tomeanx_false, true_tomeanx_false, tolerance = 0.01)
+  test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
   
-  expect_equal(tomeany_true, true_tomeany_true, tolerance = 0.01)
+  expect_equal(true_sbetas, test_sbetas, tolerance = 0.01)
   
-  expect_equal(tomeany_false, true_tomeany_false, tolerance = 0.01)
+  test_gparms <- get_growthparameters(test_fit, re_formula = NA)
+  
+  expect_equal(round(test_gparms$Estimate[1], 2), 12.72, tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.27,  tolerance = 0.01)
 
 })
+
+
+

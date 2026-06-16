@@ -10,81 +10,26 @@
 # sitar::heights
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
-                         df = 3, chains = 2, cores = 2, iter = 1000, thin = 15,
-                         
-                         
-                         
-                         a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                         df = 3, chains = 2, cores = 2, iter = 2000, 
+                         thin = 10, warmup = 1000,
+                         a_prior_beta = normal(lm, ysd, autoscale = TRUE),
                          b_prior_beta = normal(0, 2, autoscale = FALSE),
                          c_prior_beta = normal(0, 1, autoscale = FALSE),
-                         d_prior_beta = normal(0, 1.0, autoscale = FALSE),
-                         s_prior_beta = normal(lm, lm, autoscale = FALSE),
-                         a_cov_prior_beta = normal(0, 5.0, autoscale = FALSE),
-                         b_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
-                         c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
-                         d_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
-                         s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+                         d_prior_beta = normal(0, 1, autoscale = FALSE),
                          a_prior_sd = normal(0, ysd, autoscale = FALSE),
                          b_prior_sd = normal(0, 2, autoscale = FALSE),
                          c_prior_sd = normal(0, 1, autoscale = FALSE),
-                         d_prior_sd = normal(0, 1.0, autoscale = FALSE),
-                         a_cov_prior_sd = normal(0, 5.0, autoscale = FALSE),
-                         b_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
-                         c_cov_prior_sd = normal(0, 0.1, autoscale = FALSE),
-                         d_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
-                         a_prior_sd_str = NULL,
-                         b_prior_sd_str = NULL,
-                         c_prior_sd_str = NULL,
-                         d_prior_sd_str = NULL,
-                         a_cov_prior_sd_str = NULL,
-                         b_cov_prior_sd_str = NULL,
-                         c_cov_prior_sd_str = NULL,
-                         d_cov_prior_sd_str = NULL,
-                         sigma_prior_beta = normal(0, 1, autoscale = FALSE),
-                         sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
-                         sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
-                         sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
-                         sigma_prior_sd_str = NULL,
-                         sigma_cov_prior_sd_str = NULL,
+                         d_prior_sd = normal(0, 1, autoscale = FALSE),
                          rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
-                         dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
-                         dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
-                         autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
-                         autocor_prior_unstr_acor = lkj(1),
-                         gr_prior_cor = lkj(1),
-                         gr_prior_cor_str = lkj(1),
-                         sigma_prior_cor = lkj(1),
-                         sigma_prior_cor_str = lkj(1),
-                         mvr_prior_rescor = lkj(1),
-                         init = NULL,
-                         # init_r = 0.5,
-                         # a_init_beta = 'lm',
-                         # b_init_beta = 0,
-                         # c_init_beta = 0,
-                         # d_init_beta = 0,
-                         # s_init_beta = 'lm',
-                         # a_cov_init_beta = 0,
-                         # b_cov_init_beta = 0,
-                         # c_cov_init_beta = 0,
-                         # d_cov_init_beta = 0,
-                         # s_cov_init_beta = 0,
-                         # a_init_sd = 10,
-                         # b_init_sd = 1,
-                         # c_init_sd = 0.01,
-                         # d_init_sd = 0,
-                         
-                         control = list(adapt_delta = 0.9, max_treedepth = 15),
-                         
-                         
-                         backend = "cmdstanr",
-                         
-                         
+                         s_prior_beta = normal(lm, lm, autoscale = 1),
+                         control = list(adapt_delta = 0.95, max_treedepth = 12),
                          save_pars = save_pars(all = TRUE),
-                         # sample_prior = "only",
-                         # init = random,
-                         # init_r = 0.1,
                          sample_prior = "yes",
-                         normalize = TRUE, seed = 123)
+                         normalize = TRUE, 
+                         init = NULL,
+                         seed = 123)
+
+
 
 
  berkeley_exfit$test_mode <- TRUE
