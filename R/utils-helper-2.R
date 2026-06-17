@@ -78,7 +78,7 @@ export_flextable <- function(
       docx = ".docx",
       html = ".html",
       png  = ".png",
-      pdf  = ".pdf",
+      # pdf  = ".pdf",
       svg  = ".svg",
       xlsx = ".xlsx",
       stop("Unsupported return_file. Use one of: word, docx, html, png, pdf, svg, xlsx")
@@ -104,40 +104,22 @@ export_flextable <- function(
     return(normalizePath(path))
   }
   
-  if (return_file %in% c("png", "pdf", "svg")) {
+  if (return_file %in% c("png", "svg")) { # , "pdf"
     flextable::save_as_image(ft, path = path)
     return(normalizePath(path))
   }
   
   if (return_file == "xlsx") {
-    tab <- ft$body$dataset
-    
-    wb <- openxlsx2::wb_workbook()
-    wb$add_worksheet(sheet_name)
-    
-    start_row <- 1
-    if (!is.null(title)) {
-      wb$add_data(
-        sheet = sheet_name,
-        x = data.frame(title = title),
-        dims = "A1",
-        col_names = FALSE
-      )
-      start_row <- 3
-    }
-    
-    wb$add_data(
-      sheet = sheet_name,
-      x = tab,
-      dims = paste0("A", start_row),
-      col_names = TRUE
-    )
-    
+    wb <- openxlsx2::wb_workbook()$add_worksheet("table")
+    wb <- flexlsx::wb_add_flextable(wb, "table", ft)
     openxlsx2::wb_save(wb, file = path, overwrite = TRUE)
     return(normalizePath(path))
   }
   
 }
+
+
+
 
 
 # convert list_to_flextable

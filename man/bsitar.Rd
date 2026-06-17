@@ -66,7 +66,7 @@ bsitar(
   univariate_by = list(by = NA, cor = "un", terms = "subset"),
   multivariate = list(mvar = FALSE, cor = "un", rescor = TRUE, rcorr_by = NULL, rcorr_gr
     = NULL, rcorr_method = NULL, rcorr_prior = NULL),
-  a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
+  a_prior_beta = normal(lm, ysd, autoscale = FALSE),
   b_prior_beta = normal(0, 2, autoscale = FALSE),
   c_prior_beta = normal(0, 1, autoscale = FALSE),
   d_prior_beta = normal(0, 1, autoscale = FALSE),

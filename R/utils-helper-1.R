@@ -1388,7 +1388,6 @@ prior_summary_table <- function(model,
     return_table <- FALSE
   }
   
-  
   if(return_table) {
     if(!flex_table) {
       return(out$body$dataset)
@@ -1408,8 +1407,7 @@ prior_summary_table <- function(model,
                      align = align,
                      sheet_name = sheet_name)
   }
-  
-  
+
   invisible(NULL)
 }
 
