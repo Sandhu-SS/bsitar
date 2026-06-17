@@ -2887,7 +2887,6 @@ CustomDoCall <- function(what,
   } else if (get_class_what == "name"){
     call <- as.call(c(list(what, argn)))
   }
-  # if(!is.logical(args$verbose)) args$verbose <- F
   args$verbose <- eval(args$verbose)
   return(eval(call, envir = args, enclos = envir))
 }

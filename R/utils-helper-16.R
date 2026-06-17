@@ -1254,6 +1254,7 @@ loop_opt_bands <- function(opti,
       assign(eoutii, eout[[eoutii]])
     }
   }
+  
   opt <- opt.org <- opti
   bands <- tolower(bandsi)
   if (opt == 'd' | opt == 'D') {
@@ -1281,6 +1282,8 @@ loop_opt_bands <- function(opti,
     need_xvar_must <- TRUE
   }
   arguments$opt <- opt
+  arguments$ndraws <- ndraws
+  arguments$draw_ids <- draw_ids
   arguments$model$model_info[['difx']] <- difx
   if(dpar == "sigma") {
     sigma_model <- get_sigmamodel_info(model = model,

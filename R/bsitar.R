@@ -3,33 +3,37 @@
 
 #' @title Fit Bayesian SITAR Model
 #'
-#' @description The \strong{bsitar()} function fits the Bayesian version of the
-#'   Super Imposition by Translation and Rotation (\emph{SITAR}) model. The
-#'   \emph{SITAR} model is a nonlinear mixed-effects model that has been widely
-#'   used to summarize growth processes (such as height and weight) from early
-#'   childhood through adulthood.
+#' @description A Bayesian implementation of the Super Imposition by Translation
+#'   and Rotation (\emph{SITAR}) model. The \emph{SITAR} model is a nonlinear
+#'   mixed-effects framework widely used to summarize individual growth
+#'   trajectories (e.g., height or weight) from early childhood through
+#'   adulthood.
 #'
-#'   The frequentest version of the \emph{SITAR} model can be fit using the
-#'   already available R package, \pkg{sitar} \insertCite{R-sitar}{bsitar}.
-#'   However, the \pkg{bsitar} package offers an enhanced Bayesian
-#'   implementation that improves modeling capabilities. In addition to the
-#'   conventional univariate analysis (i.e., modeling a single outcome),
-#'   \pkg{bsitar} also supports:
-#'   
-#'   \itemize{
-#'     \item Univariate-by-subgroup analysis: This allows for simultaneous
-#'     modeling of a single outcome across different subgroups defined by a
-#'     factor variable (e.g., gender). The advantage is that posterior draws for
-#'     each subgroup are part of a single model object, enabling comparisons of
-#'     coefficients across groups and testing of various hypotheses.
-#'     \item Multivariate analysis: This approach involves simultaneous joint
-#'     modeling of two or more outcomes, allowing for more comprehensive growth
-#'     modeling.
-#'   }
-#'   
-#'   The Bayesian implementation in \pkg{bsitar} provides a more flexible and
-#'   robust framework for growth curve modeling compared to the frequentist
-#'   approach.
+#' The frequentist implementation of the \emph{SITAR} model is available in the
+#' \pkg{sitar} package \insertCite{R-sitar}{bsitar}. In contrast, \pkg{bsitar}
+#' extends this framework within a Bayesian paradigm, offering increased
+#' flexibility in model specification, improved uncertainty quantification, and
+#' richer inferential capabilities.
+#' 
+#' Beyond standard univariate analysis (i.e., modeling a single outcome),
+#' \pkg{bsitar} supports:
+#' 
+#' \itemize{
+#'   \item Univariate analysis: Modeling a single outcome, consistent with the
+#'   traditional use of the \pkg{sitar} package.
+#'   \item Univariate-by-subgroup analysis: Simultaneous modeling of a single
+#'   outcome across subgroups defined by a factor variable (e.g., sex).
+#'   Posterior draws for all subgroups are obtained within a single model
+#'   object, facilitating direct comparison of parameters and formal hypothesis
+#'   testing across groups.
+#'   \item Multivariate analysis: Joint modeling of two or more outcomes,
+#'   allowing for a more comprehensive representation of correlated growth
+#'   processes.
+#' }
+#'
+#' Overall, the Bayesian implementation in \pkg{bsitar} provides a flexible and
+#' robust framework for growth curve modeling, extending the capabilities of the
+#' traditional frequentist approach.
 #'  
 #' @details The \emph{SITAR} is a shape-invariant nonlinear mixed-effects growth
 #' curve model that fits a population average (i.e., mean) curve to the data and
@@ -578,177 +582,159 @@
 #'  covariates. In such cases, the user must justify the modeling of separate
 #'  curves for each category when the covariate is a factor variable.
 #'
-#' @param a_formula_gr Formula for the random effect parameter, \code{a}
-#'   (default \code{~ 1}). Similar to \code{a_formula}, users can specify
-#'   different formulas when fitting \code{univariate_by} and
-#'   \code{multivariate} models. The formula can include continuous and/or
-#'   factor variables, including their interactions as covariates (see
-#'   \code{a_formula} for details). In addition to setting up the design matrix
-#'   for the random effect parameter \code{a}, users can define the group
-#'   identifier and the correlation structure for random effects using the
-#'   vertical bar \code{||} notation. For example, to include only an intercept
-#'   for the random effects \code{a}, \code{b}, and \code{c}, user can specify:
-#' 
-#' \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr = ~1}.
-#' 
-#' To specify the group identifier (e.g., \code{id}) and an unstructured
-#' correlation structure, use the vertical bar notation:
-#' 
-#' \code{a_formula_gr = ~ (1|i|id)} \cr
-#' \code{b_formula_gr = ~ (1|i|id)} \cr
-#' \code{c_formula_gr = ~ (1|i|id)} \cr
-#' 
-#' Here, \code{i} within the vertical bars is a placeholder, and a common
-#' identifier (e.g., \code{i}) shared across the random effect formulas will
-#' model them as unstructured correlated random effects. For more details on
-#' this vertical bar approach, please see \code{[brms::brm()]}.
-#' 
-#' An alternative approach to specify the group identifier and correlation
-#' structure is through the \code{group_by} argument. To achieve the same setup
-#' as described above with the vertical bar approach, users can define the
-#' formula part as:
-#' 
-#' \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr = ~1}, 
-#' 
-#' and use \code{group_by} as \code{group_by = list(groupvar = id, cor = un)},
-#' \cr where \code{id} specifies the group identifier and \code{un} sets the
-#' unstructured correlation structure. See the \code{group_by} argument for more
-#' details.
+#' @param a_formula_gr Formula for the random effect parameter \code{a}
+#'   (default \code{~ 1}). As with \code{a_formula}, users may specify different
+#'   formulas when fitting \code{univariate_by} and \code{multivariate} models.
+#'   The formula can include continuous and/or factor covariates, as well as
+#'   their interactions (see \code{a_formula} for details).
 #'
-#' @param b_formula_gr Formula for the random effect parameter, \code{b}
-#'   (default \code{~ 1}). Similar to \code{a_formula_gr}, user can specify
-#'   different formulas when fitting \code{univariate_by} and
-#'   \code{multivariate} models. The formula can include continuous and/or
-#'   factor variable(s), including their interactions as covariates (see
-#'   \code{a_formula_gr} for details). In addition to setting up the design
-#'   matrix for the random effect parameter \code{b}, the user can set up the
-#'   group identifier and the correlation structure for random effects via the
-#'   vertical bar \code{||} approach. For example, consider only an intercept
-#'   for the random effects \code{a}, \code{b}, and \code{c} specified as \cr
-#'   \code{a_formula_gr = ~1}, \cr
-#'   \code{b_formula_gr = ~1}, and \cr 
-#'   \code{c_formula_gr = ~1}. \cr
-#'   To specify the group identifier (e.g., \code{id}) and an unstructured
-#'   correlation structure, the formula argument can be specified as: \cr
-#'   \code{a_formula_gr = ~ (1|i|id)} \cr \code{b_formula_gr = ~ (1|i|id)} \cr
-#'   \code{c_formula_gr = ~ (1|i|id)} \cr where \code{i} within the vertical
-#'   bars \code{||} is just a placeholder. A common identifier (i.e., \code{i})
-#'   shared across random effect formulas are modeled as unstructured
-#'   correlated. For more details on the vertical bar approach, please see
-#'   [brms::brm()].
-#' 
-#' @param c_formula_gr Formula for the random effect parameter, \code{c}
-#'   (default \code{~ 1}). See \code{b_formula_gr} for details.
+#'   In addition to defining the design matrix for the random effect parameter
+#'   \code{a}, this argument allows specification of the grouping structure and
+#'   correlation among random effects using vertical bar (\code{|}) notation.
 #'
-#' @param d_formula_gr Formula for the random effect parameter, \code{d}
-#'   (default \code{~ 1}). See \code{b_formula_gr} for details.
+#'   For example, to include only random intercepts for parameters \code{a},
+#'   \code{b}, and \code{c}, one can specify:
+#'
+#'   \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr = ~1}.
+#'
+#'   To include a grouping variable (e.g., \code{id}) and specify an unstructured
+#'   correlation among the random effects, use:
+#'
+#'   \code{a_formula_gr = ~ (1|i|id)} \cr
+#'   \code{b_formula_gr = ~ (1|i|id)} \cr
+#'   \code{c_formula_gr = ~ (1|i|id)} \cr
+#'
+#'   Here, \code{i} is a shared identifier indicating that the random effects
+#'   for \code{a}, \code{b}, and \code{c} are modeled as jointly correlated with
+#'   an unstructured covariance matrix. See \code{[brms::brm()]} for further
+#'   details on this notation.
+#'
+#'   Alternatively, the grouping structure and correlation can be specified
+#'   using the \code{group_by} argument. The equivalent specification to the
+#'   above can be written as:
+#'
+#'   \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr =
+#'   ~1},
+#'
+#'   together with \code{group_by = list(groupvar = id, cor = un)}, where
+#'   \code{id} defines the grouping variable and \code{un} specifies an
+#'   unstructured correlation. See \code{group_by} for additional details.
+#'
+#' @param b_formula_gr Formula for the random effect parameter \code{b} (default
+#'   \code{~ 1}). See \code{a_formula_gr} for details.
+#' 
+#' @param c_formula_gr Formula for the random effect parameter \code{c} (default
+#'   \code{~ 1}). See \code{a_formula_gr} for details.
+#'
+#' @param d_formula_gr Formula for the random effect parameter \code{d} (default
+#'   \code{~ 1}). See \code{a_formula_gr} for details.
 #'  
-#' @param a_formula_gr_str Formula for the random effect parameter, \code{a}
-#'   (default \code{NULL}), used when fitting a hierarchical model with three or
-#'   more levels of hierarchy. For example, a model applied to data that
-#'   includes repeated measurements (level 1) on individuals (level 2), which
-#'   are further nested within growth studies (level 3). 
-#'   
-#'   For \code{a_formula_gr_str} argument, only the vertical bar approach (see
-#'   \code{a_formula_gr}) can be used to define the group identifiers and
-#'   correlation structure. An example of setting up a formula for a three-level
-#'   model with random effect parameters \code{a}, \code{b}, and \code{c} is as
-#'   follows: \cr 
-#'   \code{a_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr 
-#'   \code{b_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr 
-#'   \code{c_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr 
-#'   
-#'   In this example, \code{|i|} and \code{|i2|} set up unstructured correlation
-#'   structures for the random effects at the individual and study levels,
-#'   respectively. Note that \code{|i|} and \code{|i2|} must be distinct, as
-#'   random effect parameters cannot be correlated across different levels of
-#'   hierarchy.
-#'   
-#'   Additionally, users can specify models with any number of hierarchical
-#'   levels and include covariates in the random effect formula.
-#'   
-#' @param b_formula_gr_str Formula for the random effect parameter, \code{b} 
-#'   (default \code{NULL}), used when fitting a hierarchical model with three 
-#'   or more levels of hierarchy. For details, see \code{a_formula_gr_str}.
+#' @param a_formula_gr_str Formula for the random effect parameter \code{a}
+#'   (default \code{NULL}), used for specifying hierarchical models with three
+#'   or more levels. For example, this may arise in data with repeated
+#'   measurements (level 1) nested within individuals (level 2), which are
+#'   further nested within studies (level 3).
 #'
-#' @param c_formula_gr_str Formula for the random effect parameter, \code{c} 
-#'   (default \code{NULL}), used when fitting a hierarchical model with three 
-#'   or more levels of hierarchy. For details, see \code{a_formula_gr_str}.
+#'   For \code{a_formula_gr_str}, only the vertical bar (\code{|}) notation (see
+#'   \code{a_formula_gr}) can be used to define grouping structures and
+#'   correlation patterns. An example specification for a three-level model with
+#'   random effect parameters \code{a}, \code{b}, and \code{c} is:
 #'
-#' @param d_formula_gr_str Formula for the random effect parameter, \code{d} 
-#'   (default \code{NULL}), used when fitting a hierarchical model with three 
-#'   or more levels of hierarchy. For details, see \code{a_formula_gr_str}.
+#'   \code{a_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr
+#'   \code{b_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr
+#'   \code{c_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr
+#'
+#'   In this setup, \code{|i|} and \code{|i2|} define unstructured correlation
+#'   among random effects at the individual and study levels, respectively.
+#'   These identifiers must be distinct, as random effects are not correlated
+#'   across different hierarchical levels.
+#'
+#'   More generally, users can specify models with additional hierarchical
+#'   levels and include covariates within the random effect formulas as needed.
 #'   
-#' @param d_adjusted A logical indicator to adjust the scale of the predictor
-#'   variable \code{x} when fitting the model with the random effect parameter
-#'   \code{d}. The coefficient of parameter \code{d} is estimated as a linear
-#'   function of \code{x}, i.e., \code{d * x}. If \code{FALSE} (default), the
-#'   original \code{x} is used. When \code{d_adjusted = TRUE}, \code{x} is
-#'   adjusted for the timing (\code{b}) and intensity (\code{c}) parameters as
-#'  \code{x} - \code{b}) * \code{exp(c)} i.e., \code{d * ((x-b)*exp(c))}. The
-#'  adjusted scale of \code{x} reflects individual developmental age rather than
-#'  chronological age. This makes d more sensitive to the timing of puberty in
-#'  individuals. See [sitar::sitar()] function for details.
+#' @param b_formula_gr_str Formula for the random effect parameter \code{b}
+#'   (default \code{NULL}), used for specifying hierarchical models with three
+#'   or more levels. See \code{a_formula_gr_str} for details.
 #'
-#' @param sigma_formula Formula for the fixed effect distributional parameter,
-#'   \code{sigma}. The \code{sigma_formula} sets up the fixed effect design
-#'   matrix, which may include continuous and/or factor variables (and their
-#'   interactions) as covariates for the distributional parameter. In other
-#'   words, setting up the covariates for \code{sigma_formula} follows the same
-#'   approach as for other fixed parameters, such as \code{a} (see
-#'   \code{a_formula} for details). Note that \code{sigma_formula} estimates the
-#'   \code{sigma} parameter on the \code{log} scale. By default,
-#'   \code{sigma_formula} is \code{NULL}, as the [brms::brm()] function itself
-#'   models \code{sigma} as a residual standard deviation (\code{RSD}) parameter
-#'   on the link scale. The \code{sigma_formula}, along with the arguments
-#'   \code{sigma_formula_gr} and \code{sigma_formula_gr_str}, allows
-#'   \code{sigma} to be estimated as a random effect. The setup for fixed and
-#'   random effects for \code{sigma} is similar to the approach used for other
+#' @param c_formula_gr_str Formula for the random effect parameter \code{c}
+#'   (default \code{NULL}), used for specifying hierarchical models with three
+#'   or more levels. See \code{a_formula_gr_str} for details.
+#'
+#' @param d_formula_gr_str Formula for the random effect parameter \code{d}
+#'   (default \code{NULL}), used for specifying hierarchical models with three
+#'   or more levels. See \code{a_formula_gr_str} for details.
+#'   
+#' @param d_adjusted Logical indicator for adjusting the scale of the predictor
+#'   variable \code{x} when including the random effect parameter \code{d}. The
+#'   coefficient for \code{d} is modeled as a linear function of \code{x}, i.e.,
+#'   \code{d * x}.
+#'
+#'   If \code{FALSE} (default), the original \code{x} is used. If \code{TRUE},
+#'   \code{x} is adjusted for the timing (\code{b}) and intensity (\code{c})
+#'   parameters as \code{(x - b) * exp(c)}, so that the model includes \code{d *
+#'   ((x - b) * exp(c))}.
+#'
+#'   This adjusted scale represents individual developmental age rather than
+#'   chronological age, making the parameter \code{d} more sensitive to
+#'   differences in growth timing (e.g., pubertal timing) across individuals.
+#'   See \code{[sitar::sitar()]} for further details.
+#'
+#' @param sigma_formula Formula for the distributional (fixed effect) parameter
+#'   \code{sigma}. This argument defines the fixed-effect design matrix for
+#'   \code{sigma}, allowing inclusion of continuous and/or factor covariates, as
+#'   well as their interactions (see \code{a_formula} for details). The
+#'   parameter \code{sigma} is modeled on the log scale.
+#'
+#'   By default, \code{sigma_formula = NULL}, in which case \code{[brms::brm()]}
+#'   estimates \code{sigma} as a residual standard deviation (RSD) parameter on
+#'   the link scale. When specified, \code{sigma_formula}, together with
+#'   \code{sigma_formula_gr} and \code{sigma_formula_gr_str}, enables modeling
+#'   \code{sigma} with both fixed and random effects, analogous to other model
 #'   parameters such as \code{a}, \code{b}, and \code{c}.
-#'   
-#'   It is important to note that an alternative way to set up the fixed effect
-#'   design matrix for the distributional parameter \code{sigma} is to use the
-#'   \code{dpar_formula} argument. The advantage of \code{dpar_formula} over
-#'   \code{sigma_formula} is that it allows users to specify both linear and
-#'   nonlinear formulations using the [brms::lf()] and [brms::nlf()] syntax.
-#'   These functions offer more flexibility, such as centering the predictors
-#'   and enabling or disabling cell mean centering by excluding the intercept
-#'   via \code{0 + } formulation. However, a disadvantage of the
-#'   \code{dpar_formula} approach is that random effects cannot be included for
+#'
+#'   An alternative approach is to use the \code{dpar_formula} argument to
+#'   specify the design matrix for \code{sigma}. The advantage of
+#'   \code{dpar_formula} is its flexibility in supporting both linear and
+#'   nonlinear specifications via \code{[brms::lf()]} and \code{[brms::nlf()]}.
+#'   This allows additional control, such as centering predictors or removing
+#'   the intercept using a \code{0 +} formulation. However, a limitation of
+#'   \code{dpar_formula} is that it does not support random effects for
 #'   \code{sigma}.
+#'
+#'   The arguments \code{sigma_formula} and \code{dpar_formula} are mutually
+#'   exclusive. When either is specified, the default estimation of \code{sigma}
+#'   as an RSD parameter in \code{[brms::brm()]} is disabled.
+#'
+#'   External functions (e.g., \code{poly}, \code{splines::ns}) can be used
+#'   within \code{sigma_formula}. Two common approaches are:
+#'
+#'   \itemize{
+#'   \item Direct use of standard functions, e.g.,
+#'   \code{sigma_formula = ~ 1 + splines::ns(age, df = 3)}.
+#'   \item Use of a custom wrapper function with a single argument (the
+#'   predictor), e.g., \code{sigma_formula = mypoly(age)}. Additional arguments
+#'   can be set by modifying the function definition, for example:
+#'   \code{mypoly <- poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}.
+#'   This approach can produce more concise coefficient names.
+#'   }
 #'   
-#'   \code{sigma_formula} and \code{dpar_formula} cannot be specified together.
-#'   When either \code{sigma_formula} or \code{dpar_formula} is used, the
-#'   default estimation of \code{RSD} by [brms::brm()] is automatically turned
-#'   off.
-#'   
-#'   Users can specify an external function, such as \code{poly},
-#'   \code{splines::ns} etc. There are two ways to use external function. \cr 
-#'   
-#'  \itemize{
-#'   \item A conventional approach of using routine function such as \cr
-#'   \code{sigma_formula = ~ 1 + splines::ns(age, df = 3)} \cr
-#'   \item An external function with a single argument (the predictor), e.g.,
-#'   \code{sigma_formula = poly(age)}. Additional arguments are specified
-#'   externally. For example, to set the degree of the polynomial to 3, a copy
-#'   of the \code{poly} function can be created and  modified as follows: \cr
-#'   \code{mypoly = poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}. \cr An
-#'   advantage of this approach is that spline coefficient names are small. \cr
-#'  }
-#'  
-#' @param sigma_formula_gr Formula for the random effect parameter, \code{sigma}
-#'   (default \code{NULL}). See \code{a_formula_gr} for details. Similar to
-#'   \code{sigma_formula}, external functions such as \code{poly},
-#'   \code{splines::ns} etc. can be used. For further details, please refer to
-#'   the description of \code{sigma_formula}.
+#' @param sigma_formula_gr Formula for the random effect parameter \code{sigma}
+#'   (default \code{NULL}). See \code{a_formula_gr} for details on specifying
+#'   grouping structures and correlation using vertical bar notation. As with
+#'   \code{sigma_formula}, external functions (e.g., \code{poly},
+#'   \code{splines::ns}) may be included. See \code{sigma_formula} for further
+#'   details.
+#'
+#' @param sigma_formula_gr_str Formula for the random effect parameter
+#'   \code{sigma}, used when fitting hierarchical models with three or more
+#'   levels. See \code{a_formula_gr_str} for details on specifying multi-level
+#'   structures.
 #' 
-#' @param sigma_formula_gr_str Formula for the random effect parameter,
-#'   \code{sigma}, when fitting a hierarchical model with three or more levels
-#'   of hierarchy. See \code{a_formula_gr_str} for details. As with
-#'   \code{sigma_formula}, external functions can be used. For example, \cr
-#'   \code{sigma_formula_gr_str = (1 + splines::ns(age, df = 3) | 11 | gr(id, by
-#'   = NULL))} For further details, please refer to the description of
-#'   \code{sigma_formula}.
+#'   As with \code{sigma_formula}, external functions can be incorporated. For
+#'   example:
+#'   \code{sigma_formula_gr_str = (1 + splines::ns(age, df = 3) | i | id:study)}.
+#'
+#'   See \code{sigma_formula} for additional details.
 #'  
 #' @param sigma_formula_manual A custom formula for advanced modeling of the
 #'   distributional parameter \code{sigma} using the [brms::nlf()] and
@@ -1040,10 +1026,11 @@
 #'   details. The default \code{sigmaxfunxoffset = TRUE} sets its value to same
 #'   as \code{sigmaxfun}. Users rarely need to specify \code{sigmaxfunxoffset}
 #'   themselves. One potential application is when a user wants to turn it off
-#'   by setting \code{sigmaxfunxoffset = FALSE}. Note that
-#'   \code{sigmaxfunxoffset} is called only when \code{sigmaxoffset} is a
-#'   numeric values and not data based such as \code{sigmaxoffset = mean}. This
-#'   is because even when \code{sigmaxfunxoffset} is not \code{TRUE},
+#'   by setting \code{sigmaxfunxoffset = FALSE}. 
+#'   
+#'   Note that \code{sigmaxfunxoffset} is called only when \code{sigmaxoffset}
+#'   is a numeric values and not data based such as \code{sigmaxoffset = mean}.
+#'   This is because even when \code{sigmaxfunxoffset} is not \code{TRUE},
 #'   \code{sigmaxoffset} is still automatically adjusted by \code{sigmaxfun}, as
 #'   it is inferred from the transformed \code{sigmax} variable.
 #' 
@@ -1097,50 +1084,52 @@
 #'   \code{custom_stanvars} are passed directly without conducting any sanity
 #'   checks.
 #' 
-#' @param group_arg Specify arguments for group-level random effects. The
+#' @param group_arg Arguments for specifying group-level random effects. The
 #'   \code{group_arg} should be a named list that may include \code{groupvar},
-#'   \code{dist}, \code{cor}, and \code{by} as described below:
+#'   \code{dist}, \code{cor}, and \code{by}, as described below:
+#'
 #'   \itemize{
-#'   \item \code{groupvar} specifies the subject identifier. If \code{groupvar =
-#'   NULL} (default), \code{groupvar} is automatically assigned based on the
-#'   \code{id} argument. \item \code{dist} specifies the distribution from which
-#'   the random effects are drawn (default \code{gaussian}). Currently,
-#'   \code{gaussian} is the only available distribution (as per the
-#'   [brms::brm()] documentation).
-#'   \item \code{by} can be used to estimate a separate variance-covariance
-#'   structure (i.e., standard deviation and correlation parameters) for random
-#'   effect parameters (default \code{NULL}). If specified, the variable used
-#'   for \code{by} must be a factor variable. For example, \code{by = 'sex'}
-#'   estimates separate variance-covariance structures for males and females.
-#'   \item \code{cor} specifies the covariance (i.e., correlation) structure for
-#'   random effect parameters. The default covariance is unstructured (\code{cor
-#'   = un}) for all model types (i.e., \code{univariate}, \code{univariate_by},
-#'   and \code{multivariate}). The alternative correlation structure available
-#'   for \code{univariate} and \code{univariate_by} models is \code{diagonal},
-#'   which estimates only the variance parameters (standard deviations), while
-#'   setting the covariance (correlation) parameters to zero. For
-#'   \emph{multivariate} models, options include \code{un}, \code{diagonal}, and
-#'   \code{un_s}. The \code{un} structure models a full unstructured
-#'   correlation, meaning that the group-level random effects across response
-#'   variables are drawn from a joint multivariate normal distribution with
-#'   shared correlation parameters. The \code{cor = diagonal} option estimates
-#'   only variance parameters for each sub-model, while setting the correlation
-#'   parameters to zero. The \code{cor = un_s} option allows for separate
-#'   estimation of unstructured variance-covariance parameters for each response
-#'   variable. 
+#'   \item \code{groupvar} specifies the grouping (subject) identifier. If
+#'   \code{NULL} (default), it is automatically inferred from the \code{id}
+#'   argument.
+#'   \item \code{dist} specifies the distribution of the random effects
+#'   (default \code{gaussian}). Currently, only the Gaussian distribution is
+#'   supported (see \code{[brms::brm()]}).
+#'   \item \code{by} allows estimation of separate variance-covariance
+#'   structures (i.e., standard deviations and correlations) across levels of a
+#'   factor variable (default \code{NULL}). The \code{by} variable must be a
+#'   factor. For example, \code{by = "sex"} estimates separate
+#'   variance-covariance structures for males and females.
+#'   \item \code{cor} specifies the covariance (correlation) structure of the
+#'   random effects. The default is unstructured (\code{cor = un}) for all model
+#'   types (\code{univariate}, \code{univariate_by}, and \code{multivariate}).
+#'
+#'   For \code{univariate} and \code{univariate_by} models, the alternative
+#'   option is \code{diagonal}, which estimates only variance parameters while
+#'   fixing correlations to zero.
+#'
+#'   For \code{multivariate} models, available options are:
+#'   \itemize{
+#'   \item \code{un}: A fully unstructured covariance, where random effects
+#'   across outcomes are jointly modeled with shared correlations.
+#'   \item \code{diagonal}: Variances are estimated separately for each outcome,
+#'   with correlations fixed to zero.
+#'   \item \code{un_s}: Separate unstructured variance-covariance matrices are
+#'   estimated for each outcome.
 #'   }
-#'   
-#'   Note that it is not necessary to define all or any of these options
-#'   (\code{groupvar}, \code{dist}, \code{cor}, or \code{by}), as they will
-#'   automatically be set to their default values if unspecified. Additionally,
-#'   only \code{groupvar} from the \code{group_arg} argument is passed to the
-#'   \emph{univariate_by} and \emph{multivariate} models, as these models have
-#'   their own additional options specified via the \code{univariate_by} and
-#'   \code{multivariate} arguments. Lastly, the \code{group_arg} is ignored when
-#'   random effects are specified using the vertical bar \code{||} approach (see
-#'   \code{a_formula_gr} for details) or when fitting a hierarchical model with
-#'   three or more levels of hierarchy (see \code{a_formula_gr_str} for
-#'   details).
+#'   }
+#'
+#'   All components of \code{group_arg} are optional and default values are used
+#'   when unspecified.
+#'
+#'   For \code{univariate_by} and \code{multivariate} models, only
+#'   \code{groupvar} from \code{group_arg} is used, as additional model-specific
+#'   options are handled via the corresponding arguments.
+#'
+#'   The \code{group_arg} argument is ignored when random effects are specified
+#'   using vertical bar notation (see \code{a_formula_gr}) or when fitting
+#'   hierarchical models with three or more levels (see
+#'   \code{a_formula_gr_str}).
 #'   
 #' @param sigma_group_arg Specify arguments for modeling distributional-level
 #'   random effects for \code{sigma}. The setup for \code{sigma_group_arg}
@@ -2355,7 +2344,7 @@ bsitar <- function(x,
                                        rcorr_gr = NULL,
                                        rcorr_method = NULL,
                                        rcorr_prior = NULL),
-                   a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                   a_prior_beta = normal(ymean, ysd, autoscale = FALSE),
                    b_prior_beta = normal(0, 2.0, autoscale = FALSE),
                    c_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = FALSE),
