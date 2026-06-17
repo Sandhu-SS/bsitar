@@ -84,7 +84,7 @@ test_that("bsitar works with rcs settings and decomp QR", {
   test_gparms <- get_growthparameters(test_fit, re_formula = NA)
   
   expect_equal(round(test_gparms$Estimate[1], 2), 12.72, tolerance = 0.01)
-  expect_equal(round(test_gparms$Estimate[2], 2), 6.27,  tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.55,  tolerance = 0.01)
 
 })
 

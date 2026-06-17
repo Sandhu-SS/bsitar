@@ -2355,9 +2355,9 @@ bsitar <- function(x,
                                        rcorr_gr = NULL,
                                        rcorr_method = NULL,
                                        rcorr_prior = NULL),
-                   a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
-                   b_prior_beta = normal(0, 2, autoscale = FALSE),
-                   c_prior_beta = normal(0, 1, autoscale = FALSE),
+                   a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                   b_prior_beta = normal(0, 2.0, autoscale = FALSE),
+                   c_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    s_prior_beta = normal(lm, lm, autoscale = FALSE),
                    a_cov_prior_beta = normal(0, 20.0, autoscale = FALSE),
@@ -2366,8 +2366,8 @@ bsitar <- function(x,
                    d_cov_prior_beta = normal(0,  1.0, autoscale = FALSE),
                    s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
                    a_prior_sd = normal(0, ysd, autoscale = FALSE),
-                   b_prior_sd = normal(0, 2, autoscale = FALSE),
-                   c_prior_sd = normal(0, 1, autoscale = FALSE),
+                   b_prior_sd = normal(0, 2.0, autoscale = FALSE),
+                   c_prior_sd = normal(0, 1.0, autoscale = FALSE),
                    d_prior_sd = normal(0, 1.0, autoscale = FALSE),
                    a_cov_prior_sd = normal(0, 5.0, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
@@ -2381,7 +2381,7 @@ bsitar <- function(x,
                    b_cov_prior_sd_str = NULL,
                    c_cov_prior_sd_str = NULL,
                    d_cov_prior_sd_str = NULL,
-                   sigma_prior_beta = normal(0, 1, autoscale = FALSE),
+                   sigma_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
                    sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
                    sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
@@ -2552,8 +2552,8 @@ bsitar <- function(x,
    if(data_check_for_modifications) {
      data_name_str_check <- deparse(mcall_$data)
      data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
-     data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
-     data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
+     data_name_str  <- check_forpipe(data_name_str_check, return = 'name')
+     data_name_pipe <- check_forpipe(data_name_str_check, return = 'logical')
      data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
    } else {
      data_name_pipe <- FALSE
@@ -3050,7 +3050,8 @@ bsitar <- function(x,
           if(grepl("\\(", xcall_x_i_str_i)) {
             xcall_x_i_str_i <- regmatches(xcall_x_i_str_i, 
                                           gregexpr("(?<=\\().*(?=\\))",
-                                                   xcall_x_i_str_i, perl=T))[[1]]
+                                                   xcall_x_i_str_i, 
+                                                   perl=T))[[1]]
           } else {
             xcall_x_i_str_i <- xcall_x_i_str_i
           }
@@ -4501,7 +4502,8 @@ bsitar <- function(x,
           if(is.null(brms_arguments$stan_model_args[['include_paths']])) {
             brms_arguments$stan_model_args[['include_paths']] <- "."
             if(verbose) 
-              message2c("path for .stan file(s) set to '.' via 'stan_model_args'")
+              message2c("path for .stan file(s) set 
+                        to '.' via 'stan_model_args'")
           }
         }
       } 
@@ -4686,7 +4688,7 @@ bsitar <- function(x,
       if(!grepl("^list", deparse_0(multivariate))) { # For CustomDoCall
         multivariate <- gsub("\\s", "", paste(deparse(substitute(multivariate)), 
                                               collapse = ""))
-        if (multivariate == "T") multivariate <- eval(parse(text = multivariate))
+        if(multivariate == "T") multivariate <- eval(parse(text = multivariate))
         multivariate <- as.list(multivariate)
         names(multivariate) <- 'mvar'
       } # For CustomDoCall
@@ -4783,8 +4785,9 @@ bsitar <- function(x,
   ), collapse = "")))) {
     if (is.symbol(substitute(univariate_by))) {
       if(!grepl("^list", deparse_0(multivariate))) { # For CustomDoCall
-        univariate_by <- gsub("\\s", "", paste(deparse(substitute(univariate_by)),
-                                               collapse = ""))
+        univariate_by <- gsub("\\s", "", 
+                              paste(deparse(substitute(univariate_by)),
+                                    collapse = ""))
         univariate_by <- univariate_by
         univariate_by <- as.list(univariate_by)
         names(univariate_by) <- 'by'
@@ -5943,7 +5946,7 @@ bsitar <- function(x,
     # Note:
     # - The helper `add_default_args_to_nlf_lf()` can also be applied to
     #   `dpar_formula` if needed.
-    # - Missing parameters in `sigma_formula_manual` should be automatically added.
+    # - Missing parameters in `sigma_formula_manual` should add automatically.
     # - A similar validation step may be required for `dpar_formula`.
     # -------------------------------------------------------------------------
     # SIGMA MODEL SPECIFICATION OPTIONS
@@ -6347,7 +6350,7 @@ bsitar <- function(x,
             "()'.",
             "\n\n",
             "The bsitar package provides six methods for modeling variance. ",
-            "Five of these are based on implementations available in the nlme package:",
+            "Five of these are similar to methods available in nlme package:",
             "\n  ",
             "'nlme::varPower()'",
             "\n  ",
@@ -6359,7 +6362,7 @@ bsitar <- function(x,
             "\n  ",
             "'nlme::varExp(form ~ resid(.))'",
             "\n\n",
-            "These methods are specified using the 'method' argument within 'nlf()'. ",
+            "These are specified using the 'method' argument within 'nlf()'. ",
             "For example:",
             "\n  ",
             "nlf(..., method = 'xx')",
@@ -6379,7 +6382,7 @@ bsitar <- function(x,
             "'residual' ('re')",
             "\n\n",
             "In addition, bsitar provides a sixth method inspired by the brms ",
-            "reference manual. This approach models the square root of the fitted ",
+            "reference manual in which the square root of the fitted ",
             "values and can be specified as:",
             "\n  ",
             "method = 'mean' or 'me'",
