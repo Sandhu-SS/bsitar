@@ -67,18 +67,16 @@ test_that("bsitar works fully with rcs settings with init prior", {
   }))
   
   
-  # test_fit <- test_fit_rcs
-  
-  # true_sbetas <- c(150.15,  -1.04,  -0.49,  20.13,  -4.04, -59.69, 136.02)
-  # 
-  # test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
-  # 
-  # expect_equal(true_sbetas, test_sbetas, tolerance = 0.01)
-  # 
-  # test_gparms <- get_growthparameters(test_fit, re_formula = NA)
-  # 
-  # expect_equal(round(test_gparms$Estimate[1], 2), 7.99, tolerance = 0.01)
-  # expect_equal(round(test_gparms$Estimate[2], 2), 11.78,  tolerance = 0.01)
+  true_sbetas <- c(150.15,  -1.04,  -0.49,  20.13,  -4.04, -59.69, 136.02)
+
+  test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
+
+  expect_equal(true_sbetas, test_sbetas, tolerance = 0.01)
+
+  test_gparms <- get_growthparameters(test_fit, re_formula = NA)
+
+  expect_equal(round(test_gparms$Estimate[1], 2), 7.99, tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[2], 2), 11.78,  tolerance = 0.01)
 
 })
 

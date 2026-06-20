@@ -125,6 +125,16 @@ modelbased_growthparameters_call.bgmfit <-
            newdata_fixed = NULL,
            envir = NULL, 
            ...) {
+    
+    
+    fastplyr.optimise_ppt <- getOption('fastplyr.optimise')
+    options("fastplyr.optimise" = FALSE)
+    on.exit(options("fastplyr.optimise" = fastplyr.optimise_ppt), add = TRUE)
+    
+    fastplyr.inform_ppt <- getOption('fastplyr.inform')
+    options("fastplyr.inform" = FALSE)
+    on.exit(options("fastplyr.inform" = fastplyr.inform_ppt), add = TRUE)
+
     if(!is.null(estimate_center)) {
       ec_ <- getOption("marginaleffects_posterior_center")
       options("marginaleffects_posterior_center" = estimate_center)
@@ -224,7 +234,16 @@ modelbased_growthparameters_call.bgmfit <-
     assign_function_to_environment(transform_draws, 'transform_draws', 
                                    envir = NULL)
     model$model_info[['transform_draws']] <- transform_draws
-    model <- getmodel_info(model = model, dpar = dpar)
+    
+    if(is.null(dpar)) dpar <- 'mu'
+    
+    model <- getmodel_info(model = model, 
+                           dpar = dpar,
+                           resp = resp, 
+                           deriv = deriv, 
+                           remove_cons_cov = TRUE,
+                           strict_1 = TRUE,
+                           verbose = FALSE)
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE

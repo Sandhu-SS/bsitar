@@ -67,8 +67,7 @@ test_that("bsitar works fully with rcs settings", {
   }))
   
   
-  # test_fit <- test_fit_rcs
-  
+
   true_sbetas <- c(128.05, 0.00, 0.00, 5.02, 4.28, -12.27, -13.26)
   
   test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
@@ -90,12 +89,66 @@ test_that("bsitar works fully with rcs settings", {
                tolerance = 0.01)
   
   
+  ##############################################################################
+  # get_growthparameters
+  ##############################################################################
+  
   test_gparms_re <- get_growthparameters(test_fit, by = 'id', re_formula = NULL)
   test_gparms_gp_re <- growthparameters(test_fit, re_formula = NULL)
   # This will test mean of APGV and PGV
   expect_equal(mean(test_gparms_re$Estimate), 
                mean(test_gparms_gp_re$Estimate), 
                tolerance = 0.01)
+  
+  ##############################################################################
+  # modelbased_growthparameters_call.bgmfit
+  ##############################################################################
+  
+  mgc <- modelbased_growthparameters_call.bgmfit(test_fit, method = 'custom')
+  expect_equal(mean(mgc$distance$Estimate), 158.2923, tolerance = 0.01)
+  expect_equal(mean(mgc$velocity$Estimate), 6.4, tolerance = 0.01)
+  
+  
+  ##############################################################################
+  # optimize_model
+  ##############################################################################
+  omc <- optimize_model(test_fit, 
+                        newdata = NULL,
+                        optimize_df = 3,
+                        optimize_x = list(NULL, log, sqrt),
+                        optimize_y = list(NULL, log, sqrt),
+                        transform_prior_class = c('beta', 'sd', 'rsd', 'sigma', 'dpar'),
+                        transform_beta_coef = c('b', 'c'),
+                        transform_sd_coef = c('b', 'c'),
+                        exclude_default = TRUE,
+                        add_fit_criteria = c("loo", "waic", "bayes_R2"),
+                        byresp = FALSE,
+                        model_name = NULL,
+                        overwrite = FALSE,
+                        file = NULL,
+                        force_save = FALSE,
+                        save_each = FALSE,
+                        digits = 2,
+                        cores = 1,
+                        verbose = FALSE,
+                        expose_function = FALSE,
+                        usesavedfuns = FALSE,
+                        clearenvfuns = NULL,
+                        envir = NULL)
+  
+  expect_true(is.data.frame(omc$optimize_summary))
+  
+  
+  
+  ##############################################################################
+  # hypothesis_test
+  ##############################################################################
+  
+  
+  ##############################################################################
+  # summary_table
+  ##############################################################################
+  # stab <- summary_table(test_fit)
   
   
 })

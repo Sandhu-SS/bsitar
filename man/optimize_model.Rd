@@ -121,7 +121,8 @@ is fit with \code{xvar = log} and \code{yvar = NULL}, then
 \code{optimize_x} is translated into \code{optimize_x = list(NULL, sqrt)},
 and \code{optimize_y} is reset as \code{optimize_y = list(log, sqrt)}.}
 
-\item{add_fit_criteria}{a}
+\item{add_fit_criteria}{A character vector specifying the fit criteria to
+be added. See \code{\link[=add_model_criterion]{add_model_criterion()}} for details.}
 
 \item{byresp}{A logical (default \code{FALSE}) indicating whether
 response-wise fit criteria should be calculated. This argument is evaluated

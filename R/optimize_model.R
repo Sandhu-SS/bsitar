@@ -89,7 +89,8 @@
 #'   \code{optimize_x} is translated into \code{optimize_x = list(NULL, sqrt)},
 #'   and \code{optimize_y} is reset as \code{optimize_y = list(log, sqrt)}.
 #'
-#' @param add_fit_criteria a
+#' @param add_fit_criteria A character vector specifying the fit criteria to 
+#' be added. See [add_model_criterion()] for details.
 #'
 #' @param byresp A logical (default \code{FALSE}) indicating whether
 #'   response-wise fit criteria should be calculated. This argument is evaluated
@@ -234,14 +235,49 @@ optimize_model.bgmfit <- function(model,
       stop("Argument 'optimize_x' must be a list")
     }
   }
-
-  if(!all(sapply(optimize_x, typeof) == "character")) {
-    stop("All elements of argument 'optimize_x' must be character")
-  }
   
-  if(!all(sapply(optimize_y, typeof) == "character")) {
-    stop("All elements of argument 'optimize_y' must be character")
+  check_optimize_xy <- function(optimize_x) {
+    ok <- is.list(optimize_x) && all(vapply(
+      optimize_x,
+      function(x) is.null(x) || is.function(x) || is.character(x),
+      logical(1)
+    ))
+    
+    if (!ok) {
+      bad <- which(!vapply(
+        optimize_x,
+        function(x) is.null(x) || is.function(x) || is.character(x),
+        logical(1)
+      ))
+      
+      stop(
+        sprintf(
+          paste0(
+            "Argument 'optimize_x' and 'optimize_y' must be a list whose ",
+            " elements are each NULL, a function, or a character vector. ",
+            " Invalid element(s): %s",
+          ),
+          paste(
+            sprintf(
+              "[[%d]]: type='%s', class='%s'",
+              bad,
+              vapply(optimize_x[bad], typeof, character(1)),
+              vapply(optimize_x[bad], function(x) paste(class(x), 
+                                                        collapse = ", "), 
+                     character(1))
+            ),
+            collapse = "; "
+          )
+        ),
+        call. = FALSE
+      )
+    }
+    
+    invisible(TRUE)
   }
+
+  check_optimize_xy(optimize_x)
+  check_optimize_xy(optimize_y)
  
   setxcall_   <- match.call()
   post_processing_checks_args <- list()
