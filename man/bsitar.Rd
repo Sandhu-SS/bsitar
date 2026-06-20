@@ -482,8 +482,9 @@ sub-models).}
 \item{stype}{A character string or a named list specifying the spline type to
 be used. The available options are:
 \itemize{
-\item \code{'rcs'} (default): Constructs the spline design matrix using the truncated
-power basis (Harrell's method), implemented in \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
+\item \code{'rcs'} (default): Constructs the spline design matrix using the
+truncated power basis (Harrell's method), implemented in
+\code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
 \item \code{'nsk'}: Implements a B-spline based natural cubic spline method,
 similar to \code{\link[splines2:naturalSpline]{splines2::nsk()}}.
 \item \code{'nsp'}: Implements a B-spline based natural cubic spline method,
@@ -661,11 +662,11 @@ well as their interactions (see \code{a_formula} for details). The
 parameter \code{sigma} is modeled on the log scale.
 
 By default, \code{sigma_formula = NULL}, in which case \code{[brms::brm()]}
-estimates \code{sigma} as a residual standard deviation (RSD) parameter on
-the link scale. When specified, \code{sigma_formula}, together with
-\code{sigma_formula_gr} and \code{sigma_formula_gr_str}, enables modeling
-\code{sigma} with both fixed and random effects, analogous to other model
-parameters such as \code{a}, \code{b}, and \code{c}.
+estimates \code{sigma} as a residual standard deviation (\code{RSD})
+parameter on the link scale. When specified, \code{sigma_formula}, together
+with \code{sigma_formula_gr} and \code{sigma_formula_gr_str}, enables
+modeling \code{sigma} with both fixed and random effects, analogous to
+other model parameters such as \code{a}, \code{b}, and \code{c}.
 
 An alternative approach is to use the \code{dpar_formula} argument to
 specify the design matrix for \code{sigma}. The advantage of
@@ -678,7 +679,7 @@ the intercept using a \code{0 +} formulation. However, a limitation of
 
 The arguments \code{sigma_formula} and \code{dpar_formula} are mutually
 exclusive. When either is specified, the default estimation of \code{sigma}
-as an RSD parameter in \code{[brms::brm()]} is disabled.
+as an \code{RSD} parameter in \code{[brms::brm()]} is disabled.
 
 External functions (e.g., \code{poly}, \code{splines::ns}) can be used
 within \code{sigma_formula}. Two common approaches are:
@@ -784,9 +785,35 @@ values as follows:\cr
 \code{'nlme::varExp(form ~ sqrt(fitted(.)))'}
 }
 
-Below are examples showing how to use \code{'sigmavarfun'} to specify each of
-the six variance models. We encourage the use of short hand form, \code{'vf'}
-to avoid any errors in correctly spelling the full form \code{'sigmavarfun'}
+Below are examples demonstrating how to use \code{'sigmavarfun'} via the
+\code{method} sub-argument to specify each of the six variance models. To
+minimize the risk of typographical errors, we recommend using the shorthand
+form \code{'vf'} instead of the full name \code{'sigmavarfun'}.
+
+All variance model specifications are provided through the
+\code{sigma_formula_manual} argument in \code{bsitar()}. In general, the
+syntax takes the form:
+
+\code{sigma_formula_manual = nlf(sigma ~ vf(...), method = ...) + lf(...)}
+
+Note that the predictor used within these variance functions should not be
+identical to \code{x} (see argument \code{x}, typically \code{age}). This is
+because the predictors for \code{mu} and \code{sigma} may require different
+transformations, which cannot be accommodated using a single shared
+variable.
+
+Instead, define a separate predictor variable (even if it contains identical
+values). For example:
+
+\code{data$age_vf <- data$age}
+
+and then use \code{age_vf} within the variance function. This ensures that
+transformations applied to \code{sigma} do not interfere with those used for
+\code{mu}.
+
+For \code{method = 're'}, \code{outcome} in the \code{nlf(sigma ~ vf())} is a
+placeholder that is internally replaced by the actual response variable such
+as \code{height} (See \code{y} for the response variables).
 
 \strong{1. varpower:}
 \preformatted{
@@ -796,7 +823,7 @@ to avoid any errors in correctly spelling the full form \code{'sigmavarfun'}
 
 \strong{2. varConstPower:}
 \preformatted{
-  nlf(sigma ~ vf(param1, param2, param3, predictor), method = cp') + 
+  nlf(sigma ~ vf(param1, param2, param3, predictor), method = 'cp') + 
   lf(param1 + param2 + param3 ~ 1)
 }
 
@@ -814,7 +841,7 @@ to avoid any errors in correctly spelling the full form \code{'sigmavarfun'}
 
 \strong{5. residual:}
 \preformatted{
-  nlf(sigma ~ vf(param1, param2, identity(), resp), method = 're') + 
+  nlf(sigma ~ vf(param1, param2, identity(), outcome), method = 're') + 
   lf(param1 + param2 ~ 1)
 }
 
@@ -913,13 +940,13 @@ location parameter \code{mu}. An example is:
 
 Here, \code{ls}, which is an abbreviation for location-scale, is a
 placeholder and gets replaced by the the name of actual function that is
-used for modelling the scale \code{sigma} part of the model. For example, if
-the name of the \code{mu} function is \code{sigmaSITARFun}, then the name of
+used for modelling the scale (\code{sigma}) part of the model. For example,
+if the name of the \code{mu} function is \code{SITARFun}, then the name for
 the  \code{sigma} function would be \code{sigmaSITARFun} and hence \code{ls}
 gets replaced as \code{sigmaSITARFun}. All functions and corresponding names
 are created internally.
 
-The first argument \code{x} of the function is again a placeholder for the
+The first argument \code{x} is again a placeholder for the
 actual predictor variable defined for the \code{sigma} modelling via the
 \code{sigmax} argument.In other words, the \code{x} gets replaced by the
 \code{sigmax} argument evaluated. For example, when \code{sigmax = age},
@@ -933,8 +960,8 @@ must include the form for the corresponding growth parameter defined in the
 \code{ls} function. For example, when either or both \code{sigmafixed} and
 \code{sigmarandom} are defined as \code{a+b+c}, then all three growth
 parameters \code{sigmaa}, \code{sigmab}, \code{sigmac} should be part of the
-\code{ls} function. However, when only sunset of parameters are specified via
-the \code{sigmafixed} and \code{sigmarandom} form, say for example
+\code{ls} function. However, when only sunset of parameters are specified
+via the \code{sigmafixed} and \code{sigmarandom} form, say for example
 \code{a+b}, the \code{ls} function should exclude \code{sigmac} parameter.
 
 Similarly, the number of spline parameters are based on the \code{sigmadf}
@@ -948,7 +975,9 @@ be set via the \code{sigmaknots}, \code{sigmaxoffset}, \code{sigmaxfun}, and
 Note that for the \code{location-scale} model, priors must be set up
 manually using the \code{add_self_priors} argument. To see which priors are
 required, the user can run the code with \code{get_priors = TRUE}. Also note
-that the default initial values for \code{location-scale} model are random.}
+that the default initial values for \code{location-scale} model are random,
+or \code{'0'} depending on whether the \code{init = 'random'} or \code{init
+ = '0'}.}
 
 \item{sigmax}{Predictor for the distributional parameter \code{sigma}. See
 \code{x} for details. Ignored if \code{sigma_formula_manual = NULL}.}
@@ -1015,17 +1044,52 @@ it is inferred from the transformed \code{sigmax} variable.}
 \item{autocor_formula}{Formula to set up the autocorrelation structure of
 residuals (default \code{NULL}). Allowed autocorrelation structures include:
 \itemize{
-\item autoregressive moving average (\code{arma}) of order \code{p} and
+\item auto regressive moving average (\code{arma}) of order \code{p} and
 \code{q}, specified as \code{autocor_formula = ~arma(p = 1, q = 1)}.
-\item autoregressive (\code{ar}) of order \code{p}, specified as
+\item auto regressive (\code{ar}) of order \code{p}, specified as
 \code{autocor_formula = ~ar(p = 1)}.
 \item moving average (\code{ma}) of order \code{q}, specified as
 \code{autocor_formula = ~ma(q = 1)}.
 \item unstructured (\code{unstr}) over time (and individuals), specified as
 \code{autocor_formula = ~unstr(time, id)}.
 }
-See \code{\link[brms:brm]{brms::brm()}} for further details on modeling the autocorrelation
-structure of residuals.}
+
+See \code{\link[brms:brm]{brms::brm()}} for further details on modeling the autocorrelation of
+residuals.
+
+Note that for \code{unstr} autocorrelation structure, \code{time} is a
+placeholder which could be any name. Internally, a new variable
+\code{time}, or \code{time_response} for \code{multivariate} or
+\code{univariate_by} models, is created from the predictor variable
+\code{x} e.g., \code{age}.
+
+This internal variable is required because the unstructured autocorrelation
+covariance matrix is indexed by time points treated as discrete, ordered
+indices. The underlying Stan implementation expects time to be represented
+as unique positive integers in increasing order (e.g., 1, 2, 3, ...) for
+each individual so that:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{\\itemize\{
+  \\item Each observation can be mapped to a unique row/column in the
+  \code{N_time x N_time} unstructured covariance matrix, where
+  \code{N_time} is the number of distinct time points per individual.
+  \\item The autocorrelation structure is defined over a regular, ordered
+  sequence of time indices, which is essential for constructing the
+  covariance matrix in Stan.
+  \\item Individuals with different original time scales (e.g., age in
+  years, months, or days) can share a common autocorrelation structure,
+  since time is standardized to integer indices within each individual.
+\}
+
+The predictor variable \code{x} is therefore transformed into this
+internal \code{time} variable such that it contains unique positive
+integers in increasing order, such as 1, 2, 3, for each individual
+identified by \code{id}. When the original \code{x} values do not satisfy
+this condition (e.g., they are non-integer ages like 0.5, 1.2, 3.7), the
+transformation automatically transforms them to meet this requirement
+during the creation of the internal \code{time} variable. No
+pre-processing is needed before using \code{unstr} autocorrelation.
+}\if{html}{\out{</div>}}}
 
 \item{family}{Family distribution (default \code{gaussian}) and the link
 function (default \code{identity}). See \code{\link[brms:brm]{brms::brm()}} for details on
@@ -1050,18 +1114,19 @@ details, see \code{\link[brms:brmsformula]{brms::brmsformula()}}. Currently igno
 details, see \code{\link[brms:set_prior]{brms::prior()}}. Currently ignored. It is primarily designed
 to support setting custom prior for \code{custom_formula}. Note that
 \code{custom_prior} is different from the \code{set_self_priors} which
-evaluated throughout the call.}
+is evaluated throughout the call.}
 
-\item{custom_stanvars}{Allows the preparation and passing of user-defined
-variables to be added to Stan's program blocks (default \code{NULL}). This
-is primarily useful when defining a \code{custom_family}. For more details
-on specifying \code{stanvars}, see \code{\link[brms:custom_family]{brms::custom_family()}}. Note that
+\item{custom_stanvars}{Allows the passing of user-defined variables to be
+added to Stan's program blocks (default \code{NULL}). This is primarily
+useful when defining a \code{custom_family}. For more details on specifying
+\code{stanvars}, see \code{\link[brms:custom_family]{brms::custom_family()}}. Note that
 \code{custom_stanvars} are passed directly without conducting any sanity
 checks.}
 
-\item{group_arg}{Arguments for specifying group-level random effects. The
-\code{group_arg} should be a named list that may include \code{groupvar},
-\code{dist}, \code{cor}, and \code{by}, as described below:
+\item{group_arg}{Specify the grouping variable for group-level random
+effects. The \code{group_arg} should be a named list that may include
+\code{groupvar}, \code{dist}, \code{cor}, and \code{by}, as described
+below:
 
 \itemize{
 \item \code{groupvar} specifies the grouping (subject) identifier. If
@@ -1256,9 +1321,9 @@ for individual sub models when fitting \code{univariate_by} or
 \code{multivariate} models; see \code{a_prior_beta} for details.
 }}
 
-\item{b_cov_prior_beta}{Prior specification for covariate effects included
-in the fixed effect parameter \code{b} (default: \code{normal(0, 1.0, autoscale =
-  FALSE)}). See \code{a_cov_prior_beta} for details.}
+\item{b_cov_prior_beta}{Prior specification for covariate effects included in
+the fixed effect parameter \code{b} (default: \code{normal(0, 1.0,
+  autoscale = FALSE)}). See \code{a_cov_prior_beta} for details.}
 
 \item{c_cov_prior_beta}{Prior specification for covariate effects included
 in the fixed effect parameter \code{c} (default:
@@ -2147,8 +2212,9 @@ extends this framework within a Bayesian paradigm, offering increased
 flexibility in model specification, improved uncertainty quantification, and
 richer inferential capabilities.
 
-Beyond standard univariate analysis (i.e., modeling a single outcome),
-\pkg{bsitar} supports:
+Beyond standard \emph{Univariate analysis} (i.e., modeling a single outcome),
+\pkg{bsitar} supports \emph{Univariate-by-subgroup analysis} and
+\emph{Multivariate analysis} as described below.
 
 \itemize{
 \item Univariate analysis: Modeling a single outcome, consistent with the
@@ -2313,12 +2379,12 @@ factors to 1.0 or 2.5, \pkg{bsitar} accepts any real number (e.g.,
 
 \item \strong{Transformations:} For location-scale distributions,
 \code{fxl} (function location) and \code{fxs} (function scale) apply
-transformations to their respective parameters. For example, \code{normal(2, 5, fxl = 'log',
-  fxs = 'sqrt')} translates to \code{normal(log(2), sqrt(5))}.
-Alternatively, \code{fxls} (function location scale) simultaneously
-transforms both parameters when they are interdependent (e.g., log-normal
-transformations). This can be passed as a character string or list of
-functions.
+transformations to their respective parameters. For example,
+\code{normal(2, 5, fxl = 'log', fxs = 'sqrt')} translates to
+\code{normal(log(2), sqrt(5))}. Alternatively, \code{fxls} (function
+location scale) simultaneously transforms both parameters when they are
+interdependent (e.g., log-normal transformations). This can be passed as a
+character string or list of functions.
 
 \item \strong{Uniform distributions:} The \code{addrange} argument
 symmetrically widens the prior range. For instance, \code{uniform(a, b, 
@@ -2388,10 +2454,10 @@ enhance model fitting, diagnostics, and analysis capabilities.
 # 66 boys and 70 girls (ages 0-21). For this example, we use a subset of the 
 # data for 70 girls aged 8 to 18 years.
 #
-# For details on the full Berkley height dataset, refer to 'sitar' package
-# documentation (help file: ?sitar::berkeley). Further details on the subset
-# of the data used here can be found in the vignette ('Fitting_models_with_SITAR', 
-# package = 'sitar').
+# A detailed description of Berkley height dataset is provided in the 'sitar' 
+# package documentation (help file: ?sitar::berkeley). Details on the subset
+# of the data used in the 'bsitar' package can be found in the vignette 
+# ('Fitting_models_with_SITAR', package = 'sitar').
 
 # Load the 'berkeley_exdata' that has been pre-saved
 berkeley_exdata <- getNsObject(berkeley_exdata)
@@ -2440,24 +2506,26 @@ if(exists('berkeley_exfit')) {
                   a_formula = ~1, 
                   b_formula = ~1, 
                   c_formula = ~1, 
-                  threads = brms::threading(NULL),
+                  threads = NULL,
                   chains = 2, cores = 2, iter = 1000, thin = 6)
                   
 }
 
-# Generate model summary
+# Model summary
 summary(model)
 
-# Compare model summary with the frequentist SITAR model
+# Model summary for the frequentist SITAR model fite using 'sitar' package
 print(model_ml)
 
-# Check model fit via posterior predictive checks using plot_ppc.
-# This function is based on pp_check from the 'brms' package.
+# Evaluate model fit using the posterior predictive checks (PPC) plot.
+# plot_ppc() is a wrapper for the pp_check() from 'brms' package.
 plot_ppc(model, ndraws = NULL)
 
 # Plot distance and velocity curves using plot_conditional_effects.
-# This function works like conditional_effects from the 'brms' package,
-# with the added option to plot velocity curves.
+# plot_conditional_effects() is a wrapper for conditional_effects() 
+# from 'brms' package. However, unlike conditional_effects() which plots
+# only the distance curve, plot_conditional_effects() plot velocity curve
+# in addition to the distance curve
 
 # Distance curve
 plot_conditional_effects(model, deriv = 0)
@@ -2465,8 +2533,9 @@ plot_conditional_effects(model, deriv = 0)
 # Velocity curve
 plot_conditional_effects(model, deriv = 1)
 
-# Plot distance and velocity curves along with parameter estimates using 
-# plot_curves (similar to plot.sitar from the sitar package).
+# A custom function plot_curves() can also be used to plot distance and 
+# velocity curves along with the growth parameter such as APGV 
+# plot_curves() is similar to plot() from the sitar package.
 plot_curves(model, apv = TRUE)
 
 # Compare plots with the frequentist SITAR model

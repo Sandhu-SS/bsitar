@@ -469,7 +469,13 @@ prepare_transformations <- function(data = NULL,
         evalfuns <- xfun[[i]]
         # check and do nothing if matrix, typically posterior draws
         if(tibble::is_tibble(data) | is.data.frame(data)) {
-          if(!is.null(data[[i]])) data[[i]] <- evalfuns(data[[i]])
+          if(is.factor(data[[i]])) {
+            suppressWarnings({
+              if(!is.null(data[[i]])) data[[i]] <- evalfuns(data[[i]])
+            })
+          } else {
+            if(!is.null(data[[i]])) data[[i]] <- evalfuns(data[[i]])
+          }
         }
         evalfuns <- NULL
       }

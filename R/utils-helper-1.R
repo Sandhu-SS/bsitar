@@ -1417,6 +1417,170 @@ prior_summary_table <- function(model,
 
 
 
+#' Check that a variable is a positive integer in increasing order within each
+#' group
+#'
+#' This function verifies that a given variable (typically time/age) is:
+#' \itemize{
+#'   \item A positive integer (greater than 0)
+#'   \item Increasing by exactly 1 within each group (e.g., 1, 2, 3, ...)
+#'   \item Strictly increasing within each group
+#' }
+#'
+#' The checks are performed separately for each unique value of the grouping
+#' variable.
+#'
+#' @param data A data frame containing the variables specified in \code{idvar}
+#'   and \code{xvar}.
+#' @param idvar A string specifying the name of the grouping variable (e.g.,
+#'   individual ID). The checks are performed within each unique value of this
+#'   variable.
+#' @param xvar A string specifying the name of the variable to check (e.g.,
+#'   "time" or "age"). This variable will be converted to numeric for the
+#'   checks.
+#' @param flag A logical flag indicating whether to stop with an error if the
+#'   check fails. If \code{TRUE} (default) and the check fails, an error is
+#'   thrown via \code{stop2c()}. If \code{FALSE}, the function returns the
+#'   logical result without stopping.
+#' 
+#' @return A single logical value:
+#'   \itemize{
+#'     \item \code{TRUE} if all groups satisfy all three conditions (positive
+#'     integer, increasing by 1, strictly increasing)
+#'     \item \code{FALSE} if any group fails any of the conditions
+#'   }
+#'   When \code{flag = TRUE} and the result is \code{FALSE}, an error is thrown
+#'   instead of returning.
+#'
+#' @examples
+#' # Example 1: Valid data (passes all checks)
+#' df_valid <- data.frame(
+#'   id = c("A", "A", "A", "B", "B", "B"),
+#'   age = c("1", "2", "3", "2", "3", "4")
+#' )
+#' check_id_xvar(df_valid, "id", "age")  # Returns TRUE
+#'
+#' # Example 2: Invalid data (fails increasing by 1)
+#' df_invalid <- data.frame(
+#'   id = c("A", "A", "A", "B", "B", "B"),
+#'   age = c("1", "2", "3", "2", "4", "5")  # B jumps from 2 to 4
+#' )
+#' check_id_xvar(df_invalid, "id", "age")  # Returns FALSE
+#'
+#' # Example 3: With flag = FALSE (no error thrown)
+#' check_id_xvar(df_invalid, "id", "age", flag = FALSE)  # Returns FALSE silently
+#'
+#' # Example 4: Will throw error with default flag = TRUE
+#' # check_id_xvar(df_invalid, "id", "age")  # Throws error via stop2c()
+#'
+#' @details
+#' The function performs three checks within each group:
+#' \itemize{
+#'   \item \code{positive_integer}: All values are positive integers (> 0)
+#'   \item \code{increasing_by_1}: Values increase by exactly 1 (e.g., 1, 2, 3)
+#'   \item \code{strictly_increasing}: Values are strictly increasing (any
+#'   positive step)
+#'  }
+#'
+#' The function returns \code{TRUE} only if ALL three conditions are satisfied
+#' for ALL groups.
+#'
+#' @note
+#' \itemize{
+#'   \item The \code{xvar} column can be stored as strings; it will be converted
+#'   to numeric internally.
+#'   \item Non-numeric strings in \code{xvar} become \code{NA} and cause the
+#'   check to fail.
+#'   \item The data is sorted by \code{idvar} and \code{xvar} before checking,
+#'   so input order doesn't matter.
+#'   \item When \code{flag = TRUE} and the check fails, \code{stop2c()} is
+#'   called with a descriptive error message.
+#' }
+#'
+#' @inherit berkeley author
+#' 
+#' @keywords internal
+#' @noRd
+#'
+check_id_xvar <- function(data, idvar, xvar, flag = TRUE, append_msg = "") {
+  xvar_num <- NULL;
+  positive_integer <- NULL;
+  increasing_by_1 <- NULL;
+  strictly_increasing <- NULL; 
+  all_valid <- NULL; 
+  variables <- c(idvar, xvar)
+  for (j in variables) {
+      if(length(data[[j]]) == 0) {
+        stop2c("The variable ", collapse_comma(j), 
+               " is missing. Check your data")
+      }
+  }
+  out <- data %>%
+    dplyr::mutate(xvar_num = as.numeric(get(xvar))) %>%
+    dplyr::arrange(get(idvar), xvar_num) %>%
+    dplyr::group_by(get(idvar)) %>%
+    dplyr::summarise(
+      positive_integer = all(
+        xvar_num > 0 &
+          xvar_num == as.integer(xvar_num) &
+          !is.na(xvar_num)
+      ),
+      increasing_by_1 = all(diff(xvar_num) == 1),
+      strictly_increasing = all(diff(xvar_num) > 0),
+      .groups = "drop"
+    ) %>%
+    dplyr::summarise(
+      all_valid = all(positive_integer, increasing_by_1, strictly_increasing)
+    ) %>%
+    dplyr::pull(all_valid)
+  
+  if(flag) {
+    if(!out) {
+      msg <- paste0("The time variable ", collapse_comma(xvar),
+             " must be a positive integer in increasing order (e.g., 1, 2, 3) ",
+             "for each individual identified by the variable ", 
+             collapse_comma(idvar), ".")
+      if(append_msg != "") msg <- paste0(msg, " ", append_msg)
+      stop2c(msg)
+    }
+  }
+  
+  return(out)
+}
+
+
+
+
+make_id_xvar <- function(data, idvar, xvar, timevar, resp = NULL, nys = 1) {
+  ysi <- NULL;
+  oooooooooooo <- NULL;
+  if(nys > 1) {
+    newtimevar <- paste0(timevar, "_", ysi)
+  } else {
+    newtimevar <- timevar
+  }
+  out <- data %>% 
+    dplyr::mutate(oooooooooooo = as.factor(dplyr::cur_group_id())) %>% 
+    dplyr::arrange(idvar, xvar) %>% 
+    dplyr::group_by_at(c(idvar)) %>% 
+    dplyr::mutate(!! as.symbol(newtimevar) := 
+                    factor(
+                      base::seq_along(.data[[xvar]]), 
+                      labels = paste0("T", base::seq_along(.data[[xvar]]))
+                    )
+                  ) %>%
+    dplyr::arrange(oooooooooooo) %>% 
+    dplyr::select(-dplyr::all_of('oooooooooooo')) %>%
+    dplyr::ungroup()
+  if(nys > 1) {
+    out <- out %>% dplyr::select(-dplyr::all_of(timevar))
+  }
+  attr(out, 'newtimevar') <- newtimevar
+  return(out)
+}
+
+
+
 #' Checks if object is of class \code{bgmfit}
 #'
 #' @param x An \R object
@@ -1639,6 +1803,9 @@ dollar_to_double_bracket <- function(expr) {
 #'
 #' @param x A string
 #' @return A list comprised of function arguments.
+#' 
+#' @inherit berkeley author
+#' 
 #' @keywords internal
 #' @noRd
 #'
@@ -1903,11 +2070,11 @@ gsub_quote1 <- function(deparseobj) {
 #'   arguments.
 #' @param exceptions A character vector indicating exceptions.
 #' @param ... Additional arguments.
-#' 
-#' @inherit berkeley author
 #'
 #' @return A list of function arguments.
 #'
+#' @inherit berkeley author
+#' 
 #' @keywords internal
 #' @noRd
 #' 
@@ -5477,8 +5644,10 @@ sample_n_of_groups <- function(data, size, ...) {
 #' @param minver A character string of minimum version of the package
 #' @param verbose A logical (default \code{FALSE}) to check 
 #' @param ... other arguments. Currently ignored.
-#' @keywords internal
 #' @return A list comprised of exposed functions.
+#' 
+#' 
+#' @keywords internal
 #' @noRd
 #'
 check_pkg_version_exists <- function(pkg, 
@@ -5504,10 +5673,12 @@ check_pkg_version_exists <- function(pkg,
 #' @param o An object used as an index for functions
 #' @param checks A logical (default \code{FALSE}) to check if funnctions are 
 #' attached to the \code{model}.
-#' @inherit growthparameters.bgmfit params
 #' @param ... other arguments. Currently ignored.
-#' @keywords internal
+#' @inherit growthparameters.bgmfit params
+#' 
 #' @return A list comprised of exposed functions.
+#' 
+#' @keywords internal
 #' @noRd
 #'
 check_if_functions_exists <- function(model, 
@@ -5642,9 +5813,12 @@ check_if_functions_exists <- function(model,
 #' @param o An object used as an index for functions
 #' @param checks A logical (default \code{FALSE}) to check if funnctions are 
 #' attached to the \code{model}.
-#' @inherit growthparameters.bgmfit params
 #' @param ... other arguments. Currently ignored.
+#' 
+#' @inherit growthparameters.bgmfit params
+#' 
 #' @keywords internal
+#' 
 #' @return A list comprised of exposed functions.
 #' @noRd
 #'
@@ -5701,6 +5875,7 @@ check_if_package_installed <- function(model,
 #' @param x A symbol or a character string.
 #' @param geteval A logical (default \code{TRUE}) to indicate whether to return
 #' the object as a character string or as an environment.
+#' 
 #' @keywords internal
 #' @return A list comprised of exposed functions.
 #' @noRd
@@ -7516,7 +7691,7 @@ check_if_varname_exact <- function(str,
          "\n  ",
          "Please define a new predictor which could be the same earlier", 
          "\n  ",
-         "predictot ", collapse_comma(x), " but renamed as ", 
+         "predictor ", collapse_comma(x), " but renamed as ", 
          collapse_comma(paste0(x, "2")), 
          ", or any other name"
          )
@@ -9038,6 +9213,25 @@ get_nlf_custom_arg <- function(str,
   if(!grepl(search, str)) {
     return(str)
   }
+  
+  if(search.o == "method") {
+    method_nlf_custom_arg_msg <- c("basic (ba)",
+                                   "varpower (vp)",
+                                   "varconstpower (cp)",
+                                   "varexp (ve)",
+                                   # "fitted (fi)",
+                                   "fittedz (fz)",
+                                   "fittedpower (fp)",
+                                   "fittedexp (fe)",
+                                   # "mean (mi)",
+                                   "meanpower (mp)",
+                                   "meanexp (me)",
+                                   # "residual (ri)",
+                                   "residualpower (rp)",
+                                   "residualexp (re)",
+                                   "ls")
+  }
+
   look_for_sigma_method_paran <- 
     replace_string_part(x = str,
                         start = search,
@@ -9078,19 +9272,14 @@ get_nlf_custom_arg <- function(str,
     if(!is.null(allowed_nlf_custom_arg)) {
       if(!out %in% allowed_nlf_custom_arg) {
         if(search.o == "method") {
-          stop2c(paste0("The custom arg '", search.o, "' used in nlf() ",
-                      "must be one of the following:", 
+          stop2c(paste0("The custom arg '", search.o, "' used in nlf() must",
+                      " be one of the following (short form in parenthese):", 
                       "\n  ",
-                      collapse_comma(allowed_nlf_custom_arg),
+                      collapse_comma(method_nlf_custom_arg_msg),
                       "\n  ",
-                      " Note these are either full names or two letter codes:",
+                      ". Note that 'ls' is location-scale model which does't have ",
                       "\n  ",
-                      " vp = varpower, cp = varconstpower, ve = varexp",
-                      " fz = fittedz",
-                      " fp = fittedpower, fe = fittedexp",
-                      " mp = meanpower, me = meanexp",
-                      " rp = residualpower, re = residualexp",
-                      " ls = ls", 
+                      "any alternative (full) name.",
                       "\n  "))
         } else if(search.o == "prior") {
           stop2c(paste0("The custom arg '", search.o, "' used in nlf() ",

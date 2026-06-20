@@ -7,14 +7,15 @@ if(skip_test_local_rcmd_check) {
 
 
 ###############################################################################
-# Test bsitar with rcs QR settings
+# Test bsitar with rcs settings
 ###############################################################################
 
-test_that("bsitar works with rcs settings and decomp QR", {
+test_that("bsitar works with rcs settings and sigma_formula_manual me", {
   skip_on_cran()
  
   test_scode <- bsitar(x = age, y = height, id = id, 
-                       data = test_data_male,  df = 4,
+                       data = test_data_male  %>% dplyr::mutate(age_vf = age), 
+                       df = 4,
                        stype = list(type = 'rcs', normalize = TRUE),
                        get_stancode = TRUE,
                        get_standata = FALSE, 
@@ -26,15 +27,19 @@ test_that("bsitar works with rcs settings and decomp QR", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
-                       # parameterization = "cp",
-                       decomp = "QR",
+                       sigma_formula_manual =  nlf(sigma ~ vf(param1, param2, 
+                                                              identity()), 
+                                                   method = 'me') +
+                         lf(param1 + param2 ~ 1),
                        seed = 123)
+  
   
   expect_type(test_scode, "character")
   
   
   test_sdata <- bsitar(x = age, y = height, id = id, 
-                       data = test_data_male,  df = 4,
+                       data = test_data_male  %>% dplyr::mutate(age_vf = age), 
+                       df = 4,
                        stype = list(type = 'rcs', normalize = TRUE),
                        get_stancode = FALSE,
                        get_standata = TRUE, 
@@ -46,8 +51,10 @@ test_that("bsitar works with rcs settings and decomp QR", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
-                       # parameterization = "cp",
-                       decomp = "QR",
+                       sigma_formula_manual =  nlf(sigma ~ vf(param1, param2, 
+                                                              identity()), 
+                                                   method = 'me') +
+                         lf(param1 + param2 ~ 1),
                        seed = 123)
   
   expect_type(test_sdata, "list")
@@ -55,7 +62,8 @@ test_that("bsitar works with rcs settings and decomp QR", {
   
   suppressWarnings(suppressMessages({
     test_fit <- bsitar(x = age, y = height, id = id,
-                       data = test_data_male,  df = 4,
+                       data = test_data_male  %>% dplyr::mutate(age_vf = age),
+                       df = 4,
                        stype = list(type = 'rcs', normalize = TRUE),
                        get_stancode = FALSE,
                        get_standata = FALSE,
@@ -67,25 +75,24 @@ test_that("bsitar works with rcs settings and decomp QR", {
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
-                       # parameterization = "cp",
-                       decomp = "QR",
+                       sigma_formula_manual =  nlf(sigma ~ vf(param1, param2, 
+                                                              identity()), 
+                                                   method = 'me') +
+                         lf(param1 + param2 ~ 1),
                        seed = 123)
   }))
-  
-  
-  # test_fit <- test_fit_rcs
-  
-  true_sbetas <- c(158.13,  -0.01,   0.02,  15.06,   0.65,  -3.38,  -0.21)
-  
+
+
+  true_sbetas <- c(128.05, 0.01, 0.00, 5.01, 4.28, -12.27, -13.26, -1.69, 0.37)
+
   test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
-  
+
   expect_equal(true_sbetas, test_sbetas, tolerance = 0.01)
-  
+
   test_gparms <- get_growthparameters(test_fit, re_formula = NA)
-  
-  # strange winows expect 6.27 but github 6.55 
-  # expect_equal(round(test_gparms$Estimate[1], 2), 12.72, tolerance = 0.01)
-  # expect_equal(round(test_gparms$Estimate[2], 2), 6.55,  tolerance = 0.01)
+
+  expect_equal(round(test_gparms$Estimate[1], 2), 12.87, tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.46,  tolerance = 0.01)
 
 })
 
