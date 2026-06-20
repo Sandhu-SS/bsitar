@@ -2625,8 +2625,15 @@ bsitar <- function(x,
      data_name_pipe <- FALSE
    }
 
+   denvir <- environment()
+   
+   # print(denvir)
+   # print(parent.frame())
+   # print(eval(mcall_$data, envir = denvir))
+   # print(data_name_str_attr)
+   
    if(data_name_pipe) {
-     assign(data_name_str_attr, eval(mcall_$data) )
+     assign(data_name_str_attr, eval(mcall_$data, envir = denvir) )
      mcall_$data <- as.symbol(data_name_str_attr)
    }
    
