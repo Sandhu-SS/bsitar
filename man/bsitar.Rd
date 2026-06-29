@@ -21,7 +21,7 @@ bsitar(
   yfun = NULL,
   xfunxoffset = TRUE,
   bound = 0.04,
-  stype = "nsk",
+  stype = "rcs",
   terms_rhs = NULL,
   a_formula = ~1,
   b_formula = ~1,
@@ -71,7 +71,7 @@ bsitar(
   c_prior_beta = normal(0, 1, autoscale = FALSE),
   d_prior_beta = normal(0, 1, autoscale = FALSE),
   s_prior_beta = normal(lm, lm, autoscale = FALSE),
-  a_cov_prior_beta = normal(0, 20, autoscale = FALSE),
+  a_cov_prior_beta = normal(0, 50, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 2, autoscale = FALSE),
   c_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -483,7 +483,7 @@ sub-models).}
 be used. The available options are:
 \itemize{
 \item \code{'rcs'} (default): Constructs the spline design matrix using the
-truncated power basis (Harrell's method), implemented in
+truncated power basis (Harrell's method), as implemented in
 \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
 \item \code{'nsk'}: Implements a B-spline based natural cubic spline method,
 similar to \code{\link[splines2:naturalSpline]{splines2::nsk()}}.
@@ -1068,19 +1068,17 @@ covariance matrix is indexed by time points treated as discrete, ordered
 indices. The underlying Stan implementation expects time to be represented
 as unique positive integers in increasing order (e.g., 1, 2, 3, ...) for
 each individual so that:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{\\itemize\{
-  \\item Each observation can be mapped to a unique row/column in the
-  \code{N_time x N_time} unstructured covariance matrix, where
-  \code{N_time} is the number of distinct time points per individual.
-  \\item The autocorrelation structure is defined over a regular, ordered
-  sequence of time indices, which is essential for constructing the
-  covariance matrix in Stan.
-  \\item Individuals with different original time scales (e.g., age in
-  years, months, or days) can share a common autocorrelation structure,
-  since time is standardized to integer indices within each individual.
-\}
-
+\itemize{
+\item Each observation can be mapped to a unique row/column in the
+\code{N_time x N_time} unstructured covariance matrix, where
+\code{N_time} is the number of distinct time points per individual.
+\item The autocorrelation structure is defined over a regular, ordered
+sequence of time indices, which is essential for constructing the
+covariance matrix in Stan.
+\item Individuals with different original time scales (e.g., age in
+years, months, or days) can share a common autocorrelation structure,
+since time is standardized to integer indices within each individual.
+}
 The predictor variable \code{x} is therefore transformed into this
 internal \code{time} variable such that it contains unique positive
 integers in increasing order, such as 1, 2, 3, for each individual
@@ -1088,8 +1086,7 @@ identified by \code{id}. When the original \code{x} values do not satisfy
 this condition (e.g., they are non-integer ages like 0.5, 1.2, 3.7), the
 transformation automatically transforms them to meet this requirement
 during the creation of the internal \code{time} variable. No
-pre-processing is needed before using \code{unstr} autocorrelation.
-}\if{html}{\out{</div>}}}
+pre-processing is needed before using \code{unstr} autocorrelation.}
 
 \item{family}{Family distribution (default \code{gaussian}) and the link
 function (default \code{identity}). See \code{\link[brms:brm]{brms::brm()}} for details on

@@ -3,29 +3,29 @@
 
 #' Export or return a flextable object
 #'
-#' Export a \code{flextable} object to Word, HTML, image, or Excel output,
-#' or return the input \code{flextable} unchanged when no file output is requested.
+#' Export a \code{flextable} object to Word, HTML, image, or Excel output, or
+#' return the input \code{flextable} unchanged when no file output is requested.
 #'
 #' This function is a lightweight wrapper around the \code{flextable} export
-#' helpers for Word, HTML, and image output. For Excel output, it uses
-#' the \code{openxlsx2} package to write the underlying tabular data to an
-#' \code{.xlsx} workbook, because spreadsheet export is handled differently
-#' from \code{flextable} document and image rendering.
+#' helpers for Word, HTML, and image output. For Excel output, it uses the
+#' \code{openxlsx2} package to write the underlying tabular data to an
+#' \code{.xlsx} workbook, because spreadsheet export is handled differently from
+#' \code{flextable} document and image rendering.
 #'
 #' @param ft A \code{flextable} object to return or export.
 #' @param return_file Optional character string specifying the output type.
 #'   Supported values are \code{"word"}, \code{"docx"}, \code{"html"},
-#'   \code{"png"}, \code{"pdf"}, \code{"svg"}, and \code{"xlsx"}.
-#'   If \code{NULL}, the function returns \code{ft} unchanged.
+#'   \code{"png"}, \code{"pdf"}, \code{"svg"}, and \code{"xlsx"}. If
+#'   \code{NULL}, the function returns \code{ft} unchanged.
 #' @param path Optional output file path. If \code{NULL}, a default file name is
 #'   created from \code{return_file}, such as \code{"table_output.docx"} or
 #'   \code{"table_output.xlsx"}.
-#' @param title Optional title used in exported output where supported.
-#'   For Word and HTML output, named flextable objects can be used as
-#'   document titles or section titles.
-#' @param align Alignment used for Word export. Must be one of
-#'   \code{"left"}, \code{"center"}, or \code{"right"}. This argument is
-#'   passed to [flextable::save_as_docx()].
+#' @param title Optional title used in exported output where supported. For Word
+#'   and HTML output, named flextable objects can be used as document titles or
+#'   section titles.
+#' @param align Alignment used for Word export. Must be one of \code{"left"},
+#'   \code{"center"}, or \code{"right"}. This argument is passed to
+#'   [flextable::save_as_docx()].
 #' @param sheet_name Character string giving the worksheet name for Excel
 #'   output. Default is \code{"table"}.
 #'
@@ -81,7 +81,8 @@ export_flextable <- function(
       # pdf  = ".pdf",
       svg  = ".svg",
       xlsx = ".xlsx",
-      stop("Unsupported return_file. Use one of: word, docx, html, png, pdf, svg, xlsx")
+      stop2c("Unsupported return_file. Use one of: word, 
+             docx, html, png, pdf, svg, xlsx")
     )
     path <- paste0("table_output", ext)
   }
@@ -6329,7 +6330,7 @@ correct_comparison_method_call_fun <- function(method = 'custom',
           correct_method_call <- TRUE
         } else if(!use_d1) {
           correct_method_call <- TRUE
-        } # else if(!use_d1) {
+        }
       }
     } 
   } 
@@ -6559,9 +6560,9 @@ check_set_parm <- function(parameter,
   if(verbose) {
     if(setpreparms) {
       message2c(" For 'preparms', the argument 'parameter' is ignored.",
-                "\n All levels of parameter variable are summarised. To get ",
-                "\n summary of a single variable (such as 'apgv'), you can",
-                "\n subset the parameter variable before calling the function\n")
+                " Hence, all levels of parameter variable are summarised. ",
+                " To get summary of a single variable (such as 'apgv'), user ",
+                " can subset parameter variable before calling the function.")
     }
   }
   allowed_parms_allowed_parms_size <- c(allowed_parms, allowed_parms_size)
@@ -6921,7 +6922,7 @@ get_size_from_age_draws <- function(age_draws_dt,
                                                  model = model,
                                                  data = age_draws_dt, 
                                                  re_formula = NA,
-                                                 drawindex_name = drawindex_name,
+                                                 drawindex_name=drawindex_name,
                                                  draw_ids = NULL,
                                                  future = future,
                                                  verbose = verbose))
@@ -6946,5 +6947,33 @@ get_size_from_age_draws <- function(age_draws_dt,
   age_draws_dt <- age_draws_dt[!age_draws_dt[[parameter_name]] %in% sat_name]
   return(age_draws_dt)
 }
+
+
+
+
+
+#' A wrapper around \code{'match.arg'} function
+#' 
+#' @noRd
+#' 
+match_arg_custom <- function(arg, choices, several.ok = FALSE) {
+  arg_name <- deparse(substitute(arg))
+  tryCatch(
+    match.arg(arg, choices = choices, several.ok = several.ok),
+    error = function(e) {
+      stop(
+        sprintf(
+          "Argument '%s' should be one of %s",
+          arg_name,
+          paste(sprintf("\"%s\"", choices), collapse = ", ")
+        ),
+        call. = FALSE
+      )
+    }
+  )
+}
+
+
+
 
 

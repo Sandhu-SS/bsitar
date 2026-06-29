@@ -10,7 +10,7 @@
 #' for more help.
 #' 
 #'
-#' @param model An \code{R} object of class \code{bsitar}
+#' @param model An \code{R} object of class \code{bsitar} or a list of models.
 #' 
 #' @param check_criterion A logical (default \code{FALSE}) indicating whether to
 #'   check and add fit criterion if not already added to model objects
@@ -180,6 +180,15 @@ compare_models <- function(model, ...) {
   UseMethod("compare_models")
 }
 
+
+#' An alias of 'compare_models()'
+#' @rdname compare_models
+#' @export
+compare_models.list <- function(model, ...) {
+  compare_models.bgmfit(model, ...)
+}
+  
+  
 
 #' An alias of 'compare_models()'
 #' @rdname compare_models

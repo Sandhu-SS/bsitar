@@ -105,6 +105,9 @@ clean_draws <- function(DT,
     variable <- base::names(DT)
   }
   
+  # print(DT)
+  # print(group)
+  
   bad_ids <- DT[
     ,
     .(has_na = base::any(base::sapply(.SD, base::anyNA))),

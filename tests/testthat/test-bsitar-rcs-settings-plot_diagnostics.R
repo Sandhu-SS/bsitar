@@ -26,7 +26,7 @@ test_that("test plot_diagnostics", {
                        # init = '0',
                        init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
-                       refres = 0, silent = 2,
+                       refresh = 0, silent = 2,
                        seed = 123)
   }))
   

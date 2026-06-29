@@ -260,10 +260,10 @@ Additional package-specific controls:
 \code{comparison_range_null} and \code{hypothesis_range_null}.
 \item \code{digits}: Number of digits to use when printing numeric
 results. Default \code{2}.
-\item \code{as_percent}: Logical indicating whether to return PD
-results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
-Only evaluated when \code{model} is class \code{"bsitar"} and
-\code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+\item \code{as_percent}: Logical indicating whether to return PD results
+as percentages (\code{TRUE}, default) or fractions (\code{FALSE}). Only
+evaluated when \code{model} is class \code{"bsitar"} and \code{engine} is
+\code{"bayestestR"} or \code{"mbcombo"}.
 \item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
 \item \code{inline}: Internal use only; executes custom equivalence
 function (not for users).
@@ -617,9 +617,8 @@ posterior data frames (via \pkg{brms} and \pkg{bayestestR} methods), or
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check and confirm whether the model fit object 'berkeley_exfit' exists
- berkeley_exfit <- getNsObject(berkeley_exfit)
 
-model <- berkeley_exfit
+model <- getNsObject(berkeley_exfit)
 
 # Speed up examples by using a subset of posterior draws
 draw_ids <- 1:5

@@ -3,6 +3,7 @@
 \name{compare_models.bgmfit}
 \alias{compare_models.bgmfit}
 \alias{compare_models}
+\alias{compare_models.list}
 \alias{compare_model}
 \title{Model comparison with the loo package}
 \usage{
@@ -19,10 +20,12 @@
 
 compare_models(model, ...)
 
+\method{compare_models}{list}(model, ...)
+
 compare_model(model, ...)
 }
 \arguments{
-\item{model}{An \code{R} object of class \code{bsitar}}
+\item{model}{An \code{R} object of class \code{bsitar} or a list of models.}
 
 \item{...}{More \code{brmsfit} objects.}
 

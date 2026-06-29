@@ -319,10 +319,11 @@ execution.
 \code{doFuture} package.
 }}
 
-\item{future_re_expose}{A logical value (default \code{NULL}) indicating whether
-to re-expose internal \code{Stan} functions when \code{future = TRUE}.
-This is critical when \code{\link[future:plan]{future::plan()}} is set to \code{"multisession"},
-as compiled C++ functions cannot be exported across distinct R sessions.
+\item{future_re_expose}{A logical value (default \code{NULL}) indicating
+whether to re-expose internal \code{Stan} functions when \code{future =
+  TRUE}. This is critical when \code{\link[future:plan]{future::plan()}} is set to
+\code{"multisession"}, as compiled C++ functions cannot be exported across
+distinct R sessions.
 \itemize{
 \item If \code{NULL} (default), it is automatically set to \code{TRUE}
 when the plan is \code{"multisession"}.

@@ -237,6 +237,13 @@ optimize_model.bgmfit <- function(model,
   }
   
   check_optimize_xy <- function(optimize_x) {
+    if(is.null(optimize_x)) {
+      return(optimize_x)
+    }
+    if(!is.list(optimize_x) & length(optimize_x) == 1) {
+      if(optimize_x == "NULL") return(optimize_x)
+    }
+    
     ok <- is.list(optimize_x) && all(vapply(
       optimize_x,
       function(x) is.null(x) || is.function(x) || is.character(x),
@@ -483,7 +490,7 @@ optimize_model.bgmfit <- function(model,
   if(!optimize_df_TF & !optimize_x_TF & !optimize_y_TF) {
     noting_to_opt_msg <- "Nothing to optimize. All three conditions i.e.,
     optimize_df, optimize_x, and optimize_y 
-    are identical to the base model"
+    are identical to the original model"
     message2c(noting_to_opt_msg)
     return(invisible(NULL))
   } else {

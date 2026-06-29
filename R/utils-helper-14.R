@@ -36,6 +36,7 @@ get.newdata <- function(model,
                         idata_method = NULL,
                         dummy_to_factor = NULL,
                         newdata_fixed = NULL,
+                        xrange_search = NULL,
                         verbose = FALSE) {
   if (is.null(resp)) {
     resp_rev_ <- resp

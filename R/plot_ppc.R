@@ -219,6 +219,13 @@ plot_ppc.bgmfit <-
     if(is.null(calling.args$newdata)) {
       if(!is.null(newdata)) calling.args$newdata <- newdata
     }
+    calling.args$ndraws <- eval(calling.args$ndraws)
+    calling.args$draw_ids <- eval(calling.args$draw_ids)
+    if(!is.null(calling.args$draw_ids))  {
+      calling.args$ndraws <- max(calling.args$draw_ids)
+    } else {
+      calling.args$ndraws <- calling.args$ndraws
+    }
     . <- CustomDoCall(brms::pp_check, calling.args)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     

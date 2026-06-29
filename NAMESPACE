@@ -2,6 +2,7 @@
 
 S3method(add_model_criterion,bgmfit)
 S3method(compare_models,bgmfit)
+S3method(compare_models,list)
 S3method(expose_model_functions,bgmfit)
 S3method(fitted_draws,bgmfit)
 S3method(get_comparisons,bgmfit)

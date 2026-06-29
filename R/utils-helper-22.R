@@ -1725,10 +1725,16 @@ modelbased_growthparameters_call.bgmfit <-
                                     post_processing_checks_args)
           }
         } 
+        
         analyze_data <- function(data, ...) {
           xyadj_curves_args[['newdata']] <- data
           xyadj_curves_args[['draw_ids']] <- data[['drawid']] [1]
-          xyadj_dv <- CustomDoCall(xyadj_curves, xyadj_curves_args)
+          if(is.na(mean(xyadj_curves_args[['newdata']] [[xvar]]))) {
+            xyadj_dv <- t(as.matrix(1:nrow(xyadj_curves_args[['newdata']])))
+          } else {
+            xyadj_dv <- CustomDoCall(xyadj_curves, xyadj_curves_args)
+            
+          }
           xyadj_dv <- 
             apply(xyadj_dv, 2, 
                   xyadj_curves_args$model$model_info$xfuntransform2) 
@@ -1902,6 +1908,8 @@ modelbased_growthparameters_call.bgmfit <-
           dplyr::rename(drawid = value) %>% 
           dplyr::relocate(drawid, parameter, estimate)
       }
+     
+      # onex0 <- onex0[!is.na(onex0$estimate), ]
       xyadj_xyv <- xyadj_xyv_warp_fun(onex0, model$model_info$bgmfit.data)
       return(xyadj_xyv)
       

@@ -302,6 +302,9 @@ fitted_draws.bgmfit <-
     check_fun <- FALSE
     if(deriv > 0) {
       available_d1 <- o[['available_d1']]
+      if(available_d1) {
+        if(!model_deriv) available_d1 <- FALSE
+      }
       if(!available_d1) {
         model_deriv <- FALSE
         call_slopes <- TRUE
@@ -471,16 +474,6 @@ fitted_draws.bgmfit <-
         } 
       } 
     } 
-    
-    # if(growthparameters_calling)
-    
-    # calling.args <- 
-    #   sanitize_CustomDoCall_args(what = "CustomDoCall", 
-    #                              arguments = calling.args, 
-    #                              check_formalArgs = NULL,
-    #                              check_formalArgs_exceptions = c('object'),
-    #                              check_trace_back = NULL,
-    #                              envir = parent.frame())
     
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE

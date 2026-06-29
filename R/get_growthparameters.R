@@ -276,10 +276,10 @@
 #'     \code{comparison_range_null} and \code{hypothesis_range_null}.
 #'     \item \code{digits}: Number of digits to use when printing numeric
 #'     results. Default \code{2}.
-#'     \item \code{as_percent}: Logical indicating whether to return PD 
-#'     results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
-#'     Only evaluated when \code{model} is class \code{"bsitar"} and
-#'     \code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+#'     \item \code{as_percent}: Logical indicating whether to return PD results
+#'     as percentages (\code{TRUE}, default) or fractions (\code{FALSE}). Only
+#'     evaluated when \code{model} is class \code{"bsitar"} and \code{engine} is
+#'     \code{"bayestestR"} or \code{"mbcombo"}.
 #'     \item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
 #'     \item \code{inline}: Internal use only; executes custom equivalence
 #'     function (not for users).
@@ -409,10 +409,11 @@
 #'     \code{doFuture} package.
 #'   }
 #'
-#' @param future_re_expose A logical value (default \code{NULL}) indicating whether 
-#'   to re-expose internal \code{Stan} functions when \code{future = TRUE}. 
-#'   This is critical when [future::plan()] is set to \code{"multisession"}, 
-#'   as compiled C++ functions cannot be exported across distinct R sessions.
+#' @param future_re_expose A logical value (default \code{NULL}) indicating
+#'   whether to re-expose internal \code{Stan} functions when \code{future =
+#'   TRUE}. This is critical when [future::plan()] is set to
+#'   \code{"multisession"}, as compiled C++ functions cannot be exported across
+#'   distinct R sessions.
 #'   \itemize{
 #'     \item If \code{NULL} (default), it is automatically set to \code{TRUE} 
 #'       when the plan is \code{"multisession"}.
@@ -549,6 +550,16 @@ get_growthparameters.bgmfit <- function(model,
                                         newdata_fixed = NULL,
                                         envir = NULL, 
                                         ...) {
+  
+  if(!is.null(equivalence_test) | !is.null(p_direction)) {
+    if(method != 'pkg' ) {
+    if(!pdrawsp) stop2c("For the equivalence_test and/or p_direction arguments,
+                         method must be set to 'pkg'. If the user requests
+                         pdrawsp (that is, pdrawsp = TRUE), equivalence_test
+                         and p_direction are not called, so method does not 
+                         need to be set to 'pkg' in that case.")
+    }
+  }
   
   if(!is.null(estimate_center)) {
     ec_ <- getOption("marginaleffects_posterior_center")
@@ -694,33 +705,18 @@ get_growthparameters.bgmfit <- function(model,
                         replacement = custom_get_data.brmsfit, 
                         ept_str = T)
     if(verbose) {
-      message2c(" As model[['test_mode']] = FLASE, the full data by the",
-                "\n ", 
-                "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
-                "\n ", 
-                "This full data is needed for marginaleffects functions",
-                "\n ", 
-                "'To over ride this approach, set model[['test_mode']] = TRUE")
+      message2c("As model[['test_mode']] = FALSE, the full data are extracted 
+                via insight::get_data() using custom_get_data.brmsfit. This 
+                full data are required for the marginaleffects functions. To 
+                override this behavior, set model[['test_mode']] = TRUE.",
+                pad_before = "\n", 
+                pad_after = "\n")
     }
     
     unlock_replace_bind(package = "marginaleffects", what = "get_ci_draws",
                         replacement = custom_get_ci_draws, 
                         ept_str = T)
   }
-
-  if(!model$test_mode) {
-    unlock_replace_bind(package = "insight", what = "get_data",
-                        replacement = custom_get_data.brmsfit, ept_str = T)
-    if(verbose) {
-      message2c(" As model[['test_mode']] = FLASE, the full data by the",
-                "\n ", 
-                "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
-                "\n ", 
-                "This full data is needed for marginaleffects functions",
-                "\n ", 
-                "'To over ride this approach, set model[['test_mode']] = TRUE")
-    }
-  } 
   
   if(is.null(usesavedfuns)) {
     if(!is.null(model$model_info$exefuns[[1]])) {

@@ -300,13 +300,15 @@ expose_model_functions.bgmfit <- function(model,
     }
     
     if(expose_sigma_basic_model_fun) {
-      for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
-        if(!grepl("::", model$model_info$sigmabasicfunlist_r[funi]) &
-           !grepl(":::", model$model_info$sigmabasicfunlist_r[funi])) {
-          assign(gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi]),
-                 ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
+      if(!is_emptyx(model$model_info$sigmabasicfunlist_r)) {
+        for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
+          if(!grepl("::", model$model_info$sigmabasicfunlist_r[funi]) &
+             !grepl(":::", model$model_info$sigmabasicfunlist_r[funi])) {
+            assign(gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi]),
+                   ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
+          } 
         } 
-      } 
+      }
     }
     
     sigmavarSplineFun_name_val <- model$model_info[['sigmavarfunlist_r']]
@@ -404,16 +406,19 @@ expose_model_functions.bgmfit <- function(model,
     allSplineFun_name <- c(allSplineFun_name, sigmabasicSplineFun_name)
   } 
   
+  
   if(expose) {
-    if(expose_sigma_basic_model_fun) {
-      for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
-        name_ix <- gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi])
-        assign(name_ix,
-               ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
-        Spl_funs[[name_ix]] <- ept(model$model_info$sigmabasicfunlist_r[funi])
-        environment(Spl_funs[[funi]]) <- envir
-      }
-    } 
+    if(!is_emptyx(model$model_info$sigmabasicfunlist_r)) {
+      if(expose_sigma_basic_model_fun) {
+        for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
+          name_ix <- gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi])
+          assign(name_ix,
+                 ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
+          Spl_funs[[name_ix]] <- ept(model$model_info$sigmabasicfunlist_r[funi])
+          environment(Spl_funs[[funi]]) <- envir
+        }
+      } 
+    }
   } 
   
   model$model_info[['namesexefuns']] <- allSplineFun_name

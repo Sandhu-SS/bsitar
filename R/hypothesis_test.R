@@ -286,9 +286,8 @@
 #' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
 #' # Check and confirm whether the model fit object 'berkeley_exfit' exists
-#'  berkeley_exfit <- getNsObject(berkeley_exfit)
 #' 
-#' model <- berkeley_exfit
+#' model <- getNsObject(berkeley_exfit)
 #' 
 #' # Speed up examples by using a subset of posterior draws
 #' draw_ids <- 1:5
@@ -1131,18 +1130,24 @@ hypothesis_test.bgmfit <- function(model,
       'robust', 'seed')
   
   brms_hypothesis_args_model_names <- 
-    c('x', 'hypothesis_str', 'alpha', 'robust')
+    c('x', 'hypothesis_str', 'alpha', 'robust', 'seed')
+  
   bayestestR_equivalence_test_df_names <- 
     c('x', 'range', 'ci', 'rvar_col', 'verbose')
+  
   bayestestR_equivalence_test_model_names <- 
     c('x', 'range', 'ci', 'effects', 'component', 'parameters', 'verbose')
+  
   bayestestR_p_direction_df_names <- 
     c('x', 'method', 'null', 'as_p', 'remove_na', 'rvar_col')
+  
   bayestestR_p_direction_model_names <- 
     c('x', 'method', 'null', 'effects', 'component', 'parameters', 
       'as_p', 'remove_na')
+  
   bayestestR_p_direction_model_get_predicted_names <- 
     c('x', 'method', 'null', 'as_p', 'remove_na', 'use_iterations', 'verbose')
+  
   eqpd_df<-c('format', 'get_form', 'get_value', 'digits', 
              'as_percent', 'inline')
   

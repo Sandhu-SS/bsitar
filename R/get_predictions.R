@@ -292,13 +292,12 @@ get_predictions.bgmfit <-
       unlock_replace_bind(package = "insight", what = "get_data",
                       replacement = custom_get_data.brmsfit, ept_str = T)
       if(verbose) {
-        message(" As model[['test_mode']] = FLASE, the full data by the",
-                "\n ", 
-                "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
-                "\n ", 
-                "This full data is needed for marginaleffects functions",
-                "\n ", 
-                "'To over ride this approach, set model[['test_mode']] = TRUE")
+        message2c("As model[['test_mode']] = FALSE, the full data are extracted 
+                via insight::get_data() using custom_get_data.brmsfit. This 
+                full data are required for the marginaleffects functions. To 
+                override this behavior, set model[['test_mode']] = TRUE.",
+                  pad_before = "\n", 
+                  pad_after = "\n")
       }
     }
     

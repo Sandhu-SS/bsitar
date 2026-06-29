@@ -257,7 +257,9 @@ modelbased_growthparameters.bgmfit <- function(model,
     message2c("Please install the latest version of the 
             'marginaleffects' package",
               "\n ",
-              "remotes::install_github('vincentarelbundock/marginaleffects')")
+              "remotes::install_github('vincentarelbundock/marginaleffects')",
+              pad_before = "\n",
+              pad_after = "\n")
     return(invisible(NULL))
   }
   
@@ -265,7 +267,9 @@ modelbased_growthparameters.bgmfit <- function(model,
     usedtplyrcheck <- usedtplyr
     usedtplyr <- FALSE
     if(verbose & usedtplyrcheck) message2c("Setting usedtplyr = FALSE because ",
-                                           "usecollapse = TRUE")
+                                           "usecollapse is TRUE",
+                                           pad_before = "\n",
+                                           pad_after = "\n")
   } else {
     usedtplyr <- usedtplyr
   }
@@ -367,27 +371,12 @@ modelbased_growthparameters.bgmfit <- function(model,
                         replacement = custom_get_data.brmsfit, 
                         ept_str = T)
     if(verbose) {
-      message2c(" As model[['test_mode']] = FLASE, the full data by the",
-                "\n ", 
-                "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
-                "\n ", 
-                "This full data is needed for marginaleffects functions",
-                "\n ", 
-                "'To over ride this approach, set model[['test_mode']] = TRUE")
-    }
-  } 
-
-  if(!model$test_mode) {
-    unlock_replace_bind(package = "insight", what = "get_data",
-                        replacement = custom_get_data.brmsfit, ept_str = T)
-    if(verbose) {
-      message2c(" As model[['test_mode']] = FLASE, the full data by the",
-                "\n ", 
-                "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
-                "\n ", 
-                "This full data is needed for marginaleffects functions",
-                "\n ", 
-                "'To over ride this approach, set model[['test_mode']] = TRUE")
+      message2c("As model[['test_mode']] = FALSE, the full data are extracted 
+                via insight::get_data() using custom_get_data.brmsfit. This 
+                full data are required for the marginaleffects functions. To 
+                override this behavior, set model[['test_mode']] = TRUE.",
+                pad_before = NULL, 
+                pad_after = "\n")
     }
   } 
   
@@ -558,7 +547,9 @@ modelbased_growthparameters.bgmfit <- function(model,
     model_deriv <- TRUE
     if(verbose) {
       if(!setpreparms) {
-        message2c(" For method = 'custom', deriv is set to TRUE.\n")
+        message2c("For method = 'custom', deriv is set to TRUE.",
+                  pad_before = NULL, 
+                  pad_after = "\n")
       }
     }
   }
@@ -788,7 +779,9 @@ modelbased_growthparameters.bgmfit <- function(model,
     if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
       if(is.null(xvar)) {
         if(verbose) {
-          message2c(clean_msg_sigma_model_no_xvar)
+          message2c(clean_msg_sigma_model_no_xvar, 
+                    pad_before = NULL, 
+                    pad_after = "\n")
         }
       }
     }
@@ -832,7 +825,9 @@ modelbased_growthparameters.bgmfit <- function(model,
               message2c("The difx has been set same as variables i.e.," , 
                         "\n ",
                         collapse_comma(variables),
-                        "\n ")
+                        "\n ",
+                        pad_before = NULL, 
+                        pad_after = "\n")
             }
             difx <- variables
           }
@@ -1024,7 +1019,9 @@ modelbased_growthparameters.bgmfit <- function(model,
       future_splits_at  <- NULL
       if(verbose) {
         message2c("future_splits can not be used when plot = TRUE. 
-                future_splits set as FALSE")
+                future_splits set as FALSE",
+                  pad_before = NULL, 
+                  pad_after = "\n")
       }
     } 
     if(method == 'pkg') {
@@ -1033,7 +1030,9 @@ modelbased_growthparameters.bgmfit <- function(model,
       future_splits_at  <- NULL
       if(verbose) {
         message2c("future_splits can not be used when method = 'pkg'.
-             future_splits set as FALSE")
+             future_splits set as FALSE",
+                  pad_before = NULL, 
+                  pad_after = "\n")
       }
     } 
   }
@@ -1065,12 +1064,16 @@ modelbased_growthparameters.bgmfit <- function(model,
           re_expose <- TRUE
           if(verbose) {
             message2c("For multisession plan, argument 'future_re_expose' 
-                    has been set as TRUE")
+                    has been set as TRUE",
+                      pad_before = NULL, 
+                      pad_after = "\n")
           }
         } else if(!need_future_re_expose_cpp) {
           if(verbose) {
             message2c("To speed up the calulations, it is advised to 
-                    set future_re_expose = TRUE")
+                    set future_re_expose = TRUE",
+                      pad_before = NULL, 
+                      pad_after = "\n")
           }
         }
       }
@@ -1082,13 +1085,17 @@ modelbased_growthparameters.bgmfit <- function(model,
           # if(expose_method_set == "R") {
           if(verbose) {
             message2c("To speed up the calulations, it is advised ",
-                      "to set 'future_re_expose = TRUE'")
+                      "to set 'future_re_expose = TRUE'",
+                      pad_before = NULL, 
+                      pad_after = "\n")
           }
         } 
         if(need_future_re_expose_cpp & setplanis == "multisession") {
           stop2c("For plan 'multisession', the functions need to be ",
                  "\n ",
-                 "re_exposed by setting 'future_re_expose = TRUE'")
+                 "re_exposed by setting 'future_re_expose = TRUE'",
+                 pad_before = NULL, 
+                 pad_after = "\n")
         }
       }
     }
@@ -1158,7 +1165,9 @@ modelbased_growthparameters.bgmfit <- function(model,
       message2c("Argument plot = TRUE is not allowed when either hypothesis ", 
                 "or equivalence is not NULL",
                 "\n ",
-                "Therefor, setting 'plot = FALSE'") 
+                "Therefor, setting 'plot = FALSE'",
+                pad_before = NULL, 
+                pad_after = "\n")
     }
   }
   
@@ -1212,10 +1221,14 @@ modelbased_growthparameters.bgmfit <- function(model,
 
   if(!is.null(full.args[['transform_draws']])) {
     full.args[['transform']] <- transform <- full.args[['transform_draws']]
-    if(verbose) message2c("'transform' set based on 'transform_draws'")
+    if(verbose) message2c("'transform' set based on 'transform_draws'",
+                          pad_before = NULL, 
+                          pad_after = "\n")
   } else if(!is.null(transform_draws)) {
     full.args[['transform']] <- transform <- transform_draws
-    if(verbose) message2c("'transform' set based on 'transform_draws'")
+    if(verbose) message2c("'transform' set based on 'transform_draws'",
+                          pad_before = NULL, 
+                          pad_after = "\n")
   } 
   
   full.args[['transform']] <- transform <- transform_draws
@@ -1396,6 +1409,10 @@ modelbased_growthparameters.bgmfit <- function(model,
     set_dataf_m_collapse <- set_dataf_m %>% 
       collapse::roworderv(c(idvar, xvar), decreasing = F) 
     SplineCall <- model$model_info$SplineCall
+    
+    call_function <- match_arg_custom(arg = call_function,
+                                      choices = c("R", "Stan"),
+                                      several.ok = FALSE)
     if(call_function == "R") {
       GS_gps_parms_stan   <- NULL;
     }
@@ -1415,11 +1432,18 @@ modelbased_growthparameters.bgmfit <- function(model,
                "\n",
                "} // end functions block")
       
-      if(verbose) message("Prepraring Stan function...")
+      if(verbose) message2c("Prepraring Stan function...", 
+                            pad_before = NULL, 
+                            pad_after = "\n")
       rmodel <- rstan::stanc(model_code = 
                                GS_gps_parms_stan_str_get_function_scode)
+      if(verbose) message2c("Exposing Stan function...",
+                            pad_before = NULL, 
+                            pad_after = "\n")
       rstan::expose_stan_functions(rmodel)
-      if(verbose) message("Ready Stan function...")
+      if(verbose) message2c("Calling exposed Stan function...",
+                            pad_before = NULL, 
+                            pad_after = "\n")
     } 
     
     if(call_function == "R") {

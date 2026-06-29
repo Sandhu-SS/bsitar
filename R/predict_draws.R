@@ -302,6 +302,9 @@ predict_draws.bgmfit <-
     check_fun <- FALSE
     if(deriv > 0) {
       available_d1 <- o[['available_d1']]
+      if(available_d1) {
+        if(!model_deriv) available_d1 <- FALSE
+      }
       if(!available_d1) {
         model_deriv <- FALSE
         call_slopes <- TRUE
@@ -390,7 +393,6 @@ predict_draws.bgmfit <-
       if(!is.null(newdata)) calling.args$newdata <- newdata
     }
     
-    # if(growthparameters_calling)
     calling.args <- 
       sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                  arguments = calling.args, 

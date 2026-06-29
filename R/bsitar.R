@@ -510,7 +510,7 @@
 #' @param stype A character string or a named list specifying the spline type to
 #'   be used. The available options are:
 #'  - \code{'rcs'} (default): Constructs the spline design matrix using the
-#'  truncated power basis (Harrell's method), implemented in
+#'  truncated power basis (Harrell's method), as implemented in
 #'  [Hmisc::rcspline.eval()].
 #'  - \code{'nsk'}: Implements a B-spline based natural cubic spline method,
 #'  similar to [splines2::nsk()].
@@ -1094,7 +1094,6 @@
 #'   indices. The underlying Stan implementation expects time to be represented
 #'   as unique positive integers in increasing order (e.g., 1, 2, 3, ...) for
 #'   each individual so that:
-#'
 #'     \itemize{
 #'       \item Each observation can be mapped to a unique row/column in the
 #'       \code{N_time x N_time} unstructured covariance matrix, where
@@ -1106,7 +1105,6 @@
 #'       years, months, or days) can share a common autocorrelation structure,
 #'       since time is standardized to integer indices within each individual.
 #'     }
-#'
 #'     The predictor variable \code{x} is therefore transformed into this
 #'     internal \code{time} variable such that it contains unique positive
 #'     integers in increasing order, such as 1, 2, 3, for each individual
@@ -2349,7 +2347,7 @@ bsitar <- function(x,
                    yfun = NULL,
                    xfunxoffset = TRUE, 
                    bound = 0.04,
-                   stype = 'nsk',
+                   stype = 'rcs',
                    terms_rhs = NULL,
                    a_formula = ~ 1,
                    b_formula = ~ 1,
@@ -2417,7 +2415,7 @@ bsitar <- function(x,
                    c_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    s_prior_beta = normal(lm, lm, autoscale = FALSE),
-                   a_cov_prior_beta = normal(0, 20.0, autoscale = FALSE),
+                   a_cov_prior_beta = normal(0, 50.0, autoscale = FALSE),
                    b_cov_prior_beta = normal(0,  2.0, autoscale = FALSE),
                    c_cov_prior_beta = normal(0,  1.0, autoscale = FALSE),
                    d_cov_prior_beta = normal(0,  1.0, autoscale = FALSE),
@@ -2625,18 +2623,11 @@ bsitar <- function(x,
      data_name_pipe <- FALSE
    }
 
-   denvir <- environment()
-   
-   denvir2 <- parent.frame()
-   
-   # print(denvir)
-   # print(parent.frame())
-   # print(eval(mcall_$data, envir = denvir))
-   # print(data_name_str_attr)
-   
    if(data_name_pipe) {
-     assign(data_name_str_attr, eval(mcall_$data, envir = denvir2) )
+     denvir <- parent.frame()
+     assign(data_name_str_attr, eval(mcall_$data, envir = denvir) )
      mcall_$data <- as.symbol(data_name_str_attr)
+     rm('denvir')
    }
    
    if(is.data.frame(mcall_$data) | tibble::is_tibble(mcall_$data)) {
@@ -2692,6 +2683,8 @@ bsitar <- function(x,
       } else if(is.character(temp_threads_)) {
         temp_threads_ <- threads_char(temp_threads_, 
                                       chains = eval(mcall$chains))
+      } else if(is.na(temp_threads_)) {
+        temp_threads_ <- NULL
       } else {
         stop2c("Argument 'threads' must be 'NULL', a string, or an 'integer'")
       } 
@@ -2702,6 +2695,8 @@ bsitar <- function(x,
     } 
   }
   mcall$threads <- mcall_threads_
+  
+  
   
   newcall_checks <- c('save_pars')
   if(!is.null(mcall$threads)) {
@@ -6422,7 +6417,7 @@ bsitar <- function(x,
                              x = xsi,
                              allowed_left = "._",
                              allowed_right = "._")
-  
+
       sigma_formula_manualsi <- 
         add_default_args_to_nlf_lf(str = sigma_formula_manualsi, 
                                    nys = nys, 
@@ -8433,6 +8428,33 @@ bsitar <- function(x,
         sigmagetknotsname <- paste0(ysi, "_", sigmagetknotsname)
         sigmagetpreHname  <- paste0(ysi, "_", sigmagetpreHname)
       } 
+      
+      if(is_emptyx(sigmafixedsi)) {
+        stop2c("For location scale model, please specify sigmafixed")
+      } else if(sigmafixedsi == "NULL") {
+        stop2c("For location scale model, please specify sigmafixed")
+      } else if(sigmafixedsi == "integer(0)") {
+        stop2c("For location scale model, please specify sigmafixed as a
+               string such as 'a+b+c' if you have used list()")
+      }
+      if(is_emptyx(sigmarandomsi)) {
+        if(verbose) message2c("For location scale model, the sigmarandom 
+                              was NULL, which has now been set same as 
+                              sigmafixed")
+        sigmarandomsi <- sigmafixedsi
+      } else if(sigmarandomsi == "NULL") {
+        if(verbose) message2c("For location scale model, the sigmarandom 
+                              was NULL, which has now been set same as 
+                              sigmafixed")
+        sigmarandomsi <- sigmafixedsi
+      } else if(sigmarandomsi == "integer(0)") {
+        if(verbose) message2c("For location scale model, the sigmarandom 
+                              was NULL, which has now been set same as 
+                              sigmafixed")
+        sigmarandomsi <- sigmafixedsi
+      }
+      
+
       sigmaspfun_collect <-
         c(sigmaspfun_collect, c(sigmaspfncname, 
                                 paste0(sigmaspfncname, "_",  c("d1", "d2"))
@@ -8512,6 +8534,14 @@ bsitar <- function(x,
       sigmaysi   <- ysi
       sigmadatai <- datai
       sigmaxsi   <- sigmaxsi
+     
+      
+      inside_st1 <- paste0(".*", sigmaspfncname, "\\(([^)]*)\\).*")
+      inside_it1 <- sub(inside_st1, "\\1", sigma_formula_manualsi)
+      elems_it1  <- strsplit(inside_it1, ",")[[1]]
+      nelems_it1 <- length(elems_it1)
+     
+      
       sigmaget_s_r_funs <-
         prepare_function_nsp_rcs(
           x = sigmaxsi,
@@ -8526,6 +8556,20 @@ bsitar <- function(x,
       sigmagq_funs[[ii]]   <- sigmaget_s_r_funs[['gq_funs']]
       include_fun_nameslist[[ii]] <- c(include_fun_nameslist[[ii]], 
                                        sigmaget_s_r_funs[['include_fun_names']])
+      
+      inside_st2 <- paste0(".*", sigmaspfncname, "\\(([^)]*)\\).*")
+      inside_it2 <- sub(inside_st2, "\\1", sigmaget_s_r_funs[['rcsfun']])
+      elems_it2  <- trimws(strsplit(inside_it2, ",")[[1]])
+      nelems_it2 <- length(elems_it2)
+      if(nelems_it1 != nelems_it2) {
+        stop2c("The number of parameters does not match the location-scale form
+               you specified. Please check sigmafixed and sigmadf, then ensure
+               they are consistent with the ls() specification. For example,
+               if sigmafixed = 'a+b+c' and sigmadf = 3, then ls() should
+               be ls(x, sigmaa, sigmab, sigmac, sigmas1, sigmas2, sigmas3). 
+               Similarly, if sigmafixed = 'a+b', then ls() should be 
+               ls(x, sigmaa, sigmab, sigmas1, sigmas2, sigmas3).")
+      }
       
     } 
     
@@ -11559,6 +11603,9 @@ bsitar <- function(x,
         cores_   <- eval(setarguments$cores)
         threads_ <- eval(setarguments$threads)
         
+        threads_check_NA <- threads_
+        
+        
         if(is.list(threads_)) {
           threads_ <- as.call(c(quote(brms::threading),
                                 do.call(brms::threading, threads_))) 
@@ -11621,6 +11668,17 @@ bsitar <- function(x,
             max.threads <- eval(setarguments$cores)
           }
           setarguments$threads <-  brms::threading(max.threads)
+          if(!is.null(threads_check_NA)) {
+            if(is.list(threads_check_NA)) {
+              if(!is.null(threads_check_NA$threads)) { 
+                if(is.na(threads_check_NA$threads)) {
+                  setarguments$threads <- NULL
+                }
+              }
+            } else if(!is.list(threads_check_NA)) {
+              if(is.na(threads_check_NA)) setarguments$threads <- NULL # update_model
+            }
+          }
         }
       } 
       
@@ -13132,7 +13190,6 @@ bsitar <- function(x,
         return(brm_args$stanvars)
       }
     } 
-   
     if(fit_edited_scode) {
       if(verbose) message2c("Fitting model via edited stancode...")
       if(brm_args$backend == "cmdstanr") {
@@ -13390,9 +13447,12 @@ bsitar <- function(x,
     }
     model_info[['sigmamodel_all']] <- unlist(sigmamodelnamevaluelist)
     if(set_model_sigma_by_ba) {
-      for (i in 1:length(sigmabasicfunlist_rnamelist)) {
-        model_info[[sigmabasicfunlist_rnamelist[[i]]]] <- 
-          sigmabasicfunlist_rvaluelist[[i]]
+      if(!is_emptyx(sigmabasicfunlist_rvaluelist)) {
+        for (i in 1:length(sigmabasicfunlist_rnamelist)) {
+          model_info[[sigmabasicfunlist_rnamelist[[i]]]] <- 
+            sigmabasicfunlist_rvaluelist[[i]]
+          
+        }  
       }
       for (i in 1:length(sigmabasicfunnamenamelist)) {
         model_info[[sigmabasicfunnamenamelist[[i]]]] <-

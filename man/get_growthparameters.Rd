@@ -371,10 +371,11 @@ execution.
 \code{doFuture} package.
 }}
 
-\item{future_re_expose}{A logical value (default \code{NULL}) indicating whether
-to re-expose internal \code{Stan} functions when \code{future = TRUE}.
-This is critical when \code{\link[future:plan]{future::plan()}} is set to \code{"multisession"},
-as compiled C++ functions cannot be exported across distinct R sessions.
+\item{future_re_expose}{A logical value (default \code{NULL}) indicating
+whether to re-expose internal \code{Stan} functions when \code{future =
+  TRUE}. This is critical when \code{\link[future:plan]{future::plan()}} is set to
+\code{"multisession"}, as compiled C++ functions cannot be exported across
+distinct R sessions.
 \itemize{
 \item If \code{NULL} (default), it is automatically set to \code{TRUE}
 when the plan is \code{"multisession"}.
@@ -739,10 +740,10 @@ Additional package-specific controls:
 \code{comparison_range_null} and \code{hypothesis_range_null}.
 \item \code{digits}: Number of digits to use when printing numeric
 results. Default \code{2}.
-\item \code{as_percent}: Logical indicating whether to return PD
-results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
-Only evaluated when \code{model} is class \code{"bsitar"} and
-\code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+\item \code{as_percent}: Logical indicating whether to return PD results
+as percentages (\code{TRUE}, default) or fractions (\code{FALSE}). Only
+evaluated when \code{model} is class \code{"bsitar"} and \code{engine} is
+\code{"bayestestR"} or \code{"mbcombo"}.
 \item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
 \item \code{inline}: Internal use only; executes custom equivalence
 function (not for users).

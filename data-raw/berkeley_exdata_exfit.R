@@ -7,28 +7,31 @@
 
 # berkeley_exdata
 
+# berkeley_exfitx <- berkeley_exfit
+
 # sitar::heights
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                          df = 3, chains = 2, cores = 2, iter = 2000, 
-                         thin = 10, warmup = 1000,
-                         a_prior_beta = normal(lm, ysd, autoscale = FALSE),
-                         b_prior_beta = normal(0, 2, autoscale = FALSE),
-                         c_prior_beta = normal(0, 1, autoscale = FALSE),
-                         d_prior_beta = normal(0, 1, autoscale = FALSE),
-                         a_prior_sd = normal(0, ysd, autoscale = FALSE),
-                         b_prior_sd = normal(0, 2, autoscale = FALSE),
-                         c_prior_sd = normal(0, 1, autoscale = FALSE),
-                         d_prior_sd = normal(0, 1, autoscale = FALSE),
-                         rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
-                         s_prior_beta = normal(lm, lm, autoscale = 1),
-                         control = list(adapt_delta = 0.95, max_treedepth = 12),
+                         thin = 20, warmup = 1000,
+                         
+                         # a_prior_beta = normal(ymean, ysd, autoscale = FALSE),
+                         # b_prior_beta = normal(0, 2, autoscale = FALSE),
+                         # c_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # d_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # a_prior_sd = normal(0, ysd, autoscale = FALSE),
+                         # b_prior_sd = normal(0, 2, autoscale = FALSE),
+                         # c_prior_sd = normal(0, 1, autoscale = FALSE),
+                         # d_prior_sd = normal(0, 1, autoscale = FALSE),
+                         # rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                         # s_prior_beta = normal(lm, lm, autoscale = 1),
+                         # control = list(adapt_delta = 0.95, max_treedepth = 12),
+                         # init = NULL,
+                         vcov_init_0 = TRUE,
+                         
                          save_pars = save_pars(all = TRUE),
                          sample_prior = "yes",
                          normalize = TRUE, 
-                         
-                         init = NULL,
-                         
                          seed = 123)
 
 

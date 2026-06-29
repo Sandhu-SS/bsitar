@@ -3391,9 +3391,13 @@ stop2 <- function(...) {
 #' @return A string (error message) from R's warning2c() function.
 #' @noRd
 #'
-stop2c <- function(..., call. = FALSE) {
+stop2c <- function(..., 
+                   call. = FALSE, 
+                   pad_before = NULL,
+                   pad_after = NULL) {
   msg <- paste0(list(...), collapse = "")
   msg <- clean_text_spaces(msg)
+  msg <- paste0(pad_before, " ", msg, " ", pad_after)
   stop(msg, call. = call.)
 }
 
@@ -3429,9 +3433,12 @@ warning2c <- function(...,
                       call = FALSE, 
                       immediate. = FALSE, 
                       noBreaks. = FALSE, 
-                      domain = NULL) {
+                      domain = NULL,
+                      pad_before = NULL,
+                      pad_after = NULL) {
   msg <- paste0(list(...), collapse = "")
   msg <- clean_text_spaces(msg)
+  msg <- paste0(pad_before, " ", msg, " ", pad_after)
   warning(msg, 
           call. = call, 
           immediate. = immediate., 
@@ -3468,9 +3475,12 @@ message2 <- function(...) {
 #'
 message2c <- function(..., 
                       domain = NULL, 
-                      appendLF = TRUE) {
+                      appendLF = TRUE,
+                      pad_before = NULL,
+                      pad_after = NULL) {
   msg <- paste0(list(...), collapse = "")
   msg <- clean_text_spaces(msg)
+  msg <- paste0(pad_before, " ", msg, " ", pad_after)
   message(msg, domain = domain, appendLF = appendLF)
 }
 
@@ -7334,18 +7344,16 @@ getmodel_info <- function(model,
   if(is.null(model$test_mode)) {
     model[['test_mode']] <- FALSE
     if(verbose) {
-      message2c("'model' must have attached 'test_mode' as model[['test_mode']]",
-              "\n ", 
-              "that must be set as either TRUE/FALSE",
-              "\n ", 
-              "The berkeley_exfit used for CRAN has model[['test_mode']] = TRUE",
-              "\n ", 
-              "The model[['test_mode']] = FLASE is used to get full data via the",
-              "\n ", 
-              "insight::get_data() that is needed for marginaleffects functions",
-              "\n ", 
-              "\n ", 
-              "'The model[['test_mode']] was 'NULL', setting it to as FALSE")
+      message2c("The 'model' must include a test_mode element, accessible as 
+                model[['test_mode']], and it must be a logical 
+                value (TRUE or FALSE). In the CRAN version of berkeley_exfit,
+                model[['test_mode']] is set to TRUE. Setting 
+                model[['test_mode']] to FALSE allows access to the full 
+                data via insight::get_data(), which is required by 
+                the marginaleffects functions. If model[['test_mode']] 
+                is NULL, it is set to FALSE.", 
+                pad_before = "\n", 
+                pad_after = "\n")
     }
   }
   checkresp_info(model, resp)
@@ -8701,14 +8709,12 @@ set_manual_datagrid <- function(model,
   if(!model$test_mode) {
     unlock_replace_bind(package = "insight", what = "get_data",
                         replacement = custom_get_data.brmsfit, ept_str = T)
-    if(verbose) {
-      message2c(" As model[['test_mode']] = FLASE, the full data by the",
-              "\n ", 
-              "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
-              "\n ", 
-              "This full data is needed for marginaleffects functions",
-              "\n ", 
-              "'To over ride this approach, set model[['test_mode']] = TRUE")
+    if(!verbose) {
+      message2c("As model[['test_mode']] = FALSE, the full data are extracted 
+                via insight::get_data() using custom_get_data.brmsfit. To 
+                override this behavior, set model[['test_mode']] = TRUE.",
+              pad_before = "\n", 
+              pad_after = "\n")
     }
   } 
   grid_args <- list()
@@ -8887,7 +8893,9 @@ set_for_check_ipts <- function(ipts, nipts = 50, dpar = 'mu', verbose = FALSE) {
     } else if(is.null(ipts)) {
       if(dpar == "mu") {
         if(verbose) {
-          message2c("Note: argument 'ipts' has been set as ipts = ", nipts)
+          message2c("Argument ipts has been set to ", nipts,
+                    pad_before = "\n", 
+                    pad_after = "\n")
         }
         out <- nipts
       } else if(dpar == "sigma") {
@@ -8942,8 +8950,9 @@ check_ipts <- function(ipts = NULL,
       }
     }
     if(verbose) {
-      message2c("Note: argument 'ipts' has been set as ipts = ", nipts,
-          " (default was 'NULL')")
+      message2c("Argument ipts has been set to ", nipts,
+                pad_before = "\n", 
+                pad_after = "\n")
     }
   }
   return(ipts)
