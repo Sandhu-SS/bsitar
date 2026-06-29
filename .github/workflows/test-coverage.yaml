@@ -78,7 +78,8 @@ jobs:
             flexlsx,
             flextable,
             ggdist,
-            modelsummary
+            modelsummary,
+            projpred
 
       # Some issues with processx package, so install it
       - name: Install dependencies
