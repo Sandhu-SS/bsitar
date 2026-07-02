@@ -4323,6 +4323,12 @@ bsitar <- function(x,
                                   '2' when check_sparsity = TRUE'")
   }
   
+  insight::check_if_installed('sitar', minimum_version = '1.5.0')
+  
+  if(smat == 'rcs') {
+    insight::check_if_installed('Hmisc')
+  }
+  
   if(smat == 'rcs') {
     if(!as.logical(smat_bkrange) | !as.logical(smat_fix_bknots)) {
       temp_match_sitar_a_form <- getdotslist[['match_sitar_a_form']]

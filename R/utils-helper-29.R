@@ -137,6 +137,12 @@ summary_table <-
     custom_rename = TRUE,
     custom_rename_map = NULL,
     ...) {
+    
+    insight::check_if_installed('performance',  minimum_version = '0.17.1')
+    insight::check_if_installed('modelsummary', minimum_version = '2.6.0')
+    insight::check_if_installed('parameters',   minimum_version = '0.29.2')
+    
+    
     custom_model_parameters.brmsfit <- function (model, 
                                                  centrality = "median",
                                                  dispersion = FALSE, 

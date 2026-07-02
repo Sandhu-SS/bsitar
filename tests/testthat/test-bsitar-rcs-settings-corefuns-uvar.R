@@ -6,6 +6,11 @@ if(skip_test_local_rcmd_check) {
 }
 
 
+if(set_skip_run_ci) {
+  skip_run_ci()
+}
+
+
 ###############################################################################
 # Test bsitar with rcs settings
 ###############################################################################
@@ -14,7 +19,6 @@ test_that("bsitar works fully with rcs settings", {
   skip_on_cran()
   
   testthat::skip_if_not(!test_univariate_fit_cov)
- 
   
   test_fit <- univariate_fit_cov
   
@@ -88,12 +92,12 @@ test_that("bsitar works fully with rcs settings", {
   
   
   ##############################################################################
-  # modelbased_growthparameters_call.bgmfit()
+  # modelbased_growthparameters_call()
   ##############################################################################
   
-  mgc <- modelbased_growthparameters_call.bgmfit(test_fit, 
-                                                 method = 'custom', 
-                                                 draw_ids = draw_ids)
+  mgc <- modelbased_growthparameters_call(test_fit, 
+                                          method = 'custom', 
+                                          draw_ids = draw_ids)
   check_val <- 148.4
   compa_val <- mean(mgc$distance$Estimate)
   expect_equal(compa_val, check_val, tolerance = 0.01)
@@ -106,7 +110,8 @@ test_that("bsitar works fully with rcs settings", {
   ##############################################################################
   # optimize_model
   ##############################################################################
-  suppressWarnings(suppressMessages({
+  
+  # suppressWarnings(suppressMessages({
     omc <- optimize_model(test_fit,
                           newdata = NULL,
                           optimize_df = 3,
@@ -131,7 +136,7 @@ test_that("bsitar works fully with rcs settings", {
                           usesavedfuns = FALSE,
                           clearenvfuns = NULL,
                           envir = NULL)
-  }))
+  # }))
   
   expect_true(is.data.frame(omc$optimize_summary))
   
@@ -304,42 +309,45 @@ test_that("bsitar works fully with rcs settings", {
   
   
   
+  
+  
+  
   ##############################################################################
   # predict_draws()
   ##############################################################################
   
-  outx <- predict_draws(test_fit, draw_ids = draw_ids, deriv = 0,
-                        model_deriv = TRUE)
-  check_val <- 157.665
-  compa_val <- mean(outx[,1])
-  expect_equal(compa_val, check_val, tolerance = 0.01)
+  outx_predict_draws <- predict_draws(test_fit, draw_ids = draw_ids, deriv = 0,
+                                      model_deriv = TRUE)
+  check_val_predict_draws <- 157.665
+  compa_val_predict_draws <- mean(outx_predict_draws[,1])
+  expect_equal(compa_val_predict_draws, check_val_predict_draws, tolerance = 0.01)
   
   
-  outx <- predict_draws(test_fit,  draw_ids = draw_ids, deriv = 0,
-                        model_deriv = FALSE)
-  check_val <- 157.665
-  compa_val <- mean(outx[,1])
-  expect_equal(compa_val, check_val, tolerance = 0.01)
+  outx_predict_draws <- predict_draws(test_fit,  draw_ids = draw_ids, deriv = 0,
+                                      model_deriv = FALSE)
+  check_val_predict_draws <- 157.665
+  compa_val_predict_draws <- mean(outx_predict_draws[,1])
+  expect_equal(compa_val_predict_draws, check_val_predict_draws, tolerance = 0.01)
   
   
-  outx <- predict_draws(test_fit, draw_ids = draw_ids, deriv = 1,
-                        model_deriv = TRUE)
-  check_val <- 4.23
-  compa_val <- mean(outx[,1])
-  expect_equal(compa_val, check_val, tolerance = 0.01)
+  outx_predict_draws <- predict_draws(test_fit, draw_ids = draw_ids, deriv = 1,
+                                      model_deriv = TRUE)
+  check_val_predict_draws <- 4.23
+  compa_val_predict_draws <- mean(outx_predict_draws[,1])
+  expect_equal(compa_val_predict_draws, check_val_predict_draws, tolerance = 0.01)
   
   
-  outx <- predict_draws(test_fit,  draw_ids = draw_ids, deriv = 1,
-                        model_deriv = FALSE)
-  check_val <- 4.22
-  compa_val <- mean(outx[,1])
-  expect_equal(compa_val, check_val, tolerance = 0.01)
+  outx_predict_draws <- predict_draws(test_fit,  draw_ids = draw_ids, deriv = 1,
+                                      model_deriv = FALSE)
+  check_val_predict_draws <- 4.22
+  compa_val_predict_draws <- mean(outx_predict_draws[,1])
+  expect_equal(compa_val_predict_draws, check_val_predict_draws, tolerance = 0.01)
   
-  outx <- predict_draws(test_fit,  draw_ids = draw_ids, deriv = 1,
-                        model_deriv = FALSE)
-  check_val <- 4.24
-  compa_val <- mean(outx[,1])
-  expect_equal(compa_val, check_val, tolerance = 0.01)
+  outx_predict_draws <- predict_draws(test_fit,  draw_ids = draw_ids, deriv = 1,
+                                      model_deriv = FALSE)
+  check_val_predict_draws <- 4.24
+  compa_val_predict_draws <- mean(outx_predict_draws[,1])
+  expect_equal(compa_val_predict_draws, check_val_predict_draws, tolerance = 0.01)
   
   
   ##############################################################################
@@ -537,9 +545,23 @@ test_that("bsitar works fully with rcs settings", {
   expect_true(inherits(axx, 'bgmfit'))
   
   
+  ##############################################################################
+  # 
+  ##############################################################################
+
   
+})
+
+
+
+
+
+test_that("bsitar works fully with rcs settings - summary_table", {
+  skip_on_cran()
   
+  testthat::skip_if_not(!test_univariate_fit_cov)
   
+  test_fit <- univariate_fit_cov
   
   ##############################################################################
   # summary_table
@@ -586,16 +608,6 @@ test_that("bsitar works fully with rcs settings", {
   
   expect_true(is.data.frame(summary_table_mf))
   
-  ##############################################################################
-  # 
-  ##############################################################################
-  
-  
-
-  
   
   
 })
-
-
-
