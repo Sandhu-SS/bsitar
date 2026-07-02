@@ -5131,6 +5131,7 @@ eval_xoffset_bstart_args <- function(x,
       }
       lmform <- as.formula(paste0(y, "~1+", "mat_s"))
       lmfit <- lm(lmform, data = data)
+      insight::check_if_installed('sitar', minimum_version = '1.5.0')
       eval_arg.o <- sitar::getPeak(data[[x]],
                                    predict(smooth.spline(data[[x]],
                                                          fitted(lmfit)),
@@ -5268,6 +5269,7 @@ eval_xoffset_cstart_args <- function(x,
       }
       lmform <- as.formula(paste0(y, "~1+", "mat_s"))
       lmfit <- lm(lmform, data = data)
+      insight::check_if_installed('sitar', minimum_version = '1.5.0')
       eval_arg.o <- sitar::getPeak(data[[x]],
                                    predict(smooth.spline(data[[x]],
                                                          fitted(lmfit)),

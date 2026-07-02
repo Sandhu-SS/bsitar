@@ -580,6 +580,8 @@ get_growthparameters.bgmfit <- function(model,
   options("marginaleffects_lean" = FALSE)
   on.exit(options("marginaleffects_lean" = lean_), add = TRUE)
   
+  insight::check_if_installed('sitar', minimum_version = '1.5.0')
+  
   insight::check_if_installed('cheapr', prompt = FALSE, stop = FALSE)
   
   try(zz <- insight::check_if_installed(c("marginaleffects"), 

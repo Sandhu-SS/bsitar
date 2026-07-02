@@ -501,6 +501,8 @@ growthparameters.bgmfit <- function(model,
                                envir = NULL,
                                ...) {
   
+  insight::check_if_installed('sitar', minimum_version = '1.5.0')
+  
   if(is.null(envir)) {
     envir <- model$model_info$envir
   } else {

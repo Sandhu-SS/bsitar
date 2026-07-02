@@ -611,3 +611,47 @@ test_that("bsitar works fully with rcs settings - summary_table", {
   
   
 })
+
+
+
+
+
+test_that("bsitar works fully with rcs settings - prior_summary_table", {
+  skip_on_cran()
+  
+  testthat::skip_if_not(!test_univariate_fit_cov)
+  
+  test_fit <- univariate_fit_cov
+  
+  ##############################################################################
+  # prior_summary_table
+  ##############################################################################
+  
+  prior_summary_table <- prior_summary_table(test_fit,
+                                          set_width = c(0.95, 0.9999),
+                                          set_digits = 1,
+                                          empty = "-",
+                                          print = FALSE,
+                                          return_table = TRUE,
+                                          return_file = NULL,
+                                          flex_table = TRUE,
+                                          path = NULL,
+                                          title = NULL,
+                                          align = "center",
+                                          sheet_name = "table",
+                                          draw_samples = 100,
+                                          add_range = FALSE,
+                                          transform_class = NULL,
+                                          transform_parameter = NULL,
+                                          transform_fun = NULL,
+                                          range_method_arg = NULL,
+                                          seed = 123,
+                                          verbose = FALSE)
+  
+  
+  
+  expect_true(inherits(prior_summary_table, "flextable"))
+  
+  
+  
+})

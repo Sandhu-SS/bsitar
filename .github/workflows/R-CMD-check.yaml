@@ -105,7 +105,8 @@ jobs:
             flextable,
             ggdist,
             modelsummary,
-            projpred
+            projpred,
+            sitar
 
 
   

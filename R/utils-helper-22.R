@@ -907,6 +907,7 @@ modelbased_growthparameters_call.bgmfit <-
                                            aggregate_by, 
                                            newdata, ...) {
       gparms_fun = function(hi, lo, x, ...) {
+        insight::check_if_installed('sitar', minimum_version = '1.5.0')
         if(deriv == 0) y <- (hi - lo) / eps
         if(deriv > 0)  y <- (hi + lo) / 2
         if(aggregate_by) {
@@ -927,6 +928,7 @@ modelbased_growthparameters_call.bgmfit <-
           x <- xy$x
           y <- xy$y
         } 
+        insight::check_if_installed('sitar', minimum_version = '1.5.0')
         if (parm == 'apgv') {
           out <- sitar::getPeak(x = x, y = y)[1]
           out <- ifunx_(out) 
@@ -1509,6 +1511,7 @@ modelbased_growthparameters_call.bgmfit <-
           } 
           parm_c <- list()
           pgvx <- NULL
+          insight::check_if_installed('sitar', minimum_version = '1.5.0')
           for (parmi in parm) {
             if('apgv' %in% parmi) {
               parm_c[[parmi]] <- sitar::getPeak(x, y)[1] %>% ifunx_() 
@@ -1567,6 +1570,7 @@ modelbased_growthparameters_call.bgmfit <-
             return(c(x = x[vcgi], y = y[vcgi]))
           }
           funx <- function(x,...) {
+            insight::check_if_installed('sitar', minimum_version = '1.5.0')
             if(getpest) {
               dfp <- sitar::getPeak(x[,1], x[,2]) 
               dfp[1] <- ifunx_(dfp[1]) 

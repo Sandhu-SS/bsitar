@@ -412,7 +412,7 @@ priors_to_textdata <- function(model,
 
 
 
-#' Create a prior summary flextable for a bsitar model
+#' Create a prior summary table for the bsitar model
 #'
 #' Builds a formatted summary table of user-specified prior distributions from a
 #' \code{bsitar} model. The table includes the prior distribution text, one or
@@ -590,56 +590,51 @@ priors_to_textdata <- function(model,
 #' @noRd
 #' 
 prior_summary_table <- function(model,
-                                set_width = c(0.95, 0.9999),
-                                set_digits = 1,
-                                empty = "-",
-                                print = FALSE,
-                                return_table = TRUE,
-                                return_file = NULL,
-                                flex_table = FALSE,
-                                path = NULL,
-                                title = NULL,
-                                align = "center",
-                                sheet_name = "table",
-                                # main_dir = getwd(),
-                                # tab_dir = "tables",
-                                # save_table = NULL,
-                                # return_table = NULL,
-                                # output_file = NULL,
-                                # set_table_dir = FALSE,
-                                draw_samples = 100000,
-                                add_range = FALSE,
-                                transform_class = NULL,
-                                transform_parameter = NULL,
-                                transform_fun = NULL,
-                                range_method_arg = NULL,
-                                seed = 123,
-                                verbose = FALSE) {
+                                 set_width = c(0.95, 0.9999),
+                                 set_digits = 1,
+                                 empty = "-",
+                                 print = FALSE,
+                                 return_table = TRUE,
+                                 return_file = NULL,
+                                 flex_table = FALSE,
+                                 path = NULL,
+                                 title = NULL,
+                                 align = "center",
+                                 sheet_name = "table",
+                                 draw_samples = 100000,
+                                 add_range = FALSE,
+                                 transform_class = NULL,
+                                 transform_parameter = NULL,
+                                 transform_fun = NULL,
+                                 range_method_arg = NULL,
+                                 seed = 123,
+                                 verbose = FALSE) {
   
-  .dist_obj <- NULL;
-  .lower <- NULL;
-  .row_id  <- NULL;
-  .upper <- NULL;
-  .value <- NULL;
-  .width <- NULL;
-  .rule_id <- NULL;
-  ci <- NULL;
-  coefficient <- NULL;
-  dpar <- NULL;
-  draws <- NULL;
-  group <- NULL;
-  lb <- NULL;
-  level_lab <- NULL;
-  nlpar <- NULL;
-  parameter <- NULL;
-  resp <- NULL;
-  tag <- NULL;
-  ub <- NULL;
-  xmax_range <- NULL;
-  xmin_range <- NULL;
-  range_vec <- NULL;
-  zz <- NULL;
-  dist_key <- NULL;
+  .dist_obj <- NULL
+  .lower <- NULL
+  .row_id  <- NULL
+  .upper <- NULL
+  .value <- NULL
+  .width <- NULL
+  .rule_id <- NULL
+  ci <- NULL
+  coefficient <- NULL
+  dpar <- NULL
+  draws <- NULL
+  group <- NULL
+  lb <- NULL
+  level_lab <- NULL
+  nlpar <- NULL
+  parameter <- NULL
+  resp <- NULL
+  tag <- NULL
+  ub <- NULL
+  xmax_range <- NULL
+  xmin_range <- NULL
+  range_vec <- NULL
+  zz <- NULL
+  dist_key <- NULL
+  range <- NULL
   
   insight::check_if_installed("flexlsx", prompt = FALSE)
   insight::check_if_installed("flextable", prompt = FALSE)
@@ -648,8 +643,7 @@ prior_summary_table <- function(model,
   
   ggplot2::theme_set(ggdist::theme_ggdist())
   
-  if(is.null(title)) title <- ""
-  
+  if (is.null(title)) title <- ""
   
   if (is.null(title)) {
     tab_name <- NULL
@@ -658,11 +652,26 @@ prior_summary_table <- function(model,
   } else {
     tab_name <- title
   }
- 
+  
   if (!is.logical(add_range) || length(add_range) != 1 || is.na(add_range)) {
     stop("add_range must be a single TRUE or FALSE value.")
   }
- 
+  
+  if (!is.null(set_width)) {
+    if (!is.numeric(set_width)) {
+      stop("set_width must be NULL or a numeric vector.")
+    }
+    if (length(set_width) < 1) {
+      stop("If set_width is not NULL, it must contain at least one value.")
+    }
+    if (any(is.na(set_width))) {
+      stop("set_width cannot contain NA values.")
+    }
+    if (any(set_width <= 0 | set_width >= 1)) {
+      stop("Each set_width value must be strictly between 0 and 1.")
+    }
+  }
+  
   format_transform_fun <- function(f) {
     if (!is.function(f)) {
       return("<not a function>")
@@ -678,7 +687,7 @@ prior_summary_table <- function(model,
     
     txt
   }
-
+  
   prior_object <-
     priors_to_textdata(
       model,
@@ -703,7 +712,7 @@ prior_summary_table <- function(model,
       lb = dplyr::if_else(class == "sd", "0", lb),
       lb = dplyr::if_else(class == "sd" & dpar == "sigma", "0", lb),
       .row_id = dplyr::row_number()
-    ) 
+    )
   
   prior_parsed <-
     prior_object %>%
@@ -712,26 +721,22 @@ prior_summary_table <- function(model,
       zz = paste0(class, coef, nlpar, dpar, group, resp)
     )
   
-  
-  if('sigma' %in% transform_parameter) {
-    
-    if(any('sigma' %in% prior_parsed[['class']])) {
+  if ("sigma" %in% transform_parameter) {
+    if (any("sigma" %in% prior_parsed[["class"]])) {
       prior_parsed <- prior_parsed %>%
-        dplyr::mutate(nlpar =
-                        dplyr::if_else(class == "sigma",
-                                       "sigma", nlpar))
+        dplyr::mutate(
+          nlpar = dplyr::if_else(class == "sigma", "sigma", nlpar)
+        )
       prior_parsed <- prior_parsed %>%
-        dplyr::mutate(class =
-                        dplyr::if_else(nlpar == "sigma",
-                                       "b", class))
-    } else if(any('sigma' %in% prior_parsed[['dpar']])) {
+        dplyr::mutate(
+          class = dplyr::if_else(nlpar == "sigma", "b", class)
+        )
+    } else if (any("sigma" %in% prior_parsed[["dpar"]])) {
       prior_parsed <- prior_parsed %>%
-        dplyr::mutate(nlpar =
-                        dplyr::if_else(dpar != "" & nlpar == "",
-                                       dpar, nlpar))
+        dplyr::mutate(
+          nlpar = dplyr::if_else(dpar != "" & nlpar == "", dpar, nlpar)
+        )
     }
-    
-   
   }
   
   available_classes <- sort(unique(prior_parsed$class))
@@ -742,9 +747,29 @@ prior_summary_table <- function(model,
     !is.null(transform_fun)
   
   if (isTRUE(has_transform_args)) {
-    if(is.null(transform_class)) transform_class <- "b"
-    if (is.null(transform_class) || is.null(transform_parameter) || is.null(transform_fun)) {
-      stop("If any transformation arguments are supplied, transform_class, transform_parameter, and transform_fun must all be supplied.")
+    if (is.null(transform_class)) transform_class <- "b"
+    
+    if(transform_parameter == 'sigma') {
+      if(is.null(transform_fun)) {
+        if(model$family$link_sigma == 'log') {
+          transform_fun <- function(x)exp(x)
+          if(verbose) {
+            message2c("The link for the distributional parameter sigma  is 
+                      'log', hence the automatic transformation applied is
+                      'exp', ")
+          }
+        } else if(model$family$link_sigma == 'identity') {
+          transform_fun <- function(x)(x)
+        }
+      }
+    }
+    
+    
+    if (is.null(transform_class) ||
+        is.null(transform_parameter) ||
+        is.null(transform_fun)) {
+      stop2c("If any transformation arguments are supplied, transform_class,
+             transform_parameter, and transform_fun must all be supplied.")
     }
     
     if (!is.character(transform_class)) {
@@ -797,7 +822,7 @@ prior_summary_table <- function(model,
     n_combo <- n_class * n_parameter
     n_fun <- length(transform_fun)
     
-    if(n_fun > n_combo) {
+    if (n_fun > n_combo) {
       transform_fun <- transform_fun[1:n_combo]
       n_fun <- length(transform_fun)
     }
@@ -857,10 +882,10 @@ prior_summary_table <- function(model,
       character(1)
     )
     
-    if(verbose) {
+    if (verbose) {
       message2c(
-        "Applying transformations to prior draws for the 
-        following class/parameter combinations:\n",
+        "Applying transformations to prior draws for the following 
+        class/parameter combinations:\n",
         paste(transform_map_msg, collapse = "\n")
       )
     }
@@ -870,35 +895,28 @@ prior_summary_table <- function(model,
   
   set.seed(seed)
   
-  # 1) Start from prior_parsed and create a key that defines "same prior"
   sim_tbl0 <-
     prior_parsed %>%
     dplyr::mutate(
       parameter = nlpar,
-      # dist_key defines identical priors; include lb/ub if they matter
       dist_key = paste(prior, lb, ub, sep = "||")
     )
   
-  # 2) Generate draws once per unique dist_key
   draws_by_dist <-
     sim_tbl0 %>%
     dplyr::distinct(dist_key, .dist_obj) %>%
     dplyr::rowwise() %>%
     dplyr::mutate(
       draws = list(
-        as.numeric(
-          distributional::generate(.dist_obj, times = draw_samples)
-        )
+        as.numeric(distributional::generate(.dist_obj, times = draw_samples))
       )
     ) %>%
     dplyr::ungroup()
   
-  # 3) Join draws back to every row, then restore the old shape
   sim_tbl <-
     sim_tbl0 %>%
     dplyr::left_join(
-      draws_by_dist %>%
-        dplyr::select(dist_key, draws),
+      draws_by_dist %>% dplyr::select(dist_key, draws),
       by = "dist_key"
     ) %>%
     dplyr::select(.row_id, class, parameter, .dist_obj, draws) %>%
@@ -953,43 +971,53 @@ prior_summary_table <- function(model,
     tidyr::unnest(draws) %>%
     dplyr::rename(.value = draws)
   
-  ci_tbl_long <-
-    draws_long %>%
-    dplyr::group_by(.row_id) %>%
-    ggdist::point_interval(
-      .value,
-      .width = set_width,
-      .point = median
-    ) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      level_lab = paste0(.width * 100, "% CI"),
-      ci = paste0(
-        sprintf("%0.2f", .lower),
-        ", ",
-        sprintf("%0.2f", .upper)
+  ci_labs <- character(0)
+  
+  if (is.null(set_width)) {
+    ci_tbl_wide <- prior_parsed %>%
+      dplyr::select(.row_id) %>%
+      dplyr::distinct()
+  } else {
+    ci_tbl_long <-
+      draws_long %>%
+      dplyr::group_by(.row_id) %>%
+      ggdist::point_interval(
+        .value,
+        .width = set_width,
+        .point = median
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(
+        level_lab = paste0(.width * 100, "% CI"),
+        ci = paste0(
+          sprintf("%0.2f", .lower),
+          ", ",
+          sprintf("%0.2f", .upper)
+        )
+      ) %>%
+      dplyr::select(.row_id, level_lab, ci)
+    
+    ci_tbl_wide <-
+      ci_tbl_long %>%
+      tidyr::pivot_wider(
+        id_cols = .row_id,
+        names_from = level_lab,
+        values_from = ci
       )
-    ) %>%
-    dplyr::select(.row_id, level_lab, ci)
-  
-  ci_tbl_wide <-
-    ci_tbl_long %>%
-    tidyr::pivot_wider(
-      id_cols = .row_id,
-      names_from = level_lab,
-      values_from = ci
-    )
-  
-  if(is.null(range_method_arg)) {
-    range_method_arg <- list()
-  } else if (!is.list(range_method_arg)) {
-    stop2c("range_method_arg must be a named list to 
-           pass arguments to the range_method()")
+    
+    ci_labs <- paste0(set_width * 100, "% CI")
   }
   
-  if(is.null(range_method_arg[['method']])) range_method_arg[['method']] <- "r"
-  if(is.null(range_method_arg[['na.rm']])) range_method_arg[['na.rm']] <- TRUE
-  if(is.null(range_method_arg[['seed']])) range_method_arg[['seed']] <- seed
+  if (is.null(range_method_arg)) {
+    range_method_arg <- list()
+  } else if (!is.list(range_method_arg)) {
+    stop2c("range_method_arg must be a named list to pass arguments to 
+           the range_method()")
+  }
+  
+  if (is.null(range_method_arg[["method"]])) range_method_arg[["method"]] <- "r"
+  if (is.null(range_method_arg[["na.rm"]])) range_method_arg[["na.rm"]] <- TRUE
+  if (is.null(range_method_arg[["seed"]])) range_method_arg[["seed"]] <- seed
   
   if (isTRUE(add_range)) {
     range_tbl <-
@@ -1045,7 +1073,6 @@ prior_summary_table <- function(model,
     ) %>%
     dplyr::arrange(.row_id)
   
-  ci_labs <- paste0(set_width * 100, "% CI")
   range_lab <- if (isTRUE(add_range)) "Range" else NULL
   
   relocate_cols <- ci_labs[ci_labs %in% names(prior_object_range_ci)]
@@ -1056,9 +1083,15 @@ prior_summary_table <- function(model,
   }
   
   if ("range" %in% names(prior_object_range_ci)) {
-    prior_object_range_ci <-
-      prior_object_range_ci %>%
-      dplyr::relocate(range, .after = dplyr::last_col())
+    if (length(relocate_cols) > 0) {
+      prior_object_range_ci <-
+        prior_object_range_ci %>%
+        dplyr::relocate(range, .after = dplyr::last_col())
+    } else {
+      prior_object_range_ci <-
+        prior_object_range_ci %>%
+        dplyr::relocate(range, .after = nlpar)
+    }
   }
   
   prior_object_range_ci_out <-
@@ -1100,6 +1133,8 @@ prior_summary_table <- function(model,
     }
   }
   
+  ci_cols <- ci_labs[ci_labs %in% names(prior_object_range_ci_out)]
+  
   header_labs <- list(
     class = "Class",
     parameter = "Parameter",
@@ -1107,14 +1142,12 @@ prior_summary_table <- function(model,
     prior = "Prior distribution"
   )
   
-  if (isTRUE(add_range) && "range" %in% names(prior_object_range_ci_out)) {
-    header_labs$range <- range_lab
+  for (lab in ci_cols) {
+    header_labs[[lab]] <- lab
   }
   
-  for (lab in ci_labs) {
-    if (lab %in% names(prior_object_range_ci_out)) {
-      header_labs[[lab]] <- lab
-    }
+  if (isTRUE(add_range) && "range" %in% names(prior_object_range_ci_out)) {
+    header_labs[["range"]] <- range_lab
   }
   
   add_header_lines_set <- tab_name
@@ -1125,15 +1158,23 @@ prior_summary_table <- function(model,
   coefficient_sym <- foot_letters[3]
   prior_sym <- foot_letters[4]
   
-  ci_cols <- ci_labs[ci_labs %in% names(prior_object_range_ci_out)]
-  ci_syms <- foot_letters[seq.int(from = 5, length.out = length(ci_cols))]
-  
-  if (isTRUE(add_range)) {
-    range_sym <- foot_letters[5 + length(ci_cols)]
-    transform_note_sym <- foot_letters[6 + length(ci_cols)]
+  ci_syms <- if (length(ci_cols) > 0) {
+    foot_letters[seq.int(from = 5, length.out = length(ci_cols))]
   } else {
-    range_sym <- NULL
-    transform_note_sym <- foot_letters[5 + length(ci_cols)]
+    character(0)
+  }
+  
+  range_sym <- if (isTRUE(add_range) && 
+                   "range" %in% names(prior_object_range_ci_out)) {
+    foot_letters[5 + length(ci_cols)]
+  } else {
+    NULL
+  }
+  
+  transform_note_sym <- if (!is.null(transform_rules)) {
+    foot_letters[5 + length(ci_cols) + as.integer(!is.null(range_sym))]
+  } else {
+    NULL
   }
   
   transform_desc <- NULL
@@ -1171,6 +1212,23 @@ prior_summary_table <- function(model,
     )
   }
   
+  
+  get_lab_map <- function(getnanmesx) {
+    lab_map <- c(
+      a = "a - size;",
+      b = "b - timing;",
+      c = "c - intensity;",
+      d = "d - post-growth slope;",
+      sigma = "sigma - within individual variability"
+    )
+    ord <- names(lab_map)[names(lab_map) %in% getnanmesx]
+    out <- paste0("Parameter: ", paste(lab_map[ord], collapse = " "))
+    return(out)
+  }
+  
+  set_lab_map <- get_lab_map(prior_object_range_ci_out$parameter)
+  
+  
   summary_1 <-
     prior_object_range_ci_out %>%
     dplyr::ungroup() %>%
@@ -1198,13 +1256,7 @@ prior_summary_table <- function(model,
       i = NULL,
       j = 2,
       value = flextable::as_paragraph(
-        paste0(
-          "Parameter:",
-          " a - size;",
-          " b - timing;",
-          " c - intensity;",
-          " sigma - within individual variability"
-        )
+        set_lab_map
       ),
       ref_symbols = paste0(" ", parameter_sym, " "),
       part = "header"
@@ -1249,6 +1301,7 @@ prior_summary_table <- function(model,
   if (length(ci_cols) > 0) {
     for (i in seq_along(ci_cols)) {
       ci_note <- paste0(ci_cols[i]," credible interval mass for the estimates.")
+      
       if (!is.null(transform_desc)) {
         ci_note <- paste0(
           ci_note,
@@ -1299,16 +1352,22 @@ prior_summary_table <- function(model,
       )
   }
   
-  if (!is.null(transform_note_text) && "range" %in% 
-      names(prior_object_range_ci_out)) {
+  if (!is.null(transform_note_text)) {
+    note_col <- if ("range" %in% names(prior_object_range_ci_out)) {
+      "range"
+    } else if (length(ci_cols) > 0) {
+      ci_cols[length(ci_cols)]
+    } else {
+      "prior"
+    }
+    
     summary_1 <-
       summary_1 %>%
       flextable::footnote(
         i = NULL,
-        j = which(names(prior_object_range_ci_out) == "range"),
+        j = which(names(prior_object_range_ci_out) == note_col),
         value = flextable::as_paragraph(transform_note_text),
         ref_symbols = paste0(" ", "", " "),
-        # ref_symbols = paste0(" ", transform_note_sym, " "),
         part = "header",
         inline = FALSE
       )
@@ -1373,25 +1432,27 @@ prior_summary_table <- function(model,
     out_flex <- flextable::set_caption(out_flex, caption = title)
   }
   
-  if(print) print(out_flex$body$dataset)
+  if (print) print(out_flex$body$dataset)
   
-  out <- export_flextable(ft = out_flex,
-                          return_file = return_file,
-                          path = path,
-                          title = title,
-                          align = align,
-                          sheet_name = sheet_name)
+  out <- export_flextable(
+    ft = out_flex,
+    return_file = return_file,
+    path = path,
+    title = title,
+    align = align,
+    sheet_name = sheet_name
+  )
   
-  if(is.null(return_file)) {
+  if (is.null(return_file)) {
     #
   } else {
     return_table <- FALSE
   }
   
-  if(return_table) {
-    if(!flex_table) {
+  if (return_table) {
+    if (!flex_table) {
       return(out$body$dataset)
-    } else if( flex_table) {
+    } else if (flex_table) {
       if (!is.null(title)) {
         out <- flextable::set_caption(out, caption = title)
       }
@@ -1399,15 +1460,17 @@ prior_summary_table <- function(model,
     }
   }
   
-  if(!return_table) {
-    export_flextable(ft = out_flex,
-                     return_file = return_file,
-                     path = path,
-                     title = title,
-                     align = align,
-                     sheet_name = sheet_name)
+  if (!return_table) {
+    export_flextable(
+      ft = out_flex,
+      return_file = return_file,
+      path = path,
+      title = title,
+      align = align,
+      sheet_name = sheet_name
+    )
   }
-
+  
   invisible(NULL)
 }
 
@@ -1415,9 +1478,7 @@ prior_summary_table <- function(model,
 
 
 
-
-
-#' Check that a variable is a positive integer in increasing order within each
+#' Check that time is a positive integer in increasing order within each
 #' group
 #'
 #' This function verifies that a given variable (typically time/age) is:
@@ -1544,7 +1605,6 @@ check_id_xvar <- function(data, idvar, xvar, flag = TRUE, append_msg = "") {
       stop2c(msg)
     }
   }
-  
   return(out)
 }
 

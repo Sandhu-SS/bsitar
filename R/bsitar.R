@@ -4323,7 +4323,6 @@ bsitar <- function(x,
                                   '2' when check_sparsity = TRUE'")
   }
   
-  insight::check_if_installed('sitar', minimum_version = '1.5.0')
   
   if(smat == 'rcs') {
     insight::check_if_installed('Hmisc')

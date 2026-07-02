@@ -79,7 +79,8 @@ jobs:
             flextable,
             ggdist,
             modelsummary,
-            projpred
+            projpred,
+            sitar
 
       # Some issues with processx package, so install it
       - name: Install dependencies
