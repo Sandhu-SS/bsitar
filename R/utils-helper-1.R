@@ -3653,6 +3653,45 @@ edit_scode_ncp_to_cp_new <- function(stancode,
     }
     prepare_p <- c(prepare_p, what_p)
   }
+  
+  # For Nby_
+  remove_duplicate_decls <- function(stan_text) {
+    # ensure a character vector of lines
+    lines <- if (length(stan_text) == 1L) 
+      strsplit(stan_text, "\\r?\\n")[[1L]] 
+    else 
+      stan_text
+    lines_trim <- trimws(lines)
+    # identify declaration lines matching the pattern like:
+    # array[Nby_1] cholesky_factor_corr[M_1] L_1;
+    pat <- "^array\\s*\\[.+\\]\\s*cholesky_factor_corr\\s*\\[.+\\]\\s*\\S+\\s*;\\s*$"
+    is_decl <- grepl(pat, lines_trim)
+    # for declaration lines, detect duplicates based on the full trimmed line
+    decl_lines <- lines_trim[is_decl]
+    dup_flags <- duplicated(decl_lines)
+    # keep first occurrence => mark which original lines to keep
+    keep <- rep(TRUE, length(lines))
+    # among declaration lines, mark duplicates for removal
+    if (length(decl_lines) > 0L) {
+      decl_idx <- which(is_decl)
+      keep[decl_idx[dup_flags]] <- FALSE
+    }
+    cleaned_lines <- lines[keep]
+    removed_lines <- if (length(decl_lines) > 0L) 
+      decl_lines[dup_flags] 
+    else 
+      character(0)
+    # return cleaned text (single string) and removed lines
+    list(
+      clean = paste(cleaned_lines, collapse = "\n"),
+      removed = removed_lines,
+      details = list(
+        total_lines = length(lines),
+        decl_count = length(decl_lines),
+        removed_count = length(removed_lines)
+      )
+    )
+  }
 
   move_to_p <- paste(move_to_p, collapse = "\n")
   prepare_p <- paste(prepare_p, collapse = "\n")
@@ -3697,6 +3736,25 @@ edit_scode_ncp_to_cp_new <- function(stancode,
     pattern_Mi  <- pattern_M[h1i]
     pattern_Li  <- pattern_L[h1i]
     pattern_sdi <- pattern_sd[h1i]
+    # For Nby_
+    check_Nby_call <- FALSE
+    check_Nby_call_str <- paste0("array[Nby_", h1i, "]")
+    if(grepl(check_Nby_call_str, prepare_p, fixed = T)) {
+      check_Nby_call <- TRUE
+    }
+    if(check_Nby_call) {
+      if(cp_via == "multi_normal_cholesky_lpdf") {
+        make_Nby_str <- paste0("Jby_", h1i, "[i]")
+        pattern_sdi <- paste0(pattern_sdi, "[,", make_Nby_str, "]")
+        pattern_Li <- paste0(pattern_Li, "[", make_Nby_str, "]")
+      }
+      if(cp_via == "multi_normal_lpdf") {
+        make_Nby_str <- paste0("Jby_", h1i, "[i]")
+        pattern_sdi <- paste0(pattern_sdi, "[,", make_Nby_str, "]")
+        pattern_Li <- paste0(pattern_Li, "[", make_Nby_str, "]")
+      }
+    }
+    
     if(cp_via == "multi_normal_cholesky_lpdf") {
       m_n_c_l <-
         paste0("  for(i in 1:", pattern_Ni, ') {\n',
@@ -3718,13 +3776,12 @@ edit_scode_ncp_to_cp_new <- function(stancode,
                pattern_Mi, "),\n",
                paste0("    quad_form_diag(multiply_lower_tri_self_transpose(", 
                       pattern_Li, "), ", pattern_sdi, "));"),
-               # "    diag_pre_multiply(",
-               # pattern_sdi, ", ", pattern_Li, "));",
                "  \n  }"
         )
     } 
     m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
   } 
+  
   m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
   for (il in clines_p) {
     if(!grepl("^array", il)) {
@@ -3735,6 +3792,7 @@ edit_scode_ncp_to_cp_new <- function(stancode,
       editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
     }
   }
+
   for (il in clines_tp) {
     if(!grepl("^array", il)) {
       editedcode2 <- gsub(pattern = "//", replacement = "//",
@@ -3774,6 +3832,10 @@ edit_scode_ncp_to_cp_new <- function(stancode,
   if(!normalize) {
     editedcode2 <- gsub("_lpdf", "_lupdf", editedcode2, fixed = T)
   }
+  
+  # For Nby_
+  editedcode2 <- remove_duplicate_decls(editedcode2)$clean
+  
   if(identical(pattern_r, character(0))) {
     return(stancode)
   } else if(!identical(pattern_r, character(0))) {
@@ -5116,7 +5178,7 @@ sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) {
     output_basename = NULL,
     sig_figs = NULL,
     opencl_ids = NULL,
-    num_threads = NULL,
+    threads = NULL,
     init_alpha = NULL,
     tol_obj = NULL,
     tol_rel_obj = NULL,
@@ -5146,7 +5208,7 @@ sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) {
     pathfinder_args_final[[i]] <- NULL
   }
   if(!is.null(brm_args$threads$threads)) 
-    pathfinder_args_final[['num_threads']] <- brm_args$threads$threads
+    pathfinder_args_final[['threads']] <- brm_args$threads$threads
   pathfinder_args_final[['data']] <- sdata
   pathfinder_args_final
 }
@@ -5284,7 +5346,7 @@ brms_via_cmdstanr <- function(scode,
                             include_paths = set_includes,
                             user_header = NULL,
                             compile_model_methods = FALSE,
-                            compile_hessian_method = FALSE,
+                            # compile_hessian_method = FALSE,
                             compile_standalone = FALSE)
   iter_sampling <- brm_args$iter - brm_args$warmup
   iter_warmup   <- brm_args$warmup
@@ -5300,7 +5362,7 @@ brms_via_cmdstanr <- function(scode,
       pathfinder_args_final[['show_messages']]       <- FALSE
       pathfinder_args_final[['show_exceptions']]     <- FALSE
       if(!is.null(brm_args$threads$threads)) {
-        pathfinder_args_final[['num_threads']] <- brm_args$threads$threads
+        pathfinder_args_final[['threads']] <- brm_args$threads$threads
       }
       pathfinder_args_final[['data']] <- sdata
       pathfinder_args_final[['init']] <- brm_args$init
@@ -5321,15 +5383,13 @@ brms_via_cmdstanr <- function(scode,
     }
     enverr. <- environment()
     assign('err.', FALSE, envir = enverr.)
+    
     tryCatch(
       expr = {
         cb_pathfinder <- CustomDoCall(c_scode$pathfinder, pathfinder_args_final)
       },
       error = function(e) {
         assign('err.', TRUE, envir = enverr.)
-      },
-      warning = function(w) {
-       # assign('err.', TRUE, envir = enverr.)
       }
     )
     err. <- get('err.', envir = enverr.)
@@ -6970,7 +7030,7 @@ sanitize_algorithm_args <- function(args, algorithm, verbose = FALSE) {
   if(!is.character(algorithm)) stop2c('algorithm must be a character')
   pathfinderargs <- c('save_latent_dynamics', 'output_dir',
                       'output_basename', 'sig_figs', 
-                      'num_threads', 'init_alpha', 'tol_obj',
+                      'threads', 'init_alpha', 'tol_obj',
                       'tol_rel_obj', 'tol_grad', 'tol_rel_grad',
                       'tol_param', 'history_size', 'single_path_draws',
                       'draws', 'num_paths', 'max_lbfgs_iters', 

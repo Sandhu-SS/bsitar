@@ -588,6 +588,71 @@ prepare_formula <- function(x,
       stop("You have set 'sigma_formula_gr' but 'sigma_formula' is NULL ")
     }
   }
+  
+  
+  
+  if(!is_emptyx(afixed)) {
+    if(is.character(afixed))  afixed  <- gsub("\"", "", afixed)
+  }
+  if(!is_emptyx(arandom)) {
+    if(is.character(arandom)) arandom <- gsub("\"", "", arandom)
+  }
+  if(!is_emptyx(bfixed)) {
+    if(is.character(bfixed))  bfixed  <- gsub("\"", "", bfixed)
+  }
+  if(!is_emptyx(brandom)) {
+    if(is.character(brandom)) brandom <- gsub("\"", "", brandom)
+  }
+  if(!is_emptyx(cfixed)) {
+    if(is.character(cfixed))  cfixed  <- gsub("\"", "", cfixed)
+  }
+  if(!is_emptyx(crandom)) {
+    if(is.character(crandom)) crandom <- gsub("\"", "", crandom)
+  }
+  if(!is_emptyx(dfixed)) {
+    if(is.character(dfixed))  dfixed  <- gsub("\"", "", dfixed)
+  }
+  if(!is_emptyx(drandom)) {
+    if(is.character(drandom)) drandom <- gsub("\"", "", drandom)
+  }
+  if(!is_emptyx(efixed)) {
+    if(is.character(efixed))  efixed  <- gsub("\"", "", efixed)
+  }
+  if(!is_emptyx(erandom)) {
+    if(is.character(erandom)) erandom <- gsub("\"", "", erandom)
+  }
+  if(!is_emptyx(ffixed)) {
+    if(is.character(ffixed))  ffixed  <- gsub("\"", "", ffixed)
+  }
+  if(!is_emptyx(frandom)) {
+    if(is.character(frandom)) frandom <- gsub("\"", "", frandom)
+  }
+  if(!is_emptyx(gfixed)) {
+    if(is.character(gfixed))  gfixed  <- gsub("\"", "", gfixed)
+  }
+  if(!is_emptyx(grandom)) {
+    if(is.character(grandom)) grandom <- gsub("\"", "", grandom)
+  }
+  if(!is_emptyx(hfixed)) {
+    if(is.character(hfixed))  hfixed  <- gsub("\"", "", hfixed)
+  }
+  if(!is_emptyx(hrandom)) {
+    if(is.character(hrandom)) hrandom <- gsub("\"", "", hrandom)
+  }
+  if(!is_emptyx(ifixed)) {
+    if(is.character(ifixed))  ifixed  <- gsub("\"", "", ifixed)
+  }
+  if(!is_emptyx(irandom)) {
+    if(is.character(irandom)) irandom <- gsub("\"", "", irandom)
+  }
+  
+  if(!is_emptyx(sigmafixed)) {
+    if(is.character(sigmafixed)) sigmafixed <- gsub("\"", "", sigmafixed)
+  }
+  if(!is_emptyx(sigmarandom)) {
+    if(is.character(sigmarandom)) sigmarandom <- gsub("\"", "", sigmarandom)
+  }
+
   arandom_wb <- NULL
   arandom_wb_ <- FALSE
   brandom_wb <- crandom_wb <- drandom_wb <- erandom_wb <- arandom_wb

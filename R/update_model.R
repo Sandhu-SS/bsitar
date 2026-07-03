@@ -114,6 +114,7 @@ update_model.bgmfit <-
           dots[[i]] <- gsub("^'|'$", "", dots[[i]])
           dots[[i]] <- sub("^list\\((.*)\\)$", "\\1", dots[[i]])
           dots[[i]] <- gsub("\\n", "", dots[[i]], fixed = T)
+          dots[[i]] <- gsub("\"", "", dots[[i]])
         }
       }
       ots_check <- dots
