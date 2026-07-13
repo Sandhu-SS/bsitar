@@ -195,6 +195,13 @@ xyadj_curves.bgmfit <-
     } else {
       d_r <- FALSE
     }
+    
+    if(!is.null(draw_ids)) {
+      setloopdins <- length(eval(draw_ids))
+    } else if(!is.null(ndraws)) {
+      setloopdins <- ndraws
+    } 
+    
     if(a_r) {
       null_a <- fitted(model, resp = resp, newdata = newdata, 
                        nlpar="a", ndraws = ndraws,  draw_ids = draw_ids,
@@ -205,8 +212,13 @@ xyadj_curves.bgmfit <-
                        re_formula = NA, summary = summary,
                        fullframe = NULL, itransform = "")
     } else {
-      null_a <- matrix(0, nrowdatadims, 1)
-      naaa_a <- matrix(0, nrowdatadims, 1)
+      if(summary) {
+        null_a <- matrix(0, nrowdatadims, 1)
+        naaa_a <- matrix(0, nrowdatadims, 1)
+      } else if(!summary) {
+        null_a <- matrix(0, setloopdins, nrowdatadims)
+        naaa_a <- matrix(0, setloopdins, nrowdatadims)
+      }
     }
     if(b_r) {
       null_b <- fitted(model, resp = resp, newdata = newdata, 
@@ -218,8 +230,13 @@ xyadj_curves.bgmfit <-
                        re_formula = NA, summary = summary,
                        fullframe = NULL, itransform = "")
     } else {
-      null_b <- matrix(0, nrowdatadims, 1)
-      naaa_b <- matrix(0, nrowdatadims, 1)
+      if(summary) {
+        null_b <- matrix(0, nrowdatadims, 1)
+        naaa_b <- matrix(0, nrowdatadims, 1)
+      } else if(!summary) {
+        null_b <- matrix(0, setloopdins, nrowdatadims)
+        naaa_b <- matrix(0, setloopdins, nrowdatadims)
+      }
     }
     if(c_r) {
       null_c <- fitted(model, resp = resp, newdata = newdata, 
@@ -231,8 +248,13 @@ xyadj_curves.bgmfit <-
                        re_formula = NA, summary = summary,
                        fullframe = NULL, itransform = "")
     } else {
-      null_c <- matrix(0, nrowdatadims, 1)
-      naaa_c <- matrix(0, nrowdatadims, 1)
+      if(summary) {
+        null_c <- matrix(0, nrowdatadims, 1)
+        naaa_c <- matrix(0, nrowdatadims, 1)
+      } else if(!summary) {
+        null_c <- matrix(0, setloopdins, nrowdatadims)
+        naaa_c <- matrix(0, setloopdins, nrowdatadims)
+      }
     }
     if(d_r) {
       null_d <- fitted(model, resp = resp, newdata = newdata, 
@@ -244,14 +266,15 @@ xyadj_curves.bgmfit <-
                        re_formula = NA, summary = summary,
                        fullframe = NULL, itransform = "")
     } else {
-      null_d <- matrix(0, nrowdatadims, 1)
-      naaa_d <- matrix(0, nrowdatadims, 1)
+      if(summary) {
+        null_d <- matrix(0, nrowdatadims, 1)
+        naaa_d <- matrix(0, nrowdatadims, 1)
+      } else if(!summary) {
+        null_d <- matrix(0, setloopdins, nrowdatadims)
+        naaa_d <- matrix(0, setloopdins, nrowdatadims)
+      }
     }
-    if(!is.null(draw_ids)) {
-      setloopdins <- length(eval(draw_ids))
-    } else if(!is.null(ndraws)) {
-      setloopdins <- ndraws
-    } 
+    
     dots <- list(...)
     set_get_dv <- FALSE
     if(!is.null(dots$get_dv)) {
@@ -260,6 +283,7 @@ xyadj_curves.bgmfit <-
         set_get_dv <- TRUE
       }
     }
+    
     if(!summary) {
       xadj_tmt <- yadj_tmt <- vadj_tmt <- list()
       xadj_tmf <- yadj_tmf <- vadj_tmf <- list()
@@ -377,6 +401,7 @@ xyadj_curves.bgmfit <-
       out <- out %>% dplyr::relocate(dplyr::all_of(c(Xx, Yy, idvar))) 
       out <- cbind(out, y.adj)
     } 
+    
     if(summary) {
       r_a <- null_a[ , 1]
       r_b <- null_b[ , 1]
@@ -1095,39 +1120,165 @@ scale_x_continuous_fun <- function(x_minimum, x_maximum, by = 1, fun) {
 
 
 
-get_fun_form <- function(xaxis_breaks_fun) {
-  if(is.null(xaxis_breaks_fun)) {
-    xaxis_bk_call <- function(x)x
-  } else if(is.character(xaxis_breaks_fun)) {
-    if(xaxis_breaks_fun == "identity") xaxis_bk_call <- function(x)x
-    if(xaxis_breaks_fun == "log")      xaxis_bk_call <- function(x)log(x)
-    if(xaxis_breaks_fun == "exp")      xaxis_bk_call <- function(x)exp(x)
-    if(xaxis_breaks_fun == "sqrt")     xaxis_bk_call <- function(x)sqrt(x)
-    if(xaxis_breaks_fun == "square")   xaxis_bk_call <- function(x)x^2
-  } else if(is.function(xaxis_breaks_fun)) {
-    xaxis_bk_call <- xaxis_breaks_fun
+get_fun_form <- function(xaxis_fun = NULL) {
+  if (base::is.null(xaxis_fun)) {
+    return(base::identity)
   }
-  return(xaxis_bk_call)
+  
+  if (base::is.character(xaxis_fun)) {
+    return(base::switch(
+      xaxis_fun,
+      identity = base::identity,
+      log      = base::log,
+      log10    = base::log10,
+      exp      = base::exp,
+      sqrt     = base::sqrt,
+      square   = function(x) x^2,
+      base::stop("Unknown xaxis_fun")
+    ))
+  }
+  
+  if (base::is.function(xaxis_fun)) {
+    return(xaxis_fun)
+  }
+  
+  base::stop("'xaxis_fun' must be NULL, character, or function.")
 }
 
-build_scale_x_continuous_str <- function(x_minimum, x_maximum, by = 1,
-                                         xaxis_bk_call) {
-  scale_x_continuous_str <- "scale_x_continuous_fun(x_minimum_str, 
-  x_maximum_str, by=, fun=)" 
-  scale_x_continuous_str <- gsub("x_minimum_str", paste0("", 
-                                                         x_minimum), 
-                                 scale_x_continuous_str, fixed = T)
-  scale_x_continuous_str <- gsub("x_maximum_str", paste0("", 
-                                                         x_maximum), 
-                                 scale_x_continuous_str, fixed = T)
-  scale_x_continuous_str <- gsub("by=", paste0("by=", 
-                                               by), 
-                                 scale_x_continuous_str, fixed = T)
-  scale_x_continuous_str <- gsub("fun=", paste0("fun=", 
-                                                deparse_0(xaxis_bk_call)), 
-                                 scale_x_continuous_str, fixed = T)
-  return(scale_x_continuous_str)
+build_scale_x <- function(x_min = NULL,
+                          x_max = NULL,
+                          n = 5,
+                          by = NULL,
+                          xaxis_fun = NULL,
+                          accuracy = 0.1,
+                          expand_mult = 0,
+                          use_coord_limits = TRUE,
+                          coord_pad_mult = 0.05,
+                          coord_pad_add = 0) {
+  
+  axis_fun <- get_fun_form(xaxis_fun)
+  
+  breaks_fun <- function(lims) {
+    xmin <- if (base::is.null(x_min)) lims[1] else x_min
+    xmax <- if (base::is.null(x_max)) lims[2] else x_max
+    
+    if (!base::is.finite(xmin) || !base::is.finite(xmax)) {
+      return(base::numeric(0))
+    }
+    
+    if (xmin == xmax) {
+      return(xmin)
+    }
+    
+    br <- if (!base::is.null(by)) {
+      base::seq(from = xmin, to = xmax, by = by)
+    } else {
+      base::seq(from = xmin, to = xmax, length.out = n)
+    }
+    
+    br[base::is.finite(br)]
+  }
+  
+  label_fun <- function(x) {
+    scales::label_number(accuracy = accuracy)(axis_fun(x))
+  }
+  
+  scale_obj <- ggplot2::scale_x_continuous(
+    limits = NULL,
+    breaks = breaks_fun,
+    labels = label_fun,
+    expand = ggplot2::expansion(mult = expand_mult)
+  )
+  
+  if (use_coord_limits && !(base::is.null(x_min) && base::is.null(x_max))) {
+    xrng <- x_max - x_min
+    pad <- xrng * coord_pad_mult + coord_pad_add
+    
+    base::list(
+      scale_obj,
+      ggplot2::coord_cartesian(
+        xlim = base::c(x_min - pad, x_max + pad),
+        expand = FALSE
+      )
+    )
+  } else {
+    scale_obj
+  }
 }
+
+
+
+build_scale_x <- function(x_min = NULL,
+                          x_max = NULL,
+                          n = 5,
+                          by = NULL,
+                          xaxis_fun = NULL,
+                          accuracy = 0.1,
+                          expand_mult = 0,
+                          use_coord_limits = TRUE,
+                          coord_pad_mult = 0.05,
+                          coord_pad_add = 0) {
+  
+  axis_fun <- get_fun_form(xaxis_fun)
+  
+  breaks_fun <- function(lims) {
+    xmin <- if (base::is.null(x_min)) lims[1] else x_min
+    xmax <- if (base::is.null(x_max)) lims[2] else x_max
+    
+    if (!base::is.finite(xmin) || !base::is.finite(xmax)) {
+      return(base::numeric(0))
+    }
+    
+    if (xmin == xmax) {
+      return(xmin)
+    }
+    
+    br <- if (!base::is.null(by)) {
+      base::seq(from = xmin, to = xmax, by = by)
+    } else {
+      base::seq(from = xmin, to = xmax, length.out = n)
+    }
+    
+    br[base::is.finite(br)]
+  }
+  
+  label_fun <- function(x) {
+    scales::label_number(accuracy = accuracy)(axis_fun(x))
+  }
+  
+  scale_obj <- ggplot2::scale_x_continuous(
+    limits = NULL,
+    breaks = breaks_fun,
+    labels = label_fun,
+    expand = ggplot2::expansion(mult = expand_mult)
+  )
+  
+  if (use_coord_limits && !(base::is.null(x_min) && base::is.null(x_max))) {
+    xrng <- x_max - x_min
+    pad <- xrng * coord_pad_mult + coord_pad_add
+    
+    base::list(
+      scale_obj,
+      ggplot2::coord_cartesian(
+        xlim = base::c(x_min - pad, x_max + pad),
+        expand = FALSE
+      )
+    )
+  } else {
+    scale_obj
+  }
+}
+
+
+#######################################
+
+
+
+
+
+
+
+
 
 check_unique_cap_opt <- function(opt) {
   chars <- strsplit(opt, "")[[1]]
@@ -1182,6 +1333,7 @@ get_opt_bands <- function(opt, bands, upper = TRUE) {
   return(out)
 }
 
+
 loop_opt_bands <- function(opti, 
                            bandsi, 
                            arguments,
@@ -1227,7 +1379,7 @@ loop_opt_bands <- function(opti,
   idata_method <- NULL;
   newdata_fixed <- NULL;
   draw_ids <- NULL;
-  plot_cov <- NULL;
+  groupby <- NULL;
   show_age_takeoff <- NULL;
   show_age_peak <- NULL;
   show_age_cessation <- NULL;
@@ -1239,13 +1391,19 @@ loop_opt_bands <- function(opti,
   linecolor2 <- NULL;
   label.y <- NULL;
   color.groupby <- NULL;
-  xaxis_breaks_fun <- NULL;
+  xaxis_fun <- NULL;
   linetype.groupby <- NULL;
   band.legends <- NULL;
   conf <- NULL;
   robust <- NULL;
   envir <- NULL;
   trim <- NULL;
+  estimation_method <- NULL;
+  
+  transform_xaxis <- NULL;
+  addylab_dv <- NULL;
+  estimation_method <- NULL;
+  estimation_method <- NULL;
   estimation_method <- NULL;
   
   if (!is.null(internal_formula_args)) {
@@ -1284,14 +1442,22 @@ loop_opt_bands <- function(opti,
   arguments$opt <- opt
   arguments$ndraws <- ndraws
   arguments$draw_ids <- draw_ids
-  arguments$model$model_info[['difx']] <- difx
+  
+  
+  
+  
+  
+  
+  if(is.null(difx)) difx <- xvar
+  
+  arguments$model$model_info[['difx']] <- arguments[['difx']] <- difx
   if(dpar == "sigma") {
     sigma_model <- get_sigmamodel_info(model = model,
                                        newdata = newdata,
                                        dpar = dpar, 
                                        resp = resp, 
                                        what = 'model',
-                                       cov = NULL, 
+                                       cov = cov, 
                                        all = FALSE, 
                                        verbose = verbose)
     arguments$model$model_info[['which_sigma_model']] <- 
@@ -1316,14 +1482,18 @@ loop_opt_bands <- function(opti,
                "Currently, you have set this argument as ipts = ", ipts)
       }
     }
+    
     msg_sigma_model_no_xvar <- 
       paste0("Although 'xvar' is strictly not required for estimating 
            distance curve when sigma_model = ",  collapse_comma(sigma_model), 
              " but still it is better to specify 'xvar' to correctly label
            and plot x-axis. Otherwise x-axis wil be based on the xvar
-           from the 'mu' part")
+           from the 'mu' part"
+      )
+    
     clean_msg_sigma_model_no_xvar <- trimws(gsub("\\s+", " ",
                                                  msg_sigma_model_no_xvar))
+    
     if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
       if(is.null(xvar)) {
         if(verbose) {
@@ -1331,6 +1501,14 @@ loop_opt_bands <- function(opti,
         }
       }
     }
+    
+    
+    if(is.null(grid_call)) {
+      grid_call <- FALSE
+    }
+    
+    if(is.null(grid_by)) grid_by <- cov
+    
     if(sigma_model != "ls" && need_velocity_curve) {
       xvar <- check_set_xvar_sigma(model = model, 
                                    dpar = dpar, 
@@ -1338,28 +1516,32 @@ loop_opt_bands <- function(opti,
                                    resp = resp, 
                                    auto = TRUE,
                                    verbose = verbose)
-      newdata <- set_manual_datagrid(model = model,
-                                     newdata = newdata,
-                                     resp = resp, 
-                                     dpar = NULL, 
-                                     idvar = NULL,
-                                     xvar = xvar,
-                                     difx = difx,
-                                     difx_asit = FALSE,
-                                     auto = TRUE,
-                                     xrange = NULL,
-                                     length.out = NULL,
-                                     grid_add = grid_add,
-                                     grid_type= NULL,
-                                     FUN = NULL,
-                                     FUN_character = NULL,
-                                     FUN_factor = NULL,
-                                     FUN_logical = NULL,
-                                     FUN_numeric = NULL,
-                                     FUN_integer = NULL,
-                                     FUN_binary = NULL,
-                                     FUN_other = NULL,
-                                     verbose = verbose)
+      
+      if(grid_call)
+        newdata <- set_manual_datagrid(model = model,
+                                       newdata = newdata,
+                                       resp = resp, 
+                                       dpar = NULL, 
+                                       idvar = NULL,
+                                       xvar = xvar,
+                                       difx = difx,
+                                       difx_asit = FALSE,
+                                       auto = TRUE,
+                                       xrange = NULL,
+                                       length.out = NULL,
+                                       grid_add = grid_add,
+                                       grid_type= NULL,
+                                       by = grid_by,
+                                       FUN = NULL,
+                                       FUN_character = NULL,
+                                       FUN_factor = NULL,
+                                       FUN_logical = NULL,
+                                       FUN_numeric = NULL,
+                                       FUN_integer = NULL,
+                                       FUN_binary = NULL,
+                                       FUN_other = NULL,
+                                       verbose = verbose)
+      
       arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
       arguments$newdata <- newdata
     } 
@@ -1367,6 +1549,7 @@ loop_opt_bands <- function(opti,
   
   assign_function_to_environment(transform_draws, 'transform_draws',
                                  envir = NULL)
+  
   arguments$model$model_info[['transform_draws']] <-
     model$model_info[['transform_draws']] <- transform_draws
   get.newdata_args <- list()
@@ -1383,23 +1566,53 @@ loop_opt_bands <- function(opti,
   get.newdata_args[['newdata_fixed']]  <- newdata_fixed
   get.newdata_args[['verbose']]        <- verbose
   get.newdata_args[['ipts']]           <- NULL
-  get.newdata_args$dpar      <- dpar
-  newdata.xyadj <- CustomDoCall(get.newdata, get.newdata_args)
-  get.newdata_args[['ipts']] <- ipts
-  newdata       <- CustomDoCall(get.newdata, get.newdata_args)
-  arguments$newdata <- newdata
+  get.newdata_args[['dpar']]           <- dpar
+  get.newdata_args[['cov']]            <- cov
+  newdata.xyadj              <- CustomDoCall(get.newdata, get.newdata_args)
+  
+  if(dpar == 'sigma') {
+    if(!is.null(ipts)) {
+      if(is.logical(ipts)) {
+        if(ipts) {
+          get.newdata_args[['ipts']]     <- ipts
+          get.newdata_args[['newdata']]  <- newdata
+          newdata <- CustomDoCall(get.newdata, get.newdata_args)
+          attr(newdata, 'ipts_nocall') <- TRUE
+        } else if(!ipts) {
+          newdata <- newdata
+          attr(newdata, 'ipts_nocall') <- FALSE
+        }
+      }
+    } else {
+      get.newdata_args[['ipts']]     <- ipts
+      get.newdata_args[['newdata']]  <- newdata
+      newdata <- CustomDoCall(get.newdata, get.newdata_args)
+      attr(newdata, 'ipts_nocall') <- TRUE
+    }
+  } else if(dpar == 'mu') {
+    get.newdata_args[['ipts']]     <- ipts
+    get.newdata_args[['newdata']]  <- newdata
+    newdata                    <- CustomDoCall(get.newdata, get.newdata_args)
+    attr(newdata, 'ipts_nocall') <- TRUE
+  }
+  
+  arguments$newdata          <- newdata
+  
   list_c <- attr(newdata, 'list_c')
   for (list_ci in names(list_c)) {
     assign(list_ci, list_c[[list_ci]])
   }
+  
   check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
                'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
                'uvarby', 'subindicatorsi')
+  
   for (check___ in check__) {
     if(!exists(check___)) assign(check___, NULL)
   }
-  Xx <- xvar
-  Yy <- yvar
+  
+  
+  
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
@@ -1407,7 +1620,7 @@ loop_opt_bands <- function(opti,
   }
   if (is.null(bands)) {
     bands <- ''
-  } 
+  }
   
   xvar_      <- paste0('xvar', resp_rev_)
   sigmaxvar_ <- paste0('sigma', xvar_)
@@ -1419,16 +1632,20 @@ loop_opt_bands <- function(opti,
     if(is.null(xvar)) {
       xvar   <- model$model_info[[xvar_]]
     }
-    cov    <- model$model_info[[cov_]]
+    if(is.null(cov)) cov <- model$model_info[[cov_]] else cov <- cov
   } else if(dpar == "sigma") {
     if(!is.na(model$model_info[[sigmaxvar_]])) {
       xvar   <- model$model_info[[sigmaxvar_]]
     } else if(is.na(model$model_info[[sigmaxvar_]]) & 
               !is.null(model$model_info[[xvar_]])) {
-      xvar   <- model$model_info[[xvar_]]
+      if(is.null(xvar)) {
+        xvar   <- model$model_info[[xvar_]]
+      }
     }
-    cov    <- model$model_info[[sigmacov_]]
+    if(is.null(cov)) cov <- model$model_info[[sigmacov_]] else cov <- cov
   } 
+  
+  
   groupvar_     <- paste0('groupvar', resp_rev_)
   yvar_         <- paste0('yvar', resp_rev_)
   yvar          <- model$model_info[[yvar_]]
@@ -1444,8 +1661,6 @@ loop_opt_bands <- function(opti,
   } else if (!is.null(idvar)) {
     idvar <- idvar
   }
-  cov_       <- paste0('cov', resp_rev_)
-  sigmacov_  <- paste0('sigma', cov_)
   if(is.null(idvar)) {
     if(is.null(idvar)) {
       if(!is.null(model$model_info[['idvars']])) {
@@ -1453,6 +1668,229 @@ loop_opt_bands <- function(opti,
       }
     }
   }
+  
+  Xx <- xvar
+  Yy <- yvar
+  
+  
+  
+  
+  
+  
+  # arguments$model$model_info[['difx']] <- difx
+  # if(dpar == "sigma") {
+  #   sigma_model <- get_sigmamodel_info(model = model,
+  #                                      newdata = newdata,
+  #                                      dpar = dpar, 
+  #                                      resp = resp, 
+  #                                      what = 'model',
+  #                                      cov = NULL, 
+  #                                      all = FALSE, 
+  #                                      verbose = verbose)
+  #   arguments$model$model_info[['which_sigma_model']] <- 
+  #     model$model_info[['which_sigma_model']] <- sigma_model
+  #   if(is.null(transform_draws)) {
+  #     transform_draws <- 
+  #       check_set_transform_draws_sigma(model = model, 
+  #                                       dpar = dpar, 
+  #                                       xvar = xvar, 
+  #                                       resp = resp, 
+  #                                       auto = TRUE,
+  #                                       transform_draws = transform_draws,
+  #                                       itransform = itransform,
+  #                                       verbose = verbose)
+  #     arguments[['transform_draws']] <- transform_draws
+  #   }
+  #   if(sigma_model == "basic") {
+  #     if(!is.null(ipts)) {
+  #       stop2c("For sigma_model = ",  
+  #              collapse_comma(sigma_model), ", the ipts should be NULL", 
+  #              "\n  ", 
+  #              "Currently, you have set this argument as ipts = ", ipts)
+  #     }
+  #   }
+  #   msg_sigma_model_no_xvar <- 
+  #     paste0("Although 'xvar' is strictly not required for estimating 
+  #          distance curve when sigma_model = ",  collapse_comma(sigma_model), 
+  #            " but still it is better to specify 'xvar' to correctly label
+  #          and plot x-axis. Otherwise x-axis wil be based on the xvar
+  #          from the 'mu' part")
+  #   clean_msg_sigma_model_no_xvar <- trimws(gsub("\\s+", " ",
+  #                                                msg_sigma_model_no_xvar))
+  #   if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
+  #     if(is.null(xvar)) {
+  #       if(verbose) {
+  #         message(clean_msg_sigma_model_no_xvar)
+  #       }
+  #     }
+  #   }
+  #   
+  #   if(is.null(grid_call)) {
+  #     grid_call <- FALSE
+  #   }
+  #   
+  #   if(is.null(grid_by)) grid_by <- cov
+  #   
+  #   if(sigma_model != "ls" && need_velocity_curve) {
+  #     xvar <- check_set_xvar_sigma(model = model, 
+  #                                  dpar = dpar, 
+  #                                  xvar = xvar, 
+  #                                  resp = resp, 
+  #                                  auto = TRUE,
+  #                                  verbose = verbose)
+  #     
+  #     if(grid_call)
+  #     newdata <- set_manual_datagrid(model = model,
+  #                                    newdata = newdata,
+  #                                    resp = resp, 
+  #                                    dpar = NULL, 
+  #                                    idvar = NULL,
+  #                                    xvar = xvar,
+  #                                    difx = difx,
+  #                                    difx_asit = FALSE,
+  #                                    auto = TRUE,
+  #                                    xrange = NULL,
+  #                                    length.out = NULL,
+  #                                    grid_add = grid_add,
+  #                                    grid_type= NULL,
+  #                                    FUN = NULL,
+  #                                    FUN_character = NULL,
+  #                                    FUN_factor = NULL,
+  #                                    FUN_logical = NULL,
+  #                                    FUN_numeric = NULL,
+  #                                    FUN_integer = NULL,
+  #                                    FUN_binary = NULL,
+  #                                    FUN_other = NULL,
+  #                                    verbose = verbose)
+  #     arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
+  #     arguments$newdata <- newdata
+  #   } 
+  # } 
+  # 
+  # assign_function_to_environment(transform_draws, 'transform_draws',
+  #                                envir = NULL)
+  # arguments$model$model_info[['transform_draws']] <-
+  #   model$model_info[['transform_draws']] <- transform_draws
+  # get.newdata_args <- list()
+  # get.newdata_args[['model']]          <- model
+  # get.newdata_args[['newdata']]        <- newdata
+  # get.newdata_args[['xvar']]           <- xvar
+  # get.newdata_args[['idvar']]          <- idvar
+  # get.newdata_args[['resp']]           <- resp
+  # get.newdata_args[['numeric_cov_at']] <- numeric_cov_at
+  # get.newdata_args[['aux_variables']]  <- aux_variables
+  # get.newdata_args[['levels_id']]      <- levels_id
+  # get.newdata_args[['xrange']]         <- xrange
+  # get.newdata_args[['idata_method']]   <- idata_method
+  # get.newdata_args[['newdata_fixed']]  <- newdata_fixed
+  # get.newdata_args[['verbose']]        <- verbose
+  # get.newdata_args[['ipts']]           <- NULL
+  # get.newdata_args[['dpar']]           <- dpar
+  # get.newdata_args[['cov']]            <- cov
+  # newdata.xyadj <- CustomDoCall(get.newdata, get.newdata_args)
+  # 
+  # if(dpar == 'sigma') {
+  #   if(!is.null(ipts)) {
+  #     if(is.logical(ipts)) {
+  #       if(ipts) {
+  #         get.newdata_args[['ipts']]     <- ipts
+  #         get.newdata_args[['newdata']]  <- newdata
+  #         newdata <- CustomDoCall(get.newdata, get.newdata_args)
+  #         attr(newdata, 'ipts_nocall') <- TRUE
+  #       } else if(!ipts) {
+  #         newdata <- newdata
+  #         attr(newdata, 'ipts_nocall') <- FALSE
+  #       }
+  #     }
+  #   } else {
+  #     get.newdata_args[['ipts']]     <- ipts
+  #     get.newdata_args[['newdata']]  <- newdata
+  #     newdata <- CustomDoCall(get.newdata, get.newdata_args)
+  #     attr(newdata, 'ipts_nocall') <- TRUE
+  #   }
+  # } else if(dpar == 'mu') {
+  #   get.newdata_args[['ipts']]     <- ipts
+  #   get.newdata_args[['newdata']]  <- newdata
+  #   newdata                    <- CustomDoCall(get.newdata, get.newdata_args)
+  #   attr(newdata, 'ipts_nocall') <- TRUE
+  # }
+  # 
+  # arguments$newdata          <- newdata
+  # 
+  # # get.newdata_args[['ipts']] <- ipts
+  # # newdata       <- CustomDoCall(get.newdata, get.newdata_args)
+  # # arguments$newdata <- newdata
+  # 
+  # 
+  # 
+  # list_c <- attr(newdata, 'list_c')
+  # for (list_ci in names(list_c)) {
+  #   assign(list_ci, list_c[[list_ci]])
+  # }
+  # check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
+  #              'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
+  #              'uvarby', 'subindicatorsi')
+  # for (check___ in check__) {
+  #   if(!exists(check___)) assign(check___, NULL)
+  # }
+  # Xx <- xvar
+  # Yy <- yvar
+  # if (is.null(resp)) {
+  #   resp_rev_ <- resp
+  # } else if (!is.null(resp)) {
+  #   resp_rev_ <- paste0("_", resp)
+  # }
+  # if (is.null(bands)) {
+  #   bands <- ''
+  # } 
+  # 
+  # xvar_      <- paste0('xvar', resp_rev_)
+  # sigmaxvar_ <- paste0('sigma', xvar_)
+  # cov_       <- paste0('cov', resp_rev_)
+  # sigmacov_  <- paste0('sigma', cov_)
+  # uvarby     <- model$model_info$univariate_by$by
+  # if(is.null(uvarby)) uvarby <- NA 
+  # if(dpar == "mu") {
+  #   if(is.null(xvar)) {
+  #     xvar   <- model$model_info[[xvar_]]
+  #   }
+  #   cov    <- model$model_info[[cov_]]
+  # } else if(dpar == "sigma") {
+  #   if(!is.na(model$model_info[[sigmaxvar_]])) {
+  #     xvar   <- model$model_info[[sigmaxvar_]]
+  #   } else if(is.na(model$model_info[[sigmaxvar_]]) & 
+  #             !is.null(model$model_info[[xvar_]])) {
+  #     xvar   <- model$model_info[[xvar_]]
+  #   }
+  #   cov    <- model$model_info[[sigmacov_]]
+  # } 
+  # groupvar_     <- paste0('groupvar', resp_rev_)
+  # yvar_         <- paste0('yvar', resp_rev_)
+  # yvar          <- model$model_info[[yvar_]]
+  # hierarchical_ <- paste0('hierarchical', resp_rev_)
+  # if(is.null(levels_id) & is.null(idvar)) {
+  #   idvar <- model$model_info[[groupvar_]]
+  #   if (!is.null(model$model_info[[hierarchical_]])) {
+  #     idvar <- model$model_info[[hierarchical_]]
+  #   }
+  #   model$model_info[[groupvar_]] <- idvar # idvar[1]
+  # } else if (!is.null(levels_id)) {
+  #   idvar <- levels_id
+  # } else if (!is.null(idvar)) {
+  #   idvar <- idvar
+  # }
+  # # cov_       <- paste0('cov', resp_rev_)
+  # # sigmacov_  <- paste0('sigma', cov_)
+  # if(is.null(idvar)) {
+  #   if(is.null(idvar)) {
+  #     if(!is.null(model$model_info[['idvars']])) {
+  #       idvar <- model$model_info[['idvars']]
+  #     }
+  #   }
+  # }
+  # 
+  
+  
   if (grepl("p", bands, ignore.case = T) & summary) {
     stop2c(
       "To construct bands (e.g., 95%) around the parameter estimates",
@@ -1540,8 +1978,8 @@ loop_opt_bands <- function(opti,
   d.[['probtitles']]    <- NULL
   d.[['groupby_str_d']] <- NULL
   d.[['groupby_str_v']] <- NULL
-  groupby_str_d <- unique(c(groupby_str_d, plot_cov))
-  groupby_str_v <- unique(c(groupby_str_v, plot_cov))
+  groupby_str_d <- unique(c(groupby_str_d, groupby))
+  groupby_str_v <- unique(c(groupby_str_v, groupby))
   d. <- d. %>% CustomDoCall(rbind, .) %>% data.frame()
   row.names(d.) <- NULL
   newdata_before_itransform <- newdata
@@ -1579,6 +2017,7 @@ loop_opt_bands <- function(opti,
     newdata <- prepare_transformations(data = newdata, model = model,
                                        itransform = itransform_set)
   }
+  
   curve.d <- 'distance'
   curve.v <- 'velocity'
   name.apv <- "APGV"
@@ -1657,18 +2096,33 @@ loop_opt_bands <- function(opti,
     band.alpha <- 0.25
   }
   if(is.null(color.groupby)) {
-    if(dpar == "mu")    color.groupby <- model$model_info [[cov_]]
-    if(dpar == "sigma") color.groupby <- model$model_info [[sigmacov_]]
+    if(dpar == "mu")    color.groupby <- cov 
+    if(dpar == "sigma") color.groupby <- cov 
   }
+  
   if(is.null(fill.groupby)) {
     fill.groupby <- color.groupby
   } else if(!is.null(fill.groupby)) {
     if(isFALSE(fill.groupby)) fill.groupby <- NA
   }
-  xaxis_bk_call <- get_fun_form(xaxis_breaks_fun) 
-  scale_x_continuous_str <- build_scale_x_continuous_str(x_minimum, 
-                                                         x_maximum, 
-                                                         by = 1, xaxis_bk_call)
+  
+  
+  build_scale_x_args <- list()
+  for (i in names(formals(build_scale_x))) {
+    build_scale_x_args[[i]] <- transform_xaxis[[i]]
+  }
+  if(is.null(build_scale_x_args[["x_min"]])) {
+    build_scale_x_args[["x_min"]] <- x_minimum
+  }
+  if(is.null(build_scale_x_args[["x_max"]])) {
+    build_scale_x_args[["x_max"]] <- x_maximum
+  }
+  
+  
+  defaults <- base::as.list(base::formals(build_scale_x))
+  build_scale_x_args <- utils::modifyList(defaults, build_scale_x_args)
+  add_build_scale_x <- base::do.call(build_scale_x, build_scale_x_args)
+  
   
   if (grepl("O", opt.org, ignore.case = T) |
       grepl("O", opt.org, ignore.case = T)) {
@@ -1722,7 +2176,7 @@ loop_opt_bands <- function(opti,
           ),
           linewidth = linewidth.main
         ) +
-        ept(scale_x_continuous_str) +
+        add_build_scale_x + 
         ggplot2::labs(x = "", y = "", title = "Observed") +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -1778,7 +2232,7 @@ loop_opt_bands <- function(opti,
           ),
           linewidth = linewidth.main
         ) +
-        ept(scale_x_continuous_str) +
+        add_build_scale_x + 
         ggplot2::labs(x = "", y = "", title = label.d) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -1845,7 +2299,7 @@ loop_opt_bands <- function(opti,
           ),
           linewidth = linewidth.main
         ) +
-        ept(scale_x_continuous_str) +
+        add_build_scale_x + 
         ggplot2::labs(x = "", y = "", title = label.v) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -2074,7 +2528,7 @@ loop_opt_bands <- function(opti,
       t.s.axis <- with(data_dv, transform.sec.axis(Estimate.x, Estimate.y))
       if(is.na(uvarby)) {
         if(is.na(data_dv[['groupby.x']][1])) {
-          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
           legendlabs_mult_color <- single_plot_pair_color_dv_au
           legendlabs_mult_line <- c('solid', 'solid')
           data_dv$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2091,7 +2545,7 @@ loop_opt_bands <- function(opti,
       }
       if(!is.na(uvarby)) {
         if(is.null(cov_factor_vars)) {
-          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
           legendlabs_mult_color <- single_plot_pair_color_dv_au
           legendlabs_mult_line <- c('solid', 'solid')
           data_dv$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2136,7 +2590,7 @@ loop_opt_bands <- function(opti,
                                       ggplot2::sec_axis(~ t.s.axis$rev(.),
                                                         name = label.v)) +
         ggplot2::labs(x = label.x, y = label.d, title  = "") +
-        ept(scale_x_continuous_str) +
+        add_build_scale_x + 
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90))
@@ -2373,19 +2827,32 @@ loop_opt_bands <- function(opti,
         dplyr::mutate(
           groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_au)))
         )
-      x_minimum_a_ <- x_minimum 
-      x_maximum_a_ <- x_maximum 
-      scale_x_continuous_a_str <- build_scale_x_continuous_str(x_minimum_a_, 
-                                                               x_maximum_a_, 
-                                                               by = 1, 
-                                                               xaxis_bk_call)
-      out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum_a_ & 
-                         out_a_[[Xx]] <= x_maximum_a_, ]
+      
+
+      build_scale_x_args <- list()
+      for (i in names(formals(build_scale_x))) {
+        build_scale_x_args[[i]] <- transform_xaxis[[i]]
+      }
+      if(is.null(build_scale_x_args[["x_min"]])) {
+        build_scale_x_args[["x_min"]] <- x_minimum
+      }
+      if(is.null(build_scale_x_args[["x_max"]])) {
+        build_scale_x_args[["x_max"]] <- x_maximum
+      }
+      
+      
+      defaults <- base::as.list(base::formals(build_scale_x))
+      build_scale_x_args <- utils::modifyList(defaults, build_scale_x_args)
+      add_build_scale_x <- base::do.call(build_scale_x, build_scale_x_args)
+      
+      
+      out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum & 
+                         out_a_[[Xx]] <= x_maximum, ]
       out_a_ <- out_a_ %>% dplyr::mutate(groupby.x = groupby, 
                                          groupby.y = groupby.x)
       if(is.na(uvarby)) {
         if(is.na(out_a_[['groupby']][1])) {
-          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
           legendlabs_mult_color <- single_plot_pair_color_dv_au
           legendlabs_mult_line <- c('solid', 'solid')
           out_a_$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2402,7 +2869,7 @@ loop_opt_bands <- function(opti,
       }
       if(!is.na(uvarby)) {
         if(is.null(cov_factor_vars)) {
-          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
           legendlabs_mult_color <- single_plot_pair_color_dv_au
           legendlabs_mult_line <- c('solid', 'solid')
           out_a_$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2429,7 +2896,7 @@ loop_opt_bands <- function(opti,
           linewidth = linewidth.main
         ) +
         ggplot2::labs(x = label.x, y = label.d, title  = "") +
-        ept(scale_x_continuous_a_str) +
+        add_build_scale_x + 
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(legend.position = "none") +
         ggplot2::labs(y = paste0("Adjusted ", "Individual Curves")) +
@@ -2539,15 +3006,28 @@ loop_opt_bands <- function(opti,
         )
       out_u_ <- out_u_ %>% dplyr::mutate(groupby.x = groupby, 
                                          groupby.y = groupby.x)
-      x_minimum_u_ <- x_minimum 
-      x_maximum_u_ <- x_maximum 
-      scale_x_continuous_u_str <- build_scale_x_continuous_str(x_minimum_u_, 
-                                                               x_maximum_u_, 
-                                                               by = 1, 
-                                                               xaxis_bk_call)
+      
+
+      
+      build_scale_x_args <- list()
+      for (i in names(formals(build_scale_x))) {
+        build_scale_x_args[[i]] <- transform_xaxis[[i]]
+      }
+      if(is.null(build_scale_x_args[["x_min"]])) {
+        build_scale_x_args[["x_min"]] <- x_minimum
+      }
+      if(is.null(build_scale_x_args[["x_max"]])) {
+        build_scale_x_args[["x_max"]] <- x_maximum
+      }
+     
+      
+      defaults <- base::as.list(base::formals(build_scale_x))
+      build_scale_x_args <- utils::modifyList(defaults, build_scale_x_args)
+      add_build_scale_x <- base::do.call(build_scale_x, build_scale_x_args)
+      
       if(is.na(uvarby)) { 
         if(is.na(out_u_[['groupby']][1])) {
-          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
           legendlabs_mult_color <- single_plot_pair_color_dv_au
           legendlabs_mult_line <- c('solid', 'solid')
           out_u_$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2564,7 +3044,7 @@ loop_opt_bands <- function(opti,
       }
       if(!is.na(uvarby)) { 
         if(is.null(cov_factor_vars)) {
-          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
           legendlabs_mult_color <- single_plot_pair_color_dv_au
           legendlabs_mult_line <- c('solid', 'solid')
           out_u_$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2591,7 +3071,7 @@ loop_opt_bands <- function(opti,
           linewidth = linewidth.main
         ) +
         ggplot2::labs(x = label.x, y = label.d, title  = "") +
-        ept(scale_x_continuous_u_str) +
+        add_build_scale_x + 
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
         ggplot2::theme(legend.position = "none") +
@@ -2648,19 +3128,31 @@ loop_opt_bands <- function(opti,
           dplyr::bind_rows(., out_u_ %>%
                              dplyr::mutate(curve = 'Unadjusted')) %>%
           data.frame()
-        x_minimum_au_ <- x_minimum 
-        x_maximum_au_ <- x_maximum 
-        scale_x_continuous_au_str <- build_scale_x_continuous_str(x_minimum_au_, 
-                                                                  x_maximum_au_, 
-                                                                  by = 1, 
-                                                                  xaxis_bk_call)
-        out_a_u_ <- out_a_u_[out_a_u_[[Xx]] >= x_minimum_a_ & 
-                               out_a_u_[[Xx]] <= x_maximum_a_, ]
+        
+
+        build_scale_x_args <- list()
+        for (i in names(formals(build_scale_x))) {
+          build_scale_x_args[[i]] <- transform_xaxis[[i]]
+        }
+        if(is.null(build_scale_x_args[["x_min"]])) {
+          build_scale_x_args[["x_min"]] <- x_minimum
+        }
+        if(is.null(build_scale_x_args[["x_max"]])) {
+          build_scale_x_args[["x_max"]] <- x_maximum
+        }
+        
+        defaults <- base::as.list(base::formals(build_scale_x))
+        build_scale_x_args <- utils::modifyList(defaults, build_scale_x_args)
+        add_build_scale_x <- base::do.call(build_scale_x, build_scale_x_args)
+        
+        
+        out_a_u_ <- out_a_u_[out_a_u_[[Xx]] >= x_minimum & 
+                               out_a_u_[[Xx]] <= x_maximum, ]
         out_a_u_ <- out_a_u_ %>% dplyr::mutate(groupby.x = groupby, 
                                                groupby.y = groupby.x)
         if(is.na(uvarby)) {
           if(is.na(out_a_u_[['groupby']][1])) {
-            legendlabs_mult_singel <- c('Distance', 'Velocity')
+            legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
             legendlabs_mult_color <- single_plot_pair_color_dv_au
             legendlabs_mult_line <- c('solid', 'solid')
             out_a_u_$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2677,7 +3169,7 @@ loop_opt_bands <- function(opti,
         }
         if(!is.na(uvarby)) {
           if(is.null(cov_factor_vars)) {
-            legendlabs_mult_singel <- c('Distance', 'Velocity')
+            legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')
             legendlabs_mult_color <- single_plot_pair_color_dv_au
             legendlabs_mult_line <- c('solid', 'solid')
             out_a_u_$groupby_line.x <- legendlabs_mult_singel[1]
@@ -2706,7 +3198,7 @@ loop_opt_bands <- function(opti,
           ggplot2::labs(x = label.x,
                         y = label.d,
                         title  = "") +
-          ept(scale_x_continuous_au_str) +
+          add_build_scale_x + 
           jtools::theme_apa(legend.pos = legendpos) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
           ggplot2::theme(axis.title.y.right =
@@ -2766,7 +3258,7 @@ loop_opt_bands <- function(opti,
                         y = label.d,
                         title  = "") +
           ggplot2::scale_color_manual(values = single_plot_pair_color_dv_au) +
-          ept(scale_x_continuous_a_str) +
+          add_build_scale_x + 
           jtools::theme_apa(legend.pos = legendpos.adj.unadj) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
           ggplot2::labs(y = paste0("Individual curves")) +

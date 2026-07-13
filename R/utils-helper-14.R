@@ -37,6 +37,7 @@ get.newdata <- function(model,
                         dummy_to_factor = NULL,
                         newdata_fixed = NULL,
                         xrange_search = NULL,
+                        cov = NULL,
                         verbose = FALSE) {
   if (is.null(resp)) {
     resp_rev_ <- resp
@@ -63,15 +64,17 @@ get.newdata <- function(model,
     if(is.null(xvar)) {
       xvar   <- model$model_info[[xvar_]]
     }
-    cov    <- model$model_info[[cov_]]
+    if(is.null(cov)) cov <- model$model_info[[cov_]] else cov <- cov
   } else if(dpar == "sigma") {
     if(!is.na(model$model_info[[sigmaxvar_]])) {
       xvar   <- model$model_info[[sigmaxvar_]]
     } else if(is.na(model$model_info[[sigmaxvar_]]) & 
               !is.null(model$model_info[[xvar_]])) {
-      xvar   <- model$model_info[[xvar_]]
+      if(is.null(xvar)) {
+        xvar   <- model$model_info[[xvar_]]
+      }
     }
-    cov    <- model$model_info[[sigmacov_]]
+    if(is.null(cov)) cov <- model$model_info[[sigmacov_]] else cov <- cov
   } 
   groupvar_     <- paste0('groupvar', resp_rev_)
   yvar_         <- paste0('yvar', resp_rev_)
@@ -103,7 +106,7 @@ get.newdata <- function(model,
                                        dpar = dpar, 
                                        resp = resp, 
                                        what = 'model',
-                                       cov = NULL, 
+                                       cov = cov, 
                                        all = FALSE, 
                                        verbose = verbose)
     }

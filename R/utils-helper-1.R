@@ -4113,6 +4113,7 @@ mapderivqr <- function(model,
                        robust = FALSE,
                        dpar = NULL,
                        itransform = NULL,
+                       cov = NULL,
                        verbose = FALSE) {
 
   if(is.null(probs)) {
@@ -4138,6 +4139,8 @@ mapderivqr <- function(model,
     dpar <- dpar
   }
   
+  if(is.null(difx)) difx <- xvar
+  
   validate_response(model, resp)
 
   list_c <- list()
@@ -4151,7 +4154,7 @@ mapderivqr <- function(model,
     if(is.null(xvar)) {
       xvar   <- model$model_info[[xvar_]]
     }
-    cov    <- model$model_info[[cov_]]
+    if(is.null(cov)) cov <- model$model_info[[cov_]] else cov <- cov
   } else if(dpar == "sigma") {
     
     if(!is.na(model$model_info[[sigmaxvar_]])) {
@@ -4160,7 +4163,7 @@ mapderivqr <- function(model,
               !is.null(model$model_info[[xvar_]])) {
       xvar   <- model$model_info[[xvar_]]
     }
-    cov    <- model$model_info[[sigmacov_]]
+    if(is.null(cov)) cov <- model$model_info[[sigmacov_]] else cov <- cov
   } 
   
   yvar_ <- paste0('yvar', resp_rev_)
@@ -8829,7 +8832,7 @@ set_manual_datagrid <- function(model,
   if(!model$test_mode) {
     unlock_replace_bind(package = "insight", what = "get_data",
                         replacement = custom_get_data.brmsfit, ept_str = T)
-    if(!verbose) {
+    if(verbose) {
       message2c("As model[['test_mode']] = FALSE, the full data are extracted 
                 via insight::get_data() using custom_get_data.brmsfit. To 
                 override this behavior, set model[['test_mode']] = TRUE.",
@@ -8894,6 +8897,9 @@ set_manual_datagrid <- function(model,
   newdata_all        <- newdata
   newdata_names_all  <- names(newdata_all)
   newdata            <- do.call(marginaleffects::datagrid, grid_args)
+  # newdata <- newdata %>% droplevels()
+  # print(str(newdata))
+  # stop()
   newdata_names_grid <- names(newdata)
   missing_names_grid <- setdiff(newdata_names_all, newdata_names_grid)
   for (i in missing_names_grid) {

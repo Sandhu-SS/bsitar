@@ -21,12 +21,14 @@
   re_formula = NULL,
   numeric_cov_at = NULL,
   aux_variables = NULL,
-  plot_cov = NULL,
+  cov = NULL,
+  grid_call = NULL,
+  grid_by = NULL,
   grid_add = NULL,
   levels_id = NULL,
   avg_reffects = NULL,
   ipts = NULL,
-  model_deriv = TRUE,
+  model_deriv = NULL,
   xrange = NULL,
   xrange_search = NULL,
   takeoff = FALSE,
@@ -40,7 +42,9 @@
   incl_autocor = TRUE,
   robust = FALSE,
   transform_draws = NULL,
-  xaxis_breaks_fun = NULL,
+  transform_xaxis = list(x_min = NULL, x_max = NULL, n = 5, by = NULL, xaxis_fun = NULL,
+    spacing = "data", accuracy = 0.1, expand_mult = 0, use_coord_limits = TRUE,
+    coord_pad_mult = 0.05, coord_pad_add = 0),
   scale = c("response", "linear"),
   future = FALSE,
   future_session = "multisession",
@@ -181,8 +185,18 @@ included in the model.}
 \code{ipts} argument, useful when fitting location-scale or measurement
 error models.}
 
-\item{plot_cov}{An optional character string to specify the \code{covariate}
+\item{cov}{An optional character string to specify the \code{covariate}
 passed to the plot argument (default  \code{NULL}). Rarely used.}
+
+\item{grid_call}{An optional logical (default  \code{NULL}) to indicate
+whether to call \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} when \code{dpar = 'sigma'}.
+Rarely used. The two indications are when \code{sigma_model = 'ls'} or
+\code{opt = 'v'}.}
+
+\item{grid_by}{An optional character string to specify the \code{by} argument
+passed to the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} (default  \code{NULL}). Rarely
+used. Ignored when \code{grid_call = FALSE}. If \code{grid_call = TRUE} and
+\code{grid_by = NULL}, then internally set as \code{grid_by = cov}.}
 
 \item{grid_add}{An optional argument to specify the variable(s) that can be
 passed to the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}. This is useful when fitting
@@ -333,9 +347,28 @@ off this automatic assignment of \code{'exp'} to the
   FALSE} when computing the first derivative (velocity) for \code{dpar =
   'sigma'}.}
 
-\item{xaxis_breaks_fun}{A function (default \code{NULL}) applied to the
-\code{x-axis} breaks. The default \code{NULL} is same as
-\code{function(x)x}}
+\item{transform_xaxis}{A named \code{list()} of arguments for \code{build_scale_x()}.
+Any unspecified arguments are automatically filled with the default values
+from \code{build_scale_x()}.
+Common elements include:
+\itemize{
+\item \code{x_min}: lower x-axis limit. If \code{NULL} (default),
+x_minimum is inferred internally from the \code{xvar}
+\item \code{x_max}: upper x-axis limit. If \code{NULL} (default),
+x_minimum is inferred internally from the \code{xvar}
+\item \code{n}: number of breaks.
+\item \code{by}: optional step size for breaks.
+\item \code{xaxis_fun}: transformation used for break placement and
+inverse labeling, for example \code{"identity"}, \code{"log"}, \code{"log10"},
+\code{"sqrt"}, or \code{"square"}, or a function
+\item \code{spacing}: either \code{"data"} or \code{"trans"}.
+\item \code{accuracy}: label accuracy.
+\item \code{expand_mult}: scale expansion multiplier.
+\item \code{use_coord_limits}: logical; if \code{TRUE}, zoom with
+\code{ggplot2::coord_cartesian()}.
+\item \code{coord_pad_mult}: multiplicative padding added to both x-axis ends.
+\item \code{coord_pad_add}: additive padding added to both x-axis ends.
+}}
 
 \item{scale}{Either \code{"response"} or \code{"linear"}.
 If \code{"response"}, results are returned on the scale

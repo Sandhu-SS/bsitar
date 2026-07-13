@@ -222,13 +222,12 @@ expose_model_functions.bgmfit <- function(model,
         c_model <- cmdstan_model(write_stan_file(exposecode),
                                  quiet = TRUE,
                                  cpp_options = attr(model$fit, 'cpp_options'),
-                                 # stanc_options = attr(model$fit, 'stanc_options'),
+                                 #stanc_options=attr(model$fit,'stanc_options'),
                                  dir = NULL,
                                  pedantic = FALSE,
-                                 include_paths = attr(model$fit, 'include_paths'),
+                                 include_paths=attr(model$fit, 'include_paths'),
                                  user_header = NULL,
                                  compile_model_methods = FALSE,
-                                 compile_hessian_method = FALSE,
                                  force_recompile = TRUE,
                                  compile_standalone = TRUE)
         c_model$expose_model
@@ -304,8 +303,8 @@ expose_model_functions.bgmfit <- function(model,
         for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
           if(!grepl("::", model$model_info$sigmabasicfunlist_r[funi]) &
              !grepl(":::", model$model_info$sigmabasicfunlist_r[funi])) {
-            assign(gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi]),
-                   ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
+            assign(gsub("<-.*$", "",model$model_info$sigmabasicfunlist_r[funi]),
+                   ept(model$model_info$sigmabasicfunlist_r[funi]),envir=envir)
           } 
         } 
       }
@@ -411,7 +410,7 @@ expose_model_functions.bgmfit <- function(model,
     if(!is_emptyx(model$model_info$sigmabasicfunlist_r)) {
       if(expose_sigma_basic_model_fun) {
         for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
-          name_ix <- gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi])
+          name_ix <-gsub("<-.*$", "",model$model_info$sigmabasicfunlist_r[funi])
           assign(name_ix,
                  ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
           Spl_funs[[name_ix]] <- ept(model$model_info$sigmabasicfunlist_r[funi])

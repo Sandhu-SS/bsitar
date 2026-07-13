@@ -563,6 +563,8 @@ predict_draws.bgmfit <-
           }
         }
         
+        if(is.null(difx)) difx <- xvar
+        
         if(sigma_model != "ls" && need_velocity_curve) {
           xvar <- check_set_xvar_sigma(model = model, 
                                        dpar = dpar, 
@@ -659,6 +661,7 @@ predict_draws.bgmfit <-
             mapderivqr_args[['summary']] <- calling.args[['summary']]
             mapderivqr_args[['robust']] <- calling.args[['robust']]
             mapderivqr_args[['dpar']] <- calling.args[['dpar']]
+            mapderivqr_args[['cov']] <- calling.args[['cov']]
             mapderivqr_args[['verbose']] <- calling.args[['verbose']]
             . <- CustomDoCall(mapderivqr, mapderivqr_args)
           }
@@ -720,6 +723,7 @@ predict_draws.bgmfit <-
             mapderivqr_args[['summary']] <- calling.args[['summary']]
             mapderivqr_args[['robust']] <- calling.args[['robust']]
             mapderivqr_args[['dpar']] <- calling.args[['dpar']]
+            mapderivqr_args[['cov']] <- calling.args[['cov']]
             mapderivqr_args[['verbose']] <- calling.args[['verbose']]
             . <- CustomDoCall(mapderivqr, mapderivqr_args)
           }

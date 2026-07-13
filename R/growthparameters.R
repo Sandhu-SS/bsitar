@@ -653,7 +653,8 @@ growthparameters.bgmfit <- function(model,
   if(xcall != 'plot_curves') {
     need_velocity_curve <- TRUE
     need_xvar_must      <- TRUE
-    arguments$model$model_info[['difx']] <- difx
+    if(is.null(difx)) difx <- xvar
+    arguments$model$model_info[['difx']] <- arguments[['difx']] <- difx
     if(dpar == "sigma") {
       sigma_model <- get_sigmamodel_info(model = model,
                                          newdata = newdata,
@@ -1187,8 +1188,13 @@ growthparameters.bgmfit <- function(model,
       }
     }
     
+    if(is.null(attr(newdata, 'ipts_nocall'))) {
+      attr(newdata, 'ipts_nocall') <- TRUE
+    }
+    
     list_c <- attr(newdata, 'list_c')
     if(is.null(list_c)) {
+      if(attr(newdata, 'ipts_nocall'))
       newdata <- get.newdata(model, 
                              newdata = newdata, 
                              xvar = xvar,
@@ -1219,6 +1225,8 @@ growthparameters.bgmfit <- function(model,
     for (check___ in check__) {
       if(!exists(check___)) assign(check___, NULL)
     }
+    
+    if(is.null(uvarby)) uvarby <- NA
     
     newdata___ <- newdata
     
