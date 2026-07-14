@@ -7374,6 +7374,7 @@ plot_equivalence_test <-  function(x,
 checkresp_info <- function(model, resp) {
   uvarby <- model$model_info$univariate_by$by
   if(is.null(uvarby)) uvarby <- NA 
+  if(is.null(resp)) check_resp_str <- FALSE else check_resp_str <- TRUE
   error_message <- NULL
   if (model$model_info$nys == 1 & !is.null(resp)) {
     error_message <-  
@@ -7414,6 +7415,35 @@ checkresp_info <- function(model, resp) {
   if(!is.null(error_message)) {
     error_message <- stop2c(clean_text_spaces(error_message))
   }
+  
+  if(check_resp_str) {
+    if (!is.na(uvarby)) {
+      model_str <- 'univariate_by'
+    } else if (model$model_info$multivariate$mvar) {
+      model_str <- 'multivariate'
+    } else {
+      model_str <- 'univariate'
+    }
+    if(!resp %in% model$model_info$yvars) {
+      error_message <- sprintf(
+        "You have fit a '%s' model but did not set the \n '%s' argument 
+        correctly (which is '%s' at present).\n  The avaialble 
+        response options are: %s",
+        model_str,
+        "resp",
+        resp,
+        collapse_comma(model$model_info$yvars)
+      )
+    } else {
+      error_message <- NULL
+    }
+    if(model_str != 'univariate') {
+      if(!is.null(error_message)) {
+        error_message <- stop2c(clean_text_spaces(error_message))
+      }
+    }
+  }
+  
   return(invisible(NULL))
 }
 

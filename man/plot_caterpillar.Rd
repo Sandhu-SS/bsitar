@@ -6,12 +6,13 @@
 \title{Caterpillar plot for bsitar random effects}
 \usage{
 \method{plot_caterpillar}{bgmfit}(
-  model,
+  model = NULL,
   group = NULL,
   groupby = NULL,
   effect = NULL,
   transform_parameter = NULL,
   transform_fun = NULL,
+  pdata = NULL,
   probs = c(0.025, 0.975),
   conf = NULL,
   robust = FALSE,
@@ -20,7 +21,7 @@
   dpar = NULL,
   levels_id = NULL,
   idvar = NULL,
-  layout = "single",
+  layout = NULL,
   linecolor = NULL,
   linecolor1 = NULL,
   linecolor2 = NULL,
@@ -35,13 +36,20 @@
   linetype.groupby = NA,
   color.groupby = NULL,
   fill.groupby = NULL,
-  point_color = "#1f4e79",
-  interval_color = "#1f4e79",
+  point_size = NULL,
+  point_color = NULL,
+  interval_color = NULL,
   combine = TRUE,
   ncol = NULL,
+  wrap_plots_ncol = NULL,
+  wrap_plots_nrow = NULL,
+  facet_ncol = NULL,
+  facet_nrow = NULL,
+  scales = "fixed",
+  space = "fixed",
   patch_plot.margin = ggplot2::margin(10, 0, 10, 0),
   each_object = FALSE,
-  refline = 0,
+  refline = NULL,
   dodge = 0.4,
   envir = NULL,
   verbose = FALSE,
@@ -84,6 +92,11 @@ transformation keys used by the method.
 }
 Each function must accept a numeric vector and return a numeric vector of
 the same length.}
+
+\item{pdata}{An optional parameter data frame in wide format where parameter
+name and key variable such as \code{Estimate} are named as
+\code{effect.Estimate}. Currently ignored. Included here for future
+expansion.}
 
 \item{probs}{Numeric vector of length 2 giving the lower and upper credible
 interval probabilities passed to \code{\link[brms:ranef.brmsfit]{brms::ranef()}}. Default is
@@ -194,13 +207,16 @@ and velocity curves for \code{covariates} or individual-specific curves. If
 \code{NULL} (default), then fill color is set same as the
 \code{color.groupby}.}
 
-\item{point_color}{Color used for the posterior mean points. If \code{NULL},
-the color is set internally to \code{"#1f4e79"} when \code{groupby} is
-\code{NULL}; otherwise, distinct colors are used for each level of the
-\code{groupby} variable.}
+\item{point_size}{Size used for the posterior mean points. When \code{NULL}
+(default), the size is set internally to \code{1.5}.}
 
-\item{interval_color}{Color used for the posterior interval lines. If
-\code{NULL}, the color is set internally to \code{"#1f4e79"} when
+\item{point_color}{Color used for the posterior mean points. When \code{NULL}
+(default), the color is set internally to \code{"#1f4e79"} if
+\code{groupby} is \code{NULL}; otherwise, distinct colors are used for each
+level of the \code{groupby} variable.}
+
+\item{interval_color}{Color used for the posterior interval lines. When
+\code{NULL} (default), the color is set internally to \code{"#1f4e79"} if
 \code{groupby} is \code{NULL}; otherwise, distinct colors are used for each
 level of the \code{groupby} variable.}
 
@@ -212,6 +228,33 @@ function returns the individual plot objects without combining them.}
 columns for \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. If \code{NULL}, then number of
 columns is set as \code{2}.}
 
+\item{wrap_plots_ncol}{Optional integer set the number of columns for the
+\code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. Default is \code{NULL}, which allows internally
+setting the \code{wrap_plots_ncol} based on the number of plots.}
+
+\item{wrap_plots_nrow}{Optional integer set the number of rows for the
+\code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}. Default is \code{NULL}, which allows internally
+setting the \code{wrap_plots_nrow} based on the number of plots.}
+
+\item{facet_ncol}{Optional integer set the number of columns for the
+\code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}}. Default is \code{NULL}, which allows internally
+setting the \code{facet_ncol} based on the number of plots.}
+
+\item{facet_nrow}{Optional integer set the number of rows for the
+\code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}}. Default is \code{NULL}, which allows internally
+setting the \code{facet_ncol} based on the number of plots.}
+
+\item{scales}{Should scales be fixed (\code{"fixed"}, the default),
+free (\code{"free"}), or free in one dimension (\code{"free_x"},
+\code{"free_y"})?}
+
+\item{space}{If \code{"fixed"} (default), all panels have the same size and
+the number of rows and columns in the layout can be arbitrary. If
+\code{"free_x"}, panels have widths proportional to the length of the x-scale,
+but the layout is constrained to one row. If \code{"free_y"}, panels have
+heights proportional to the length of the y-scale, but the layout is
+constrained to one column.}
+
 \item{patch_plot.margin}{Optional margin specification passed to
 \pkg{patchwork}.}
 
@@ -219,8 +262,12 @@ columns is set as \code{2}.}
 to return each plot object (combined and individual plots) or only the
 combined when multiple plots are requested.}
 
-\item{refline}{Numeric value for the vertical reference line. Default is
-\code{0}.}
+\item{refline}{Numeric value for the vertical reference line. The default is
+\code{NULL}, which is internally treated as \code{0}. Note that the same
+transformation is applied to \code{refline} as specified by
+\code{transform_parameter}. For example, if the \code{parameter} \code{'c'}
+is transformed using \code{'exp'}, then \code{refline = 0} is transformed
+to \code{refline = exp(0)}, that is, \code{refline = 1}.}
 
 \item{dodge}{Width used to control the horizontal thickness of the interval
 bars.}
@@ -258,8 +305,8 @@ are on the transformed scale.
 \donttest{
 # Fit Bayesian SITAR model 
 
-# To avoid mode estimation which takes time, the Bayesian SITAR model is fit to 
-# the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
+# To avoid mode estimation which takes time, the Bayesian SITAR model is fit  
+# to the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check and confirm whether the model fit object 'berkeley_exfit' exists
