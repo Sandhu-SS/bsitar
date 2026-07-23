@@ -12731,7 +12731,7 @@ bsitar <- function(x,
   } else if(initsi[[1]] == 'custom') {
     if(!is.null(init_custom)) full_custom <- TRUE
   }
-
+  
   exe_model_fit <- TRUE
   if(get_stancode |
      get_standata |
@@ -12765,7 +12765,7 @@ bsitar <- function(x,
       }
      } 
   } 
-
+  
   fit_edited_scode_exe_model_fit <- exe_model_fit
   exe_model_fit                  <- TRUE
   if(exe_model_fit) {
@@ -12882,6 +12882,7 @@ bsitar <- function(x,
     brm_args <- sanitize_algorithm_args(args = brm_args,
                                         algorithm = brm_args$algorithm,
                                         verbose = FALSE)
+    
     if(is.logical(pathfinder_init)) {
       if(!pathfinder_init) pathfinder_init <- FALSE
       if( pathfinder_init) pathfinder_init <- TRUE
@@ -12890,6 +12891,7 @@ bsitar <- function(x,
         pathfinder_init <- TRUE
       }
     }
+    
     if(brm_args$backend == "cmdstanr" | !is.null(pathfinder_args) | 
        pathfinder_init) {
       clinenumber <- getOption("cmdstanr.print_line_numbers")
@@ -12904,7 +12906,7 @@ bsitar <- function(x,
       options("cmdstanr_warn_inits" = FALSE)
       on.exit(options("cmdstanr_warn_inits" = cwarninits), add = TRUE)
     }
-  
+    
     if(is.null(brm_args$threads$threads)) {
       if(brm_args$backend == "cmdstanr") {
         brm_args$stan_model_args$stanc_options <- NULL
@@ -13195,6 +13197,7 @@ bsitar <- function(x,
         return(brm_args$stanvars)
       }
     } 
+    
     if(fit_edited_scode) {
       if(verbose) message2c("Fitting model via edited stancode...")
       if(brm_args$backend == "cmdstanr") {

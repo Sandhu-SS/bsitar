@@ -7031,6 +7031,12 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
 #'
 sanitize_algorithm_args <- function(args, algorithm, verbose = FALSE) {
   if(!is.character(algorithm)) stop2c('algorithm must be a character')
+  if(algorithm == "sampling" | 
+     algorithm == "meanfield" |
+     algorithm == "fullrank" |
+     algorithm == "fixed_param") {
+    return(args)
+  }
   pathfinderargs <- c('save_latent_dynamics', 'output_dir',
                       'output_basename', 'sig_figs', 
                       'threads', 'init_alpha', 'tol_obj',

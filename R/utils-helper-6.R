@@ -845,8 +845,6 @@ GS_rcs_call_stan_R_str <- function() {
              matrix[N, nk] temp_basis; 
              temp_basis[:, 1] = rep_vector(0.0, N); 
              temp_basis[:, 2] = rep_vector(0.0, N); 
-             print(temp_basis);
-             print(basis_evals);
              temp_basis[:, 3:(nk - 0)] = basis_evals[:, 2:(nk - 1)]; 
              return temp_basis;
         } else {
