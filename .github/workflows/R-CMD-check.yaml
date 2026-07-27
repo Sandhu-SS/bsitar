@@ -117,9 +117,9 @@ jobs:
         shell: Rscript {0}
       
       # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
-      - name: Setup Rtools (Windows only)
-        if: runner.os == 'Windows'
-        uses: r-lib/actions/setup-rtools@v2
+      #- name: Setup Rtools (Windows only)
+       # if: runner.os == 'Windows'
+        #uses: r-lib/actions/setup-rtools@v2
 
       - name: Install rstan from source
         if: runner.os == 'Windows'
@@ -136,7 +136,7 @@ jobs:
           cmdstanr::install_cmdstan(cores = parallel::detectCores())
         shell: Rscript {0}
 
-        
+
 
       - uses: r-lib/actions/check-r-package@v2
         with:
