@@ -80,8 +80,10 @@ jobs:
             ggdist,
             modelsummary,
             projpred,
-            sitar,
-            rstan
+            sitar
+
+
+
 
       # Some issues with processx package, so install it
       - name: Install dependencies
@@ -90,6 +92,19 @@ jobs:
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
       
+      # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
+      - name: Setup Rtools (Windows only)
+        if: runner.os == 'Windows'
+        uses: r-lib/actions/setup-rtools@v2
+
+      - name: Install rstan from source
+        if: runner.os == 'Windows'
+        run: |
+          install.packages("StanHeaders", type = "source")
+          install.packages("rstan", type = "source")
+        shell: Rscript {0}
+
+
       # Build Cmdstan
       - name: Build Cmdstan
         run: |
