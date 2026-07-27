@@ -106,7 +106,8 @@ jobs:
             ggdist,
             modelsummary,
             projpred,
-            sitar
+            sitar,
+            rstan
 
 
   

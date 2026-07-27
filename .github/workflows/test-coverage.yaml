@@ -80,7 +80,8 @@ jobs:
             ggdist,
             modelsummary,
             projpred,
-            sitar
+            sitar,
+            rstan
 
       # Some issues with processx package, so install it
       - name: Install dependencies
