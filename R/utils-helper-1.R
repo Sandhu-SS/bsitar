@@ -5301,7 +5301,7 @@ check_if_cmdstanr_available <- function() {
 brms_via_cmdstanr <- function(scode, 
                               sdata, 
                               brm_args, 
-                              brms_arguments,
+                              brms_arguments = list(),
                               pathfinder_args = NULL,
                               pathfinder_init = FALSE,
                               Rescor_by_levels = NULL, 
@@ -5351,8 +5351,23 @@ brms_via_cmdstanr <- function(scode,
                             compile_model_methods = FALSE,
                             # compile_hessian_method = FALSE,
                             compile_standalone = FALSE)
-  iter_sampling <- brm_args$iter - brm_args$warmup
-  iter_warmup   <- brm_args$warmup
+  # iter_sampling <- brm_args$iter - brm_args$warmup
+  # iter_warmup   <- brm_args$warmup
+  if(is.null(brm_args$warmup)) {
+    if(!is.null(brm_args$iter)) {
+      brm_args$warmup <- floor(brm_args$iter / 2)
+    }
+  }
+  if(is.null(brm_args$iter_sampling)) {
+    iter_sampling <- brm_args$iter - brm_args$warmup
+  } else {
+    iter_sampling <- brm_args$iter_sampling
+  }
+  if(is.null(brm_args$iter_warmup)) {
+    iter_warmup <- brm_args$warmup
+  } else {
+    iter_warmup <- brm_args$iter_warmup
+  }
   call_pathfinder_ <- FALSE
   if(pathfinder_init | !is.null(pathfinder_args)) {
     call_pathfinder_ <- TRUE
@@ -5462,9 +5477,14 @@ brms_via_cmdstanr <- function(scode,
 brms_via_rstan <- function(scode, 
                            sdata, 
                            brm_args, 
-                           brms_arguments,
+                           brms_arguments = list(),
                            Rescor_by_levels = NULL,
                            verbose = FALSE) {
+  if(is.null(brm_args$warmup)) {
+    if(!is.null(brm_args$iter)) {
+      brm_args$warmup <- floor(brm_args$iter / 2)
+    }
+  }
   if(!is.null(brm_args$threads$threads)) {
     stan_threads <- TRUE
   } else {
