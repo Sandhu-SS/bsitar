@@ -13,6 +13,11 @@
 #'   documented here
 #'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
 #'   If \code{NULL} (default), method \code{'m1'} is automatically set. 
+#'   
+#' @param data_exp A character vector that create new variable matrix based on
+#'   the data column such as \code{"splines::ns(logagem, df = 3)"} used in the
+#'   \code{sigma_formual} argument. If \code{NULL} (default), then the
+#'   \code{data_exp} is automatically inferred from the the \code{model}.
 #' 
 #' @return A data frame object. 
 #' @inheritParams  growthparameters.bgmfit 
@@ -38,7 +43,11 @@ get.newdata <- function(model,
                         newdata_fixed = NULL,
                         xrange_search = NULL,
                         cov = NULL,
-                        verbose = FALSE) {
+                        verbose = FALSE,
+                        data_exp = NULL) {
+  
+  exe_data_exp <- FALSE # not calling eval_data_exp() 
+  
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
@@ -186,6 +195,9 @@ get.newdata <- function(model,
     } else if(newdata_fixed == 2) {
       newdata <- prepare_transformations(data = newdata, model = model)
     } else if(newdata_fixed == 3) {
+      if(exe_data_exp)
+      newdata <- eval_data_exp(newdata = newdata, model = model,
+                               data_exp = data_exp, verbose = verbose)
       return(newdata) # i.e., not even applied 'dummy_to_factor' and return
     } else {
       stop("'newdata_fixed' should be either NULL or an integer, 1, 2, or 3")
@@ -286,6 +298,9 @@ get.newdata <- function(model,
     if(is.null(list_c[['uvarby']])) {
       list_c[['uvarby']] <- NA
     }
+    if(exe_data_exp)
+    newdata <- eval_data_exp(newdata = newdata, model = model,
+                             data_exp = data_exp, verbose = verbose)
     attr(newdata, 'list_c') <- list_c
     return(newdata)
   }
@@ -695,6 +710,9 @@ get.newdata <- function(model,
           newdata <- newdata
         }
       } 
+      if(exe_data_exp)
+      newdata <- eval_data_exp(newdata = newdata, model = model,
+                               data_exp = data_exp, verbose = verbose)
       return(newdata)
     }
   newdata <- i_data(
@@ -733,6 +751,9 @@ get.newdata <- function(model,
   if(is.null(list_c[['uvarby']])) {
     list_c[['uvarby']] <- NA
   }
+  if(exe_data_exp)
+  newdata <- eval_data_exp(newdata = newdata, model = model,
+                           data_exp = data_exp, verbose = verbose)
   attr(newdata, 'list_c') <- list_c
   if(newdata_was_data_table) {
     newdata <- data.table::as.data.table(newdata)

@@ -65,9 +65,9 @@
 #'   Common elements include:
 #'   \itemize{
 #'     \item `x_min`: lower x-axis limit. If \code{NULL} (default),
-#'     x_minimum is inferred internally from the \code{xvar}
+#'     x_min is inferred internally from the \code{xvar}
 #'     \item `x_max`: upper x-axis limit. If \code{NULL} (default),
-#'     x_minimum is inferred internally from the \code{xvar}
+#'     x_max is inferred internally from the \code{xvar}
 #'     \item `n`: number of breaks.
 #'     \item `by`: optional step size for breaks.
 #'     \item `xaxis_fun`: transformation used for break placement and
@@ -401,8 +401,8 @@ plot_curves.bgmfit <- function(model,
     addylab_v <- "Velocity"
   }
   if(dpar == 'sigma') {
-    addylab_d <- "Sigma"
-    addylab_v <- "Sigma Rate"
+    addylab_d <- "RSD"
+    addylab_v <- "RSD Rate"
   }
   addylab_dv <- c(addylab_d, addylab_v)
 
@@ -1106,8 +1106,12 @@ plot_curves.bgmfit <- function(model,
   name.hline <- c()
   x_minimum <- min(newdata[[Xx]])
   x_maximum <- max(newdata[[Xx]])
+  
+  x_minimumx <<- x_minimum
+  x_maximumx <<- x_maximum
+  
   x_minimum <- floor(x_minimum)
-  x_maximum <- floor(x_maximum)
+  x_maximum <- ceiling(x_maximum)
   
   single_plot_pair_color_dv_au <- c('black', 'red')
   if (nchar(opt) > 2) {
@@ -1127,15 +1131,20 @@ plot_curves.bgmfit <- function(model,
       color.unadj <- "green4"
   }
   
+  
   if (is.null(label.y)) {
-    label.d     <- firstup(curve.d)
-    label.v     <- firstup(curve.v)
+    label.d     <- addylab_d # firstup(curve.d)
+    label.v     <- addylab_v # firstup(curve.v)
     label.adj   <- firstup('adjusted')
     label.unadj <- firstup('unadjusted')
   } else {
     label.d     <- label.v     <- label.y
     label.adj   <- label.unadj <- label.y
   }
+  
+  # Note that labs y = "", change them to addylab_d / addylab_v if needed
+  y_lab_d <- "" # addylab_d
+  y_lab_v <- "" # addylab_v
   
   if (is.null(label.x)) {
     label.x     <- paste0(Xx, "")
@@ -1257,7 +1266,7 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         add_build_scale_x + 
-        ggplot2::labs(x = "", y = "", title = label.d) +
+        ggplot2::labs(x = "", y = y_lab_d, title = label.d) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
@@ -1330,7 +1339,7 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         add_build_scale_x + 
-        ggplot2::labs(x = "", y = "", title = label.v) +
+        ggplot2::labs(x = "", y = y_lab_v, title = label.v) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
 

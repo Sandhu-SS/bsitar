@@ -6979,3 +6979,103 @@ match_arg_custom <- function(arg, choices, several.ok = FALSE) {
 
 
 
+#' Evaluate data expression string used by brms
+#' @details
+#' This is inserted in the [get.newdata()] function that create new variable 
+#' matrix based on the data column such as \code{"splines::ns(logagem, df = 3)"}
+#' used in the \code{sigma_formual} argument.
+#' 
+#' @noRd
+#' 
+eval_data_exp <- function(newdata = NULL, 
+                          model = NULL, 
+                          data_exp = NULL, 
+                          verbose = FALSE) {
+  
+  if(!is.null(model)) {
+    model_data <-  model$data
+    if(is.null(newdata)) {
+      newdata <- model_selected$model_info$bgmfit.data
+    }
+  } else if(is.null(model)) {
+    if(is.null(newdata)) newdata <- model_selected$model_info$bgmfit.data
+    model_data <-  newdata
+  }
+  
+  if(is.null(newdata)) stop("newdata must be a specified")
+  
+  if(!is.null(data_exp)) {
+    if(is.logical(data_exp)) {
+      if(!data_exp) return(newdata)
+    }
+  }
+  
+  names1 <- names(model_data) # names(model_selected$data)
+  names2 <- names(newdata) # names(model_selected$model_info$bgmfit.data)
+  
+  if(is.null(data_exp)) {
+    data_exp <- model_selected$model_info$data_exp
+  }
+  
+  if(is.null(data_exp)) {
+    data_exp <- setdiff(names1, names2)
+    if(length(data_exp) == 0) data_exp <- NULL
+  }
+  
+  data_exp <- NULL
+  
+  if(is.null(data_exp)) return(newdata)
+  
+  if(!is.character(data_exp)) stop("'data_exp' must be a character vector")
+
+  enverr. <- environment()
+  for (set_exp_ci in data_exp) {
+    assign('err.', FALSE, envir = enverr.)
+    tryCatch(
+      expr = {
+        newdata_mat <- with(newdata, ept(set_exp_ci))
+      },
+      error = function(e) {
+        assign('err.', TRUE, envir = enverr.)
+      }
+    )
+    err. <- get('err.', envir = enverr.)
+    if (err.) {
+      message(set_exp_ci , " could not be evaluated using 'eval_data_exp'")
+    } else if (!err.) {
+      newdata[[set_exp_ci]] <- newdata_mat
+    }
+  } # for (set_exp_ci in data_exp) {
+  
+  # print(head(newdata))
+  # print(data_exp)
+  
+  # for (set_exp_ci in data_exp) {
+  #   newdata_mat <- with(newdata, bsitar:::ept(set_exp_ci))
+  #   # colnames(newdata_mat) <- paste0(set_exp_ci, ".", colnames(newdata_mat)) 
+  #   # newdata <- cbind(newdata, newdata_mat)
+  #   newdata[[set_exp_ci]] <- newdata_mat
+  # }
+  # names(newdata)
+  
+  return(newdata)
+}
+
+
+# set_exp_c <- c("splines::ns(logagem, df = 3)", 
+#                "stats::poly(age, defree = 2)")
+# model_selected <- berkeley_exfit
+# newdata <- berkeley_exfit$data
+# newdata <- berkeley_exfit$model_info$bgmfit.data
+# eval_data_exp(newdata = newdata, model = NULL, 
+#               data_exp = NULL, verbose = FALSE) %>% head()
+
+
+# set_exp_c <- c("splines::ns(logagem, df = 3)", 
+#                "stats::poly(age, defree = 2)")
+# # model_selected <- berkeley_exfit
+# newdata <- model_selected$data
+# newdata <- model_selected$model_info$bgmfit.data
+# eval_data_exp(newdata = newdata, model = model_selected, 
+#               data_exp = NULL, verbose = FALSE) %>% head()
+

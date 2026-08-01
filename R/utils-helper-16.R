@@ -2038,7 +2038,7 @@ loop_opt_bands <- function(opti,
   x_minimum <- min(newdata[[Xx]])
   x_maximum <- max(newdata[[Xx]])
   x_minimum <- floor(x_minimum)
-  x_maximum <- floor(x_maximum)
+  x_maximum <- ceiling(x_maximum)
   single_plot_pair_color_dv_au <- c('black', 'red')
   if (nchar(opt) > 2) {
     layout <- 'facet'
@@ -2063,6 +2063,11 @@ loop_opt_bands <- function(opti,
     label.d     <- label.v     <- label.y
     label.adj   <- label.unadj <- label.y
   }
+  # Note that labs y = "", change them to addylab_d / addylab_v if needed
+  y_lab_d <- "" # addylab_d
+  y_lab_v <- "" # addylab_v
+  y_lab_o <- "" # "Observed Trajectories"
+  
   if (is.null(label.x)) {
     label.x     <- paste0(Xx, "")
   }
@@ -2177,7 +2182,7 @@ loop_opt_bands <- function(opti,
           linewidth = linewidth.main
         ) +
         add_build_scale_x + 
-        ggplot2::labs(x = "", y = "", title = "Observed") +
+        ggplot2::labs(x = "", y = y_lab_o, title = "Observed") +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
     }
@@ -2233,7 +2238,7 @@ loop_opt_bands <- function(opti,
           linewidth = linewidth.main
         ) +
         add_build_scale_x + 
-        ggplot2::labs(x = "", y = "", title = label.d) +
+        ggplot2::labs(x = "", y = y_lab_d, title = label.d) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       if (grepl("d", bands, ignore.case = T)) {
@@ -2300,7 +2305,7 @@ loop_opt_bands <- function(opti,
           linewidth = linewidth.main
         ) +
         add_build_scale_x + 
-        ggplot2::labs(x = "", y = "", title = label.v) +
+        ggplot2::labs(x = "", y = y_lab_v, title = label.v) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       if (grepl("v", bands, ignore.case = T)) {
