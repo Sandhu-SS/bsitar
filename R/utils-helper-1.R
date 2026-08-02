@@ -5705,7 +5705,7 @@ plot_lositic3 <- function(model,
           fixed_[1,1], fixed_[2,1], fixed_[3,1],
           fixed_[4,1], fixed_[5,1], fixed_[6,1],
           fixed_[7,1], fixed_[8,1], fixed_[9,1])
-  getfb <- transform.sec.axis(pob$data$Estimate.x, pob$data$Estimate.y)
+  getfb <- transform_sec_axis(pob$data$Estimate.x, pob$data$Estimate.y)
   xyvelocity_1 <-
     Funx1(xintercept_1,
           fixed_[1,1], fixed_[2,1], fixed_[3,1],
@@ -6691,35 +6691,8 @@ refine_grid <- function(fullgrid = NULL,
 
 ### avoid ggtext - it depends on jpeg whihc fails rmdcheck on ubuntu
 
-#' Title
-#'
-#' @param family 
-#' @param face 
-#' @param size 
-#' @param colour 
-#' @param fill 
-#' @param box.colour 
-#' @param linetype 
-#' @param linewidth 
-#' @param hjust 
-#' @param vjust 
-#' @param halign 
-#' @param valign 
-#' @param angle 
-#' @param lineheight 
-#' @param margin 
-#' @param padding 
-#' @param r 
-#' @param color 
-#' @param box.color 
-#' @param align_widths 
-#' @param align_heights 
-#' @param rotate_margins 
-#' @param debug 
-#' @param inherit.blank 
-#'
-#' @return A \code{aes()} object
-#' @keywords internal
+#' Title ggtextelementmarkdown
+#' 
 #' @noRd
 #'
 ggtextelementmarkdown <- function (family = NULL, 

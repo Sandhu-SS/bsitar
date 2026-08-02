@@ -220,7 +220,7 @@ of the \pkg{bayesplot} package.
 }
 \details{
 The \strong{plot_ppc()} function is a wrapper around the
-\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} function, which allows for the visualization of
+\code{\link[brms:pp_check]{brms::pp_check()}} function, which allows for the visualization of
 posterior predictive checks.
 }
 \examples{

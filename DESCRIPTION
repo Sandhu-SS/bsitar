@@ -2,7 +2,7 @@ Type: Package
 Package: bsitar
 Title: Bayesian Super Imposition by Translation and Rotation Growth Curve
     Analysis
-Version: 0.3.3.9987
+Version: 0.3.3.9988
 Authors@R:
     person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", 
            role = c("aut", "cre", "cph"),
@@ -121,5 +121,5 @@ LazyLoad: no
 LazyDataCompression: xz
 NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+RoxygenNote: 8.0.0
 Language: en-US

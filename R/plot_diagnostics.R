@@ -189,8 +189,8 @@
 #' diagnostics. Residual-based plots are constructed with \pkg{tidybayes}, using
 #' posterior residual draws together with fitted-value draws from
 #' [tidybayes::add_epred_draws()], [tidybayes::add_linpred_draws()], or
-#' [tidybayes::add_predicted_draws()] MCMC diagnostics are produced through[
-#' brms::mcmc_plot()], which is a wrapper around plotting functionality from
+#' [tidybayes::add_predicted_draws()] MCMC diagnostics are produced through
+#' \code{'mcmc_plot'} which is a wrapper around plotting functionality from
 #' \pkg{bayesplot}. Posterior predictive checks are produced through
 #' [brms::pp_check()]
 #' 
@@ -204,7 +204,7 @@
 #' function: \code{".epred"}, \code{".linpred"}, \code{".prediction"}, and
 #' \code{".residual"}.
 #' 
-#' MCMC diagnostic plots are delegated to [brms::mcmc_plot()], which provides a
+#' MCMC diagnostic plots are delegated to \code{'mcmc_plot'} which provides a
 #' convenient wrapper around \pkg{bayesplot} diagnostics such as trace plots,
 #' autocorrelation plots, density overlays, R-hat, and effective sample size
 #' summaries. 

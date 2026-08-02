@@ -63,7 +63,7 @@ plot_caterpillar(model, ...)
 
 \item{group}{A character string specifying the grouping factor to plot. This
 is typically the individual identifier, such as \code{id}. If \code{group =
-  NULL} (the default), it is determined automatically from the model object.
+NULL} (the default), it is determined automatically from the model object.
 In most cases, \code{idvar} and \code{levels_id} are used to define the
 grouping structure, so \code{group} will rarely need to be specified
 manually.}
@@ -99,7 +99,7 @@ name and key variable such as \code{Estimate} are named as
 expansion.}
 
 \item{probs}{Numeric vector of length 2 giving the lower and upper credible
-interval probabilities passed to \code{\link[brms:ranef.brmsfit]{brms::ranef()}}. Default is
+interval probabilities passed to \code{\link[brms:ranef]{brms::ranef()}}. Default is
 \code{c(0.025, 0.975)}.}
 
 \item{conf}{A numeric value (default \code{0.95}) specifying the confidence
@@ -290,12 +290,12 @@ random effect.
 }
 \description{
 Create a caterpillar plot of group-level effects from a \code{bsitar} model using
-posterior summaries returned by \code{\link[brms:ranef.brmsfit]{brms::ranef()}}. When multiple plots are
+posterior summaries returned by \code{\link[brms:ranef]{brms::ranef()}}. When multiple plots are
 requested, plots are arranged and combined into a single display with
 \pkg{patchwork}.
 }
 \details{
-The function extracts group-level summaries using \code{\link[brms:ranef.brmsfit]{brms::ranef()}} with
+The function extracts group-level summaries using \code{\link[brms:ranef]{brms::ranef()}} with
 \code{summary = TRUE}, then plots posterior means and credible intervals for
 the selected grouping factor and effect. If transformations are requested,
 they are applied before summarizing the draws so that the plotted summaries

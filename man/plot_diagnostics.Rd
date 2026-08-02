@@ -88,46 +88,46 @@ residuals plotted against predictor values derived from posterior draws.}
 residuals.}
 \item{\code{"qq"}}{Same as \code{"qqp"}.}
 \item{\code{"pairs"}}{Pair plots for MCMC draws via
-\code{\link[bayesplot:MCMC-scatterplots]{bayesplot::mcmc_pairs()}}.}
+\code{\link[bayesplot:mcmc_pairs]{bayesplot::mcmc_pairs()}}.}
 \item{\code{"acfp"}}{Autocorrelation plots of parameters for MCMC draws via
-\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "acf"}.}
+\code{\link[brms:mcmc_plot]{brms::mcmc_plot()}} with \code{type = "acf"}.}
 \item{\code{"acfr"}}{Autocorrelation plots of residuals via
 custom acf_residuals_custom function.}
 \item{\code{"acf"}}{Same as \code{"acfr"}.}
 \item{\code{"trace"}}{Trace plots for selected parameters via
-\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "trace"}.}
+\code{\link[brms:mcmc_plot]{brms::mcmc_plot()}} with \code{type = "trace"}.}
 \item{\code{"dens_overlay"}}{Density overlays for selected parameters via
-\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "dens_overlay"}.}
+\code{\link[brms:mcmc_plot]{brms::mcmc_plot()}} with \code{type = "dens_overlay"}.}
 \item{\code{"rhat"}}{Potential scale reduction diagnostics via
-\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "rhat"}.}
+\code{\link[brms:mcmc_plot]{brms::mcmc_plot()}} with \code{type = "rhat"}.}
 \item{\code{"rhat_hist"}}{Potential scale reduction diagnostics via
-\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "rhat_hist"}.}
+\code{\link[brms:mcmc_plot]{brms::mcmc_plot()}} with \code{type = "rhat_hist"}.}
 \item{\code{"neff"}}{Effective sample size diagnostics via
-\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "neff"}.}
+\code{\link[brms:mcmc_plot]{brms::mcmc_plot()}} with \code{type = "neff"}.}
 \item{\code{"ppc_overlay"}}{Posterior predictive density overlay via
-\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "dens_overlay"}.}
+\code{\link[brms:pp_check]{brms::pp_check()}} with \code{type = "dens_overlay"}.}
 \item{\code{"ppc_hist"}}{Posterior predictive histogram via
-\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "hist"}.}
+\code{\link[brms:pp_check]{brms::pp_check()}} with \code{type = "hist"}.}
 \item{\code{"ppc_scatter"}}{Posterior predictive observed-versus-replicated
-average scatter plot via \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type =
-    "scatter_avg"}.}
+average scatter plot via \code{\link[brms:pp_check]{brms::pp_check()}} with \code{type =
+  "scatter_avg"}.}
 \item{\code{"ppc_stat"}}{Posterior predictive check for a summary statistic
-via \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "stat"}.}
+via \code{\link[brms:pp_check]{brms::pp_check()}} with \code{type = "stat"}.}
 }}
 
 \item{set_draws}{Character scalar indicating which fitted-value draw type to
 use for the residual-versus-fitted plot. Must be one of:
 \describe{
 \item{\code{"epred"}}{Expected posterior predictive values from
-\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_epred_draws()}}. This is usually the preferred option when
+\code{\link[tidybayes:add_epred_draws]{tidybayes::add_epred_draws()}}. This is usually the preferred option when
 available.}
 \item{\code{"linpred"}}{Linear predictor values from
-\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_linpred_draws()}}.}
+\code{\link[tidybayes:add_linpred_draws]{tidybayes::add_linpred_draws()}}.}
 \item{\code{"prediction"}}{Posterior predictive draws from
 \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_predicted_draws()}}.}
 }
 The \pkg{tidybayes} documentation recommends using expectation-scale
-predictions from \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_epred_draws()}} when available, because
+predictions from \code{\link[tidybayes:add_epred_draws]{tidybayes::add_epred_draws()}} when available, because
 these correspond to the expectation of the posterior predictive
 distribution more directly than the linear predictor in many models.}
 
@@ -177,7 +177,7 @@ standard-error ribbon.}
 residual-versus-fitted plot. The default is \code{"lm"}.}
 
 \item{ppc_stat}{Summary statistic to use when \code{plots} includes
-\code{"ppc_stat"}. This value is passed to \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} as
+\code{"ppc_stat"}. This value is passed to \code{\link[brms:pp_check]{brms::pp_check()}} as
 \code{type = "stat", stat = 'ppc_stat'}.}
 
 \item{rank_overlay}{Logical; if \code{TRUE}, sets the \pkg{bayesplot} color
@@ -341,27 +341,28 @@ combined into a single display using \pkg{patchwork}.
 This function provides a single interface to several common Bayesian model
 diagnostics. Residual-based plots are constructed with \pkg{tidybayes}, using
 posterior residual draws together with fitted-value draws from
-\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_epred_draws()}}, \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_linpred_draws()}}, or
-\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_predicted_draws()}} MCMC diagnostics are produced through\link[brms:mcmc_plot.brmsfit]{ brms::mcmc_plot()}, which is a wrapper around plotting functionality from
+\code{\link[tidybayes:add_epred_draws]{tidybayes::add_epred_draws()}}, \code{\link[tidybayes:add_linpred_draws]{tidybayes::add_linpred_draws()}}, or
+\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_predicted_draws()}} MCMC diagnostics are produced through
+\code{'mcmc_plot'} which is a wrapper around plotting functionality from
 \pkg{bayesplot}. Posterior predictive checks are produced through
-\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}
+\code{\link[brms:pp_check]{brms::pp_check()}}
 
 Residual-based diagnostics are created by joining posterior residual draws
-from \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_residual_draws()}} with fitted-value draws from one of
-\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_epred_draws()}}, \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_linpred_draws()}}, or
+from \code{\link[tidybayes:add_residual_draws]{tidybayes::add_residual_draws()}} with fitted-value draws from one of
+\code{\link[tidybayes:add_epred_draws]{tidybayes::add_epred_draws()}}, \code{\link[tidybayes:add_linpred_draws]{tidybayes::add_linpred_draws()}}, or
 \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_predicted_draws()}}. The resulting joined draws are used for
 the residual-versus-fitted plot, and the residuals are summarized with
-\code{\link[tidybayes:reexports]{tidybayes::median_qi()}} before creating the Q-Q plot. The \pkg{tidybayes}
+\code{\link[tidybayes:median_qi]{tidybayes::median_qi()}} before creating the Q-Q plot. The \pkg{tidybayes}
 documentation notes that the default output column names depend on the draw
 function: \code{".epred"}, \code{".linpred"}, \code{".prediction"}, and
 \code{".residual"}.
 
-MCMC diagnostic plots are delegated to \link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}, which provides a
+MCMC diagnostic plots are delegated to \code{'mcmc_plot'} which provides a
 convenient wrapper around \pkg{bayesplot} diagnostics such as trace plots,
 autocorrelation plots, density overlays, R-hat, and effective sample size
 summaries.
 
-Posterior predictive checks are delegated to \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}, which
+Posterior predictive checks are delegated to \code{\link[brms:pp_check]{brms::pp_check()}}, which
 exposes \pkg{bayesplot} \code{PPC} types such as density overlays,
 histograms, average scatter checks, and statistic-based checks.
 }
@@ -420,9 +421,9 @@ res4 <- plot_diagnostics(
 
 }
 \seealso{
-\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}, \code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}},
-\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_residual_draws()}}, \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_epred_draws()}},
-\code{\link[tidybayes:add_predicted_draws]{tidybayes::add_linpred_draws()}}, \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_predicted_draws()}},
+\code{\link[brms:pp_check]{brms::pp_check()}}, \code{\link[brms:mcmc_plot]{brms::mcmc_plot()}},
+\code{\link[tidybayes:add_residual_draws]{tidybayes::add_residual_draws()}}, \code{\link[tidybayes:add_epred_draws]{tidybayes::add_epred_draws()}},
+\code{\link[tidybayes:add_linpred_draws]{tidybayes::add_linpred_draws()}}, \code{\link[tidybayes:add_predicted_draws]{tidybayes::add_predicted_draws()}},
 \code{\link[patchwork:wrap_plots]{patchwork::wrap_plots()}}
 }
 \author{

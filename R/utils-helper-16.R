@@ -2,6 +2,7 @@
 
 #' An internal function to get adjusted curves (for random effects)
 #' 
+#' @exportS3Method xyadj_curves bgmfit
 #' @noRd
 #'
 xyadj_curves.bgmfit <-
@@ -487,7 +488,8 @@ xyadj_curves <- function(model, ...) {
 
 
 #' Title An internal function to get unadjusted curves
-#' 
+#'
+#' @exportS3Method xyunadj_curves bgmfit
 #' @noRd
 #'
 xyunadj_curves.bgmfit <- function (model,
@@ -599,6 +601,7 @@ xyunadj_curves <- function(model, ...) {
 
 #' Title An internal function to trim growth curves
 #' 
+#' @exportS3Method trimlines_curves bgmfit
 #' @noRd
 #' 
 trimlines_curves.bgmfit <-
@@ -970,7 +973,7 @@ set_lines_colors_ribbon <- function(plot, guideby = NULL) {
 #' 
 #' @noRd
 #'
-transform.sec.axis <- function(primary,
+transform_sec_axis <- function(primary,
                                secondary,
                                na.rm = TRUE) {
   from <- range(secondary, na.rm = na.rm)
@@ -2530,7 +2533,7 @@ loop_opt_bands <- function(opti,
                 interaction(dplyr::across(dplyr::all_of(groupby_str_v))))
         }
       }
-      t.s.axis <- with(data_dv, transform.sec.axis(Estimate.x, Estimate.y))
+      t.s.axis <- with(data_dv, transform_sec_axis(Estimate.x, Estimate.y))
       if(is.na(uvarby)) {
         if(is.na(data_dv[['groupby.x']][1])) {
           legendlabs_mult_singel <- addylab_dv # c('Distance', 'Velocity')

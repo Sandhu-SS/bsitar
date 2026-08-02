@@ -51,6 +51,7 @@ make_standata_custom <- function(formula, ...) {
 #' str(sdata2)
 #'
 #' @keywords internal
+#' @exportS3Method standata_custom default
 #' @noRd
 standata_custom.default <- function(object, data, family = gaussian(), prior = NULL,
                              autocor = NULL, data2 = NULL, cov_ranef = NULL,
@@ -108,6 +109,13 @@ standata_custom.default <- function(object, data, family = gaussian(), prior = N
     threads = threads, ...
   )
 }
+
+#' @noRd
+#' @exportS3Method standata_custom default
+standata_custom <- function(object, ...) {
+  UseMethod("standata_custom")
+}
+
 
 .standata_custom <- function(bframe, data, prior, stanvars, data2,
                       threads = threading(), check_response = TRUE,
@@ -201,6 +209,7 @@ standata_custom.default <- function(object, data, family = gaussian(), prior = N
 #' @return A named list containing the data passed to Stan.
 #'
 #' @keywords internal
+#' @exportS3Method standata_custom brmsfit
 #' @noRd
 standata_custom.brmsfit <- function(object, newdata = NULL, re_formula = NULL,
                              newdata2 = NULL, new_objects = NULL,
@@ -239,5 +248,11 @@ standata_custom.brmsfit <- function(object, newdata = NULL, re_formula = NULL,
     data2 = data2, stanvars = stanvars,
     threads = object$threads, ...
   )
+}
+
+#' @noRd
+#' @exportS3Method standata_custom brmsfit
+standata_custom <- function(object, ...) {
+  UseMethod("standata_custom")
 }
 

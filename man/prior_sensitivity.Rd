@@ -72,7 +72,7 @@ prior_sensitivity(model, ...)
 \item{model}{A fitted model object from \code{bsitar}.}
 
 \item{variable}{Optional character vector of parameter or quantity names to
-assess. Passed to \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} and, when
+assess. Passed to \code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}} and, when
 plotting, to the corresponding \pkg{priorsense} plotting function.}
 
 \item{lower_alpha}{Lower alpha value for gradient calculation.}
@@ -142,15 +142,15 @@ following fit criteria using \code{\link[=add_model_criterion]{add_model_criteri
 \code{"loo_R2"}, \code{"jointlik"}, or \code{"margliklik"}.}
 
 \item{include_jointlik}{Logical; if \code{TRUE}, appends a \code{joint log-
-  likelihood} quantity using \code{\link[priorsense:predictions_as_draws]{priorsense::predictions_as_draws()}} with the
+likelihood} quantity using \code{\link[priorsense:predictions_as_draws]{priorsense::predictions_as_draws()}} with the
 custom \code{jointlik_fun} function. If \code{include_criterion} contains
 \code{"jointlik"}, \code{include_jointlik} is automatically set to
 \code{TRUE}.}
 
 \item{include_predictor}{A character string or named list specifying
 predictor-based quantities to append as \code{expected values at predictor
-  values}, using \code{\link[priorsense:predictions_as_draws]{priorsense::predictions_as_draws()}} with a custom call to
-\code{\link[brms:posterior_epred.brmsfit]{brms::posterior_epred()}}.}
+values}, using \code{\link[priorsense:predictions_as_draws]{priorsense::predictions_as_draws()}} with a custom call to
+\code{\link[brms:posterior_epred]{brms::posterior_epred()}}.}
 
 \item{name_predictor}{A character string or \code{NULL} (default). If
 \code{NULL}, \code{name_predictor} is set internally to \code{xvar}. Note
@@ -173,15 +173,15 @@ available.}
 \item{plot_return}{Optional logical indicating whether to print plot object.}
 
 \item{facet}{Optional value passed to \code{facet_rows} in
-\code{\link[priorsense:powerscale_plots]{priorsense::powerscale_plot_dens()}} and
-\code{\link[priorsense:powerscale_plots]{priorsense::powerscale_plot_ecdf()}}.}
+\code{\link[priorsense:powerscale_plot_dens]{priorsense::powerscale_plot_dens()}} and
+\code{\link[priorsense:powerscale_plot_ecdf]{priorsense::powerscale_plot_ecdf()}}.}
 
 \item{empty}{A string that is used to replace \code{NULL} values.}
 
 \item{print}{A logical to print the object.}
 
 \item{return_table}{Optional logical indicating whether to return the raw
-sensitivity object from \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} or a
+sensitivity object from \code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}} or a
 structured list with class attributes. Set \code{return_table = FALSE} if
 you plan to call \code{\link[=prior_conflict]{prior_conflict()}} later. Note that when
 \code{return_table = NULL} (the default), then it is internally set as
@@ -197,13 +197,13 @@ If \code{NULL}, the function returns \code{ft} unchanged.}
 
 \item{return_conflict}{Optional logical indicating whether to return the raw
 sensitivity results \code{return_conflict = FALSE} from
-\code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} or the \code{conflict}
+\code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}} or the \code{conflict}
 \code{return_conflict = TRUE} as evaluated using the \code{\link[=prior_conflict]{prior_conflict()}}.
 The \code{return_table} behavior is same whether \code{return_conflict =
-  TRUE} or \code{return_conflict = FALSE}.}
+TRUE} or \code{return_conflict = FALSE}.}
 
-\item{digits}{Optional integer to pass on to \code{\link[base:Round]{base::round()}} applied to the
-numeric variables returned from the \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}}.
+\item{digits}{Optional integer to pass on to \code{\link[base:round]{base::round()}} applied to the
+numeric variables returned from the \code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}}.
 When \code{digits = NULL} (default), \code{digits} is ignored.}
 
 \item{path}{Optional output file path. If \code{NULL}, a default file name is
@@ -354,7 +354,7 @@ most post-processing functions rely on \pkg{brms}, it is recommended to set
 derivatives like velocity curves.}
 
 \item{...}{Additional arguments passed to
-\code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}}.}
+\code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}}.}
 }
 \value{
 When \code{return_table = TRUE}, a table of sensitivity values for each
@@ -367,7 +367,7 @@ components:
 \code{include_criterion}, \code{include_jointlik}, or
 \code{include_predictor} are specified, otherwise \code{NULL}.}
 \item{sensitivity}{The object returned by
-\code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}}.}
+\code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}}.}
 \item{plot}{A plot object, or list of plot objects when
 \code{plot = "both"}, otherwise \code{NULL}.}
 \item{plot_type}{The requested plot type, if any.}
@@ -383,7 +383,7 @@ also allows visualization of sensitivity analysis plot(s).
 }
 \details{
 The \strong{prior_sensitivity} function is intended as a package-level
-convenience wrapper around \code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} and the
+convenience wrapper around \code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}} and the
 associated plotting tools.
 
 If requested, the function also constructs an augmented draws object using
@@ -396,12 +396,12 @@ The \strong{prior_sensitivity} supports two closely related workflows for
 prior sensitivity analysis.
 
 \strong{Standard workflow:} The function calls
-\code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}} directly on the fitted \code{bsitar}
+\code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}} directly on the fitted \code{bsitar}
 model and returns the sensitivity results. This is the simpler approach when
 you only need sensitivity assessments for the model parameters themselves.
 
 \strong{Extended workflow:} A posterior draws object is created using
-\code{\link[posterior:draws_df]{posterior::as_draws_df()}} which allows computing the additional derived
+\code{\link[posterior:as_draws_df]{posterior::as_draws_df()}} which allows computing the additional derived
 quantities. This extended draws object is useful when user wants to explore
 prior sensitivity not only for model parameters but also for model-based fit
 criteria and predictive quantities. The posterior draws object can be
@@ -419,7 +419,7 @@ using the custom \code{jointlik_fun} function. This captures the
 joint likelihood of all observations under each posterior draw. See
 \code{include_jointlik} argument for details.
 \item \strong{Posterior expected predictions} via
-\code{\link[brms:posterior_epred.brmsfit]{brms::posterior_epred()}}. Use the \code{include_predictor} argument
+\code{\link[brms:posterior_epred]{brms::posterior_epred()}}. Use the \code{include_predictor} argument
 to specify predictor values for which to compute expected predictions.
 See \code{include_predictor} argument for details.
 \item \strong{Point-wise log-likelihood draws} via
@@ -501,10 +501,10 @@ conflict <- prior_sensitivity(
 
 }
 \seealso{
-\code{\link[priorsense:powerscale-sensitivity]{priorsense::powerscale_sensitivity()}},
-\code{\link[priorsense:powerscale_plots]{priorsense::powerscale_plot_dens()}},
-\code{\link[priorsense:powerscale_plots]{priorsense::powerscale_plot_ecdf()}},
-\code{\link[priorsense:powerscale_plots]{priorsense::powerscale_plot_quantities()}},
+\code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}},
+\code{\link[priorsense:powerscale_plot_dens]{priorsense::powerscale_plot_dens()}},
+\code{\link[priorsense:powerscale_plot_ecdf]{priorsense::powerscale_plot_ecdf()}},
+\code{\link[priorsense:powerscale_plot_quantities]{priorsense::powerscale_plot_quantities()}},
 \code{\link[priorsense:predictions_as_draws]{priorsense::predictions_as_draws()}},
 \code{\link[=prior_conflict]{prior_conflict()}}
 }

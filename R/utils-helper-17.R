@@ -16,7 +16,7 @@ make_stancode_custom <- function(formula, ...) {
 }
 
 #' Stan Code for \pkg{brms} Models
-#'
+#' @exportS3Method stancode_custom default
 #' @noRd
 #' 
 stancode_custom.default <- function(object, data, family = gaussian(),
@@ -85,6 +85,13 @@ stancode_custom.default <- function(object, data, family = gaussian(),
    normalize = normalize, save_model = save_model, ...
  )
 }
+
+#' @noRd
+#' @exportS3Method stancode_custom default
+stancode_custom <- function(object, ...) {
+  UseMethod("stancode_custom")
+}
+
 
 
 .stancode_custom <- function(bterms, prior, stanvars, threads = threading(),
@@ -414,6 +421,8 @@ stancode_custom.default <- function(object, data, family = gaussian(),
 
 
 
+
+
 #' Extract Stan code from \code{bgmfit} objects
 #'
 #' Extract Stan code from a fitted \pkg{brms} model.
@@ -432,6 +441,7 @@ stancode_custom.default <- function(object, data, family = gaussian(),
 #' @return Stan code for further processing.
 #'
 #' @keywords internal
+#' @exportS3Method stancode_custom bgmfit
 #' @noRd
 stancode_custom.bgmfit <- function(object, version = TRUE, regenerate = NULL,
                              threads = NULL, backend = NULL, ...) {
@@ -485,6 +495,13 @@ stancode_custom.bgmfit <- function(object, version = TRUE, regenerate = NULL,
   }
   out
 }
+
+#' @noRd
+#' @exportS3Method stancode_custom bgmfit
+stancode_custom <- function(object, ...) {
+  UseMethod("stancode_custom")
+}
+
 
 
 expand_include_statements <- function(model) {

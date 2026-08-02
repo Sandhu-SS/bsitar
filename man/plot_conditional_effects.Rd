@@ -143,16 +143,16 @@ posterior distribution before computing summaries (default \code{NULL}).
 The argument \code{transform_draws} is derived from the
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
 the \code{transform} argument from the deprecated
-\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
+\code{\link[brms:posterior_predict]{brms::posterior_predict()}} function. It's important to note that for both
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:avg_predictions]{marginaleffects::avg_predictions()}},
 the \code{transform_draws} argument takes precedence over the
 \code{transform} argument. Note that when \code{transform_draws = NULL}, an
 attempt is made to automatically set \code{transform_draws = 'exp'} for
 \code{dpar = 'sigma'}. User can set  \code{transform_draws = FALSE} to turn
 off this automatic assignment of \code{'exp'} to the
 \code{transform_draws}. It is also important to set \code{transform_draws =
-  FALSE} when computing the first derivative (velocity) for \code{dpar =
-  'sigma'}.}
+FALSE} when computing the first derivative (velocity) for \code{dpar =
+'sigma'}.}
 
 \item{resolution}{Number of support points used to generate
 the plots. Higher resolution leads to smoother plots.
@@ -344,7 +344,7 @@ automatically. A use case for \code{funlist} is when \code{sigma_formula},
 function (e.g., \code{poly(age)}). The \code{funlist} should include
 function names defined in the \code{globalenv()}. For functions needing
 both distance and velocity curves (e.g., \code{plot_curves(..., opt =
-  'dv')}), \code{funlist} must include two functions: one for the distance
+'dv')}), \code{funlist} must include two functions: one for the distance
 curve and one for the velocity curve.}
 
 \item{xvar}{A character string (default \code{NULL}) specifying the
@@ -357,7 +357,7 @@ internally. A use case is when conflicting variables exist (e.g.,
 \code{'x'} variable that should be used for manual differentiation of the
 distance curve. Internally, the \code{xvar} is set as \code{difx} if
 specified. The argument \code{difx} is evaluated only when \code{dpar =
-  'sigma'}, ignored otherwise. Note that argument \code{xvar} itself is rarely
+'sigma'}, ignored otherwise. Note that argument \code{xvar} itself is rarely
 used because \code{xvar} is inferred internally. A use case is when
 conflicting variables exist (e.g., \code{sigma_formula}) and user wants to
 set a specific variable as \code{'x'}.}
@@ -368,7 +368,7 @@ internally.}
 
 \item{itransform}{A character string (default \code{NULL}) indicating the
 variables names that are reverse transformed. Options are  \code{c("x",
-  "y", "sigma")}. The \code{itransform} is primarily used to get the
+"y", "sigma")}. The \code{itransform} is primarily used to get the
 \code{xvar} variable at original scale i.e., \code{itransform = 'x'}. To
 turn of all transformations, use \code{itransform = ""}. when
 \code{itransform = NULL}, the appropriate transformation for \code{xvar} is
@@ -406,14 +406,14 @@ most post-processing functions rely on \pkg{brms}, it is recommended to set
 \code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
 derivatives like velocity curves.}
 
-\item{...}{Additional arguments passed to the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}
-function. Please see \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} for details.}
+\item{...}{Additional arguments passed to the \code{\link[brms:conditional_effects]{brms::conditional_effects()}}
+function. Please see \code{\link[brms:conditional_effects]{brms::conditional_effects()}} for details.}
 }
 \value{
 An object of class \code{'brms_conditional_effects'}, which is a
 named list with one data.frame per effect containing all information
 required to generate conditional effects plots. See
-\code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} for details.
+\code{\link[brms:conditional_effects]{brms::conditional_effects()}} for details.
 }
 \description{
 Display conditional effects of one or more numeric and/or categorical
@@ -421,18 +421,18 @@ predictors including two-way interaction effects.
 }
 \details{
 The \strong{plot_conditional_effects()} is a wrapper around the
-\code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}. The \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} function
+\code{\link[brms:conditional_effects]{brms::conditional_effects()}}. The \code{\link[brms:conditional_effects]{brms::conditional_effects()}} function
 from the \pkg{brms} package can be used to plot the fitted (distance) curve
 when response (e.g., height) is not transformed. However, when the outcome
-is log or square root transformed, the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} will
+is log or square root transformed, the \code{\link[brms:conditional_effects]{brms::conditional_effects()}} will
 return the fitted curve on the log or square root scale, whereas the
 \strong{plot_conditional_effects()} will return the fitted curve on the
 original scale. Furthermore, the \strong{plot_conditional_effects()} also
 plots the velocity curve on the original scale after making the required
 back-transformation. Apart from these differences, both these functions
-(\link[brms:conditional_effects.brmsfit]{brms::conditional_effects} and \strong{plot_conditional_effects()}) work
+(\link[brms:conditional_effects]{brms::conditional_effects} and \strong{plot_conditional_effects()}) work
 in the same manner. In other words, the user can specify all the arguments
-which are available in the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}. An alternative
+which are available in the \code{\link[brms:conditional_effects]{brms::conditional_effects()}}. An alternative
 approach is to \code{\link[=get_predictions]{get_predictions()}} function (with \code{plot = TRUE}) which
 is based on the \pkg{marginaleffects}.
 }
@@ -464,7 +464,7 @@ plot_conditional_effects(model, deriv = 1, re_formula = NULL)
 
 }
 \seealso{
-\code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}
+\code{\link[brms:conditional_effects]{brms::conditional_effects()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

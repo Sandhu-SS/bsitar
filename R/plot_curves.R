@@ -1107,9 +1107,6 @@ plot_curves.bgmfit <- function(model,
   x_minimum <- min(newdata[[Xx]])
   x_maximum <- max(newdata[[Xx]])
   
-  x_minimumx <<- x_minimum
-  x_maximumx <<- x_maximum
-  
   x_minimum <- floor(x_minimum)
   x_maximum <- ceiling(x_maximum)
   
@@ -1577,7 +1574,7 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
-      t.s.axis <- with(data_dv, transform.sec.axis(Estimate.x, Estimate.y))
+      t.s.axis <- with(data_dv, transform_sec_axis(Estimate.x, Estimate.y))
       
       if(is.na(uvarby)) {
         if(is.na(data_dv[['groupby.x']][1])) {

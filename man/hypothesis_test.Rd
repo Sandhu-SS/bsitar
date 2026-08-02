@@ -135,7 +135,7 @@ comparisons. The exact meaning depends on the selected engine and methods.}
 \item{hypothesis_str}{A character vector specifying one or more non-linear
 hypothesis concerning parameters of the model. Note that the argument
 \code{hypothesis_str} is the renamed version of the \code{hypothesis}
-argument for the \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}. This renaming is done to avoid
+argument for the \code{\link[brms:hypothesis]{brms::hypothesis()}}. This renaming is done to avoid
 conflicts with the \code{hypothesis} argument for the
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}.}
 
@@ -362,7 +362,7 @@ comparisons from \code{\link[marginaleffects:comparisons]{marginaleffects::compa
 \code{\link[=get_growthparameters]{get_growthparameters()}}. Defaults to \code{NULL}, in which case it is
 automatically determined from other arguments. Only
 evaluated when \code{model} is class \code{"bsitar"} and \code{engine =
-  "marginaleffects" or "mbcombo"}.}
+"marginaleffects" or "mbcombo"}.}
 
 \item{comparison_by}{Character string specifying the \code{by} variable for
 comparisons. Defaults to \code{NULL}, in which case it is inferred from the
@@ -386,7 +386,7 @@ hypothesis from \code{\link[marginaleffects:comparisons]{marginaleffects::compar
 \code{\link[=get_growthparameters]{get_growthparameters()}}. Defaults to \code{NULL}, in which case it is
 automatically determined from other arguments. Only
 evaluated when \code{model} is class \code{"bsitar"} and \code{engine =
-  "marginaleffects" or "mbcombo"}.}
+"marginaleffects" or "mbcombo"}.}
 
 \item{hypothesis_by}{Character string specifying the \code{by} variable for
 hypotheses. Defaults to \code{NULL}, in which case it is inferred from the
@@ -440,15 +440,15 @@ options are restored upon function exit using \code{\link[base:on.exit]{base::on
 the type of credible intervals: \code{'eti'} for equal-tailed intervals or
 \code{'hdi'} for highest density intervals. This option sets the global
 options as follows: \code{options("marginaleffects_posterior_interval" =
-  "eti")} or \code{options("marginaleffects_posterior_interval" = "hdi")},
+"eti")} or \code{options("marginaleffects_posterior_interval" = "hdi")},
 and is restored on exit using \code{\link[base:on.exit]{base::on.exit()}}.}
 
 \item{na.rm}{Logical; if \code{TRUE} (default), then remove \code{NA} values.}
 
-\item{alpha}{Alpha level for hypothesis tests used in \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}.
+\item{alpha}{Alpha level for hypothesis tests used in \code{\link[brms:hypothesis]{brms::hypothesis()}}.
 The default is \code{NULL}, in which case \code{alpha} is inferred from
 \code{probs}. With the default \code{probs}, this corresponds to
-\code{alpha = 0.05}, which is also the default in \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}.}
+\code{alpha = 0.05}, which is also the default in \code{\link[brms:hypothesis]{brms::hypothesis()}}.}
 
 \item{ci}{Confidence level used in \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} and
 \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}}. The default is \code{NULL}, in which case
@@ -484,8 +484,8 @@ and \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}}.}
 
 \item{plot}{Logical or a character string \code{"return"}; if \code{TRUE},
 plot the hypothesis test results and return the data frame. Set \code{plot
-  = "return"} to return the plot object itself instead of the data frame.
-Note that only \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}} and \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}}
+= "return"} to return the plot object itself instead of the data frame.
+Note that only \code{\link[brms:hypothesis]{brms::hypothesis()}} and \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}}
 support plotting.}
 
 \item{digits}{Number of digits to use when printing numeric results. Default
@@ -493,7 +493,7 @@ support plotting.}
 
 \item{engine}{Optional engine selector specifying which backend(s) to use:
 \itemize{
-\item \code{"brms"} for \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}} non-linear hypothesis
+\item \code{"brms"} for \code{\link[brms:hypothesis]{brms::hypothesis()}} non-linear hypothesis
 testing
 \item \code{"bayestestR"} for \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} (ROPE) and
 \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}} (PD) testing
@@ -534,7 +534,7 @@ derivatives like velocity curves.}
 An object (typically a list) containing some or all of the following
 components, depending on the requested analyses and available methods:
 \itemize{
-\item A \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}} result object for hypothesis tests.
+\item A \code{\link[brms:hypothesis]{brms::hypothesis()}} result object for hypothesis tests.
 \item A \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} result for ROPE and practical
 equivalence.
 \item A \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}} result for probability of direction.
@@ -543,7 +543,7 @@ predictions.
 }
 }
 \description{
-Performs non-linear hypothesis testing via \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}, Region of
+Performs non-linear hypothesis testing via \code{\link[brms:hypothesis]{brms::hypothesis()}}, Region of
 Practical Equivalence (\code{ROPE}) via \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}},
 probability of direction (\code{pd}) via \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}}, and
 pairwise and contrast-style comparisons via \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}},
@@ -574,7 +574,7 @@ This function collects arguments from multiple upstream packages:
 \itemize{
 \item \code{hypothesis_test} arguments (e.g., \code{hypothesis},
 \code{class}, \code{scope}, \code{alpha}, \code{robust}, \code{seed}) map
-to \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}} and, in particular,
+to \code{\link[brms:hypothesis]{brms::hypothesis()}} and, in particular,
 \code{scope} controls where hypothesis components referenced in
 \code{hypothesis} are looked up. Note that to avoid conflicts with the
 \code{hypothesis} argument from
@@ -583,7 +583,7 @@ the \code{hypothesis} argument for the brms package is renamed as
 \code{hypothesis_str}. In other words, the \code{hypothesis_str} (see
 below) is used to setup the
 \code{hypothesis} argument when calling the
-\code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}.
+\code{\link[brms:hypothesis]{brms::hypothesis()}}.
 \item
 \code{equivalence_test} arguments (e.g., \code{range}, \code{ci},
 \code{remove_na}, \code{parameters}) map to
@@ -734,7 +734,7 @@ hyp_ex1 <- hypothesis_test(hyp_draws,
 }
 \seealso{
 \itemize{
-\item \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}} for hypothesis testing.
+\item \code{\link[brms:hypothesis]{brms::hypothesis()}} for hypothesis testing.
 \item \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} for ROPE tests.
 \item \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}} for probability of direction tests.
 \item \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} for prediction contrasts.

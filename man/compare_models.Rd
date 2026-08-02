@@ -41,7 +41,7 @@ check and add fit criterion if not already added to model objects}
 
 \item{add_criterion_args}{A named list to set up the arguments for the
 \code{\link[=add_model_criterion]{add_model_criterion()}} function. Ignored when \code{check_criterion =
-  FALSE} or when each model objects has precomputed fit criteria.}
+FALSE} or when each model objects has precomputed fit criteria.}
 
 \item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
 Controls whether Stan functions are exposed for post-processing.
@@ -64,7 +64,7 @@ information.}
 An object of class "\code{compare.loo}".
 }
 \description{
-A wrapper around \code{\link[brms:loo_compare.brmsfit]{brms::loo_compare()}} to compare models using fit criteria.
+A wrapper around \code{\link[brms:loo_compare]{brms::loo_compare()}} to compare models using fit criteria.
 }
 \details{
 All models should have pre computed fit criterion See \code{\link[=add_model_criterion]{add_model_criterion()}}
@@ -94,7 +94,7 @@ compare_model_12 <- compare_models(model_1, model_2, criterion = c("waic"))
 
 }
 \seealso{
-\code{\link[brms:loo_compare.brmsfit]{brms::loo_compare()}}
+\code{\link[brms:loo_compare]{brms::loo_compare()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

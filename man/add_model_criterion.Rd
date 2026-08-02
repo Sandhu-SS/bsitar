@@ -176,8 +176,8 @@ added.
 The \strong{add_model_criterion()} function is a wrapper around
 \code{\link[brms:add_criterion]{brms::add_criterion()}} that allows adding fit criteria to a model. Note
 that arguments such as \code{compare} and \code{pointwise} are relevant
-only for \link[brms:add_ic]{brms::add_loo}, while \code{summary}, \code{robust}, and
-\code{probs} are ignored except for the \code{\link[brms:bayes_R2.brmsfit]{brms::bayes_R2()}}
+only for \link[brms:add_loo]{brms::add_loo}, while \code{summary}, \code{robust}, and
+\code{probs} are ignored except for the \code{\link[brms:bayes_R2]{brms::bayes_R2()}}
 }
 \examples{
 \donttest{
@@ -195,8 +195,8 @@ model <- add_model_criterion(model, criterion = c("waic"))
 
 }
 \seealso{
-\link[brms:add_ic]{brms::add_loo}, \code{\link[brms:add_ic]{brms::add_ic()}}, \code{\link[brms:add_ic]{brms::add_waic()}},
-\code{\link[brms:bayes_R2.brmsfit]{brms::bayes_R2()}}
+\link[brms:add_loo]{brms::add_loo}, \code{\link[brms:add_ic]{brms::add_ic()}}, \code{\link[brms:add_waic]{brms::add_waic()}},
+\code{\link[brms:bayes_R2]{brms::bayes_R2()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

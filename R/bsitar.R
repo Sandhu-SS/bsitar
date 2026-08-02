@@ -2204,22 +2204,23 @@
 #'   further analysis, diagnostics, and post-processing, including model summary
 #'   statistics, predictions, and visualizations.
 #'
-#'@export
+#' @export
 #'
-#'@inheritParams brms::brm
+#' @inheritParams brms::brm
 #'
-#'@importFrom stats as.formula coef df dist filter fitted gaussian lm mad median
-#'  model.matrix predict quantile rbeta sd setNames smooth.spline rnorm runif
-#'  rcauchy rexp rlnorm rgamma rlnorm loess na.omit residuals complete.cases
-#'  deriv formula update
+#' @importFrom stats as.formula coef df dist filter fitted gaussian lm mad 
+#' @importFrom stats model.matrix predict quantile rbeta sd setNames 
+#' @importFrom stats rcauchy rexp rlnorm rgamma rlnorm loess na.omit residuals 
+#' @importFrom stats deriv formula median update smooth.spline rnorm runif
+#' @importFrom stats complete.cases 
 #' 
-#'@importFrom rlang .data
+#' @importFrom rlang .data
 #'
-#'@importFrom utils combn head installed.packages packageVersion tail data
+#' @importFrom utils combn head installed.packages packageVersion tail data
 #'
-#'@importFrom Rdpack reprompt
+#' @importFrom Rdpack reprompt
 #'
-#'@import brms
+#' @import brms
 #'
 #' @note The package is under continuous development, and new models,
 #'   post-processing features, and improvements are being actively worked on.

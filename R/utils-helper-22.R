@@ -48,6 +48,7 @@
 #'   outside their measurement range}
 #' 
 #' @keywords internal
+#' @exportS3Method modelbased_growthparameters_call bgmfit
 #' @noRd
 #' 
 modelbased_growthparameters_call.bgmfit <-

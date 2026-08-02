@@ -210,7 +210,7 @@ bivariate model, \code{x = list(x1, x2)} specifies that \code{x1} is the
 predictor variable for the first sub-model, and \code{x2} is the predictor
 for the second sub-model. To use \code{x1} as a common predictor variable
 for both sub-models, user can specify \code{x = list(x1)} or simply \code{x =
- x1}.}
+x1}.}
 
 \item{y}{Response variable (e.g., repeated height measurements). For
 \code{univariate} and \code{univariate_by} models, \code{y} is specified as
@@ -486,21 +486,21 @@ be used. The available options are:
 truncated power basis (Harrell's method), as implemented in
 \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
 \item \code{'nsk'}: Implements a B-spline based natural cubic spline method,
-similar to \code{\link[splines2:naturalSpline]{splines2::nsk()}}.
+similar to \code{\link[splines2:nsk]{splines2::nsk()}}.
 \item \code{'nsp'}: Implements a B-spline based natural cubic spline method,
-similar to \code{\link[splines2:naturalSpline]{splines2::nsp()}}.
+similar to \code{\link[splines2:nsp]{splines2::nsp()}}.
 }
 
 The \code{'rcs'} method uses a truncated power basis, whereas \code{'nsk'}
-and \code{'nsp'} are B-spline-based methods. Unlike \code{\link[splines2:naturalSpline]{splines2::nsp()}} and
-\code{\link[splines2:naturalSpline]{splines2::nsk()}}, which normalize the spline basis by default, \code{'nsk'}
+and \code{'nsp'} are B-spline-based methods. Unlike \code{\link[splines2:nsp]{splines2::nsp()}} and
+\code{\link[splines2:nsk]{splines2::nsk()}}, which normalize the spline basis by default, \code{'nsk'}
 and \code{'nsp'} return the non-normalized version of the spline. If
 normalization is desired, the user can specify \code{normalize = TRUE} in a
 list. For example, to use a normalized \code{'nsp'}, one can specify
 \code{stype = list(type = 'nsp', normalize = TRUE)}.
 
-For more details, see \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}, \code{\link[splines2:naturalSpline]{splines2::nsk()}}, and
-\code{\link[splines2:naturalSpline]{splines2::nsp()}}.}
+For more details, see \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}, \code{\link[splines2:nsk]{splines2::nsk()}}, and
+\code{\link[splines2:nsp]{splines2::nsp()}}.}
 
 \item{terms_rhs}{An optional character string (default \code{NULL}) specifying
 terms on the right-hand side of the response variable, but before the
@@ -713,8 +713,8 @@ example:
 See \code{sigma_formula} for additional details.}
 
 \item{sigma_formula_manual}{A custom formula for advanced modeling of the
-distributional parameter \code{sigma} using the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} and
-\code{\link[brms:brmsformula-helpers]{brms::lf()}} functions. This is an advanced and experimental feature for
+distributional parameter \code{sigma} using the \code{\link[brms:nlf]{brms::nlf()}} and
+\code{\link[brms:lf]{brms::lf()}} functions. This is an advanced and experimental feature for
 specifying complex variance structures. The \code{sigma_formula_manual} can
 be can be a character string or a list of formulas.
 
@@ -738,7 +738,7 @@ A simple example of modeling \code{sigma} directly:
   }
 Note that use can specify any external function in the linear predictor
 part of the formula \code{'lf()'} in order to model nonlinear trajectories.
-For example, user can include \code{\link[splines2:naturalSpline]{splines2::nsk()}} in the model as follows:
+For example, user can include \code{\link[splines2:nsk]{splines2::nsk()}} in the model as follows:
 \preformatted{
   sigma_formula_manual = list(nlf(sigma ~ z) + 
   lf(z ~ 1 + splines2::nsk(age) + (1 | gr(id))))
@@ -1006,7 +1006,7 @@ Currently not used even when \code{sigma_formula_manual} is specified.}
 
 \item{sigmaxoffset}{Offset for the \code{x} in the \code{sigma} structure.
 See \code{xoffset} for details. Ignored if \code{sigma_formula_manual =
-  NULL}.}
+NULL}.}
 
 \item{sigmabstart}{Starting value for the \code{b} parameter in the
 \code{sigma} structure. See \code{bstart} for details. Ignored if
@@ -1094,7 +1094,7 @@ available distributions and link functions, and how to specify them. For
 \code{univariate_by} and \code{multivariate} models, the \code{family} can
 be the same for all sub-models (e.g., \code{family = gaussian()}) or
 different for each sub-model, such as \code{family = list(gaussian(),
-  student())}, which sets \code{gaussian} distribution for the first
+student())}, which sets \code{gaussian} distribution for the first
 sub-model and \code{student_t} distribution for the second. Note that the
 \code{family} argument is ignored if \code{custom_family} is specified
 (i.e., if \code{custom_family} is not \code{NULL}).}
@@ -1108,7 +1108,7 @@ user-defined Stan functions must be exposed by setting
 details, see \code{\link[brms:brmsformula]{brms::brmsformula()}}. Currently ignored.}
 
 \item{custom_prior}{Specifies custom prior Default is \code{NULL}. For
-details, see \code{\link[brms:set_prior]{brms::prior()}}. Currently ignored. It is primarily designed
+details, see \code{\link[brms:prior]{brms::prior()}}. Currently ignored. It is primarily designed
 to support setting custom prior for \code{custom_formula}. Note that
 \code{custom_prior} is different from the \code{set_self_priors} which
 is evaluated throughout the call.}
@@ -1320,7 +1320,7 @@ for individual sub models when fitting \code{univariate_by} or
 
 \item{b_cov_prior_beta}{Prior specification for covariate effects included in
 the fixed effect parameter \code{b} (default: \code{normal(0, 1.0,
-  autoscale = FALSE)}). See \code{a_cov_prior_beta} for details.}
+autoscale = FALSE)}). See \code{a_cov_prior_beta} for details.}
 
 \item{c_cov_prior_beta}{Prior specification for covariate effects included
 in the fixed effect parameter \code{c} (default:
@@ -1334,7 +1334,7 @@ details.}
 
 \item{s_cov_prior_beta}{Prior specification for covariate effects included in
 the fixed effect parameter \code{splines} (default: \code{normal(0, 10.0,
-  autoscale = FALSE)}). As described in \code{s_formula}, the \emph{SITAR}
+autoscale = FALSE)}). As described in \code{s_formula}, the \emph{SITAR}
 model does not allow covariates in the spline design matrix. If covariates
 are specified (see \code{s_formula}), the approach to setting priors for
 the covariates in parameter \code{s} is the same as for \code{a} (see
@@ -1365,21 +1365,21 @@ or different for each sub model (see \code{a_prior_beta}).}
 
 \item{a_cov_prior_sd}{Prior specification for covariate effects included in
 the random effect parameter \code{a} (default: \code{normal(0, 5.0,
-  autoscale = FALSE)}). The approach is the same as described for
+autoscale = FALSE)}). The approach is the same as described for
 \code{a_cov_prior_beta}, except that no pre-defined options (e.g.,
 \code{lm}) are allowed.}
 
 \item{b_cov_prior_sd}{Prior specification for covariate effects included in
 the random effect parameter \code{b} (default: \code{normal(0, 1.0,
-  autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.}
+autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.}
 
 \item{c_cov_prior_sd}{Prior specification for covariate effects included in
 the random effect parameter \code{c} (default: \code{normal(0, 0.1,
-  autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.}
+autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.}
 
 \item{d_cov_prior_sd}{Prior specification for covariate effects included in
 the random effect parameter \code{d} (default: \code{normal(0, 1.0,
-  autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.}
+autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.}
 
 \item{a_prior_sd_str}{Prior specification for the random effect parameter
 \code{a} when fitting a hierarchical model with three or more levels of
@@ -1532,7 +1532,7 @@ set \code{init = "random"}, which is internally translated to \code{init =
 
 \item{init_r}{Positive real value specifying the range for random initial
 values (default \code{0.5}). This argument is used only when \code{init =
-  "random"}. Note that the default in \strong{Stan} is \code{2.0}, which
+"random"}. Note that the default in \strong{Stan} is \code{2.0}, which
 generates random initials between \code{-2.0} and \code{2.0} on the
 unconstrained parameter space.}
 
@@ -1833,12 +1833,12 @@ fixed effect parameter \code{a}, one can:
 \code{prior_a_cov_scale    <- rep(5, 10)}
 \item Add them to \code{prior_data}:
 \code{prior_data = list(
-        prior_a_cov_location = prior_a_cov_location,
-        prior_a_cov_scale    = prior_a_cov_scale
-      )}
+      prior_a_cov_location = prior_a_cov_location,
+      prior_a_cov_scale    = prior_a_cov_scale
+    )}
 \item Use these objects in the prior specification:
 \code{a_cov_prior_beta = normal(prior_a_cov_location,
-                                      prior_a_cov_scale)}
+                                    prior_a_cov_scale)}
 }}
 
 \item{init_data}{Optional named list (default \code{NULL}) used to pass
@@ -1852,7 +1852,7 @@ parameter-specific initial specifications (e.g., \code{a_init_beta = "0"}),
 \code{init_custom} is applied only to parameters without their own initial
 settings. To override this behavior and use \code{init_custom} for all
 parameters regardless of parameter-specific initials, set \code{init =
-  "custom"}.}
+"custom"}.}
 
 \item{expose_function}{Logical (default \code{FALSE}) indicating whether to
 expose Stan functions used in model fitting.}
@@ -1870,10 +1870,10 @@ return the model formula (see \code{\link[brms:brmsformula]{brms::brmsformula()}
 return the Stan variables (see \code{\link[brms:stanvar]{brms::stanvar()}} for details).}
 
 \item{get_priors}{Logical or character (default \code{FALSE}) controlling
-prior retrieval (see \code{\link[brms:default_prior]{brms::get_prior()}} for details). If \code{get_priors
-  = TRUE}, priors corresponding to the final compiled model code are
+prior retrieval (see \code{\link[brms:get_prior]{brms::get_prior()}} for details). If \code{get_priors
+= TRUE}, priors corresponding to the final compiled model code are
 returned. To obtain basic default priors instead, use \code{get_priors =
-  "default"}.}
+"default"}.}
 
 \item{get_priors_eval}{Logical (default \code{FALSE}) indicating whether to
 return the priors as specified by the user.}
@@ -1901,7 +1901,7 @@ for internal use only.}
 
 \item{outliers}{Optional specification (default \code{NULL}) for removing
 outliers. This should be a named list passed directly to \code{\link[sitar:velout]{sitar::velout()}}
-and \code{\link[sitar:codeplot]{sitar::zapvelout()}}. Intended for internal use only.}
+and \code{\link[sitar:zapvelout]{sitar::zapvelout()}}. Intended for internal use only.}
 
 \item{unused}{Optional formula defining variables that are unused in the
 model but should still be stored in the model frame, for example when they
@@ -1918,7 +1918,7 @@ should not be used for inference. The number of warmup iterations must not
 exceed \code{iter}, and the default is \code{iter / 2}.}
 
 \item{thin}{Positive integer specifying the thinning interval. Set \code{thin
-  > 1} to reduce memory usage and computation time when \code{iter} is large.
+> 1} to reduce memory usage and computation time when \code{iter} is large.
 Thinning is sometimes used when MCMC draws show high autocorrelation,
 evidenced by poor chain mixing (e.g., high \code{rhat}) despite good
 parameter recovery. Autocorrelation can be inspected using functions such
@@ -1978,8 +1978,8 @@ This parameter can also be set globally via the \code{"brms.opencl"} option.}
 included in the Stan code (default \code{TRUE}). If \code{FALSE},
 normalization constants are omitted, which may improve sampling efficiency,
 but requires Stan version \code{2.25} or higher. Note that \code{normalize
-  = FALSE} disables some post-processing functionality (e.g.,
-\code{\link[brms:bridge_sampler.brmsfit]{brms::bridge_sampler()}}). This behavior can be controlled globally via the
+= FALSE} disables some post-processing functionality (e.g.,
+\code{\link[brms:bridge_sampler]{brms::bridge_sampler()}}). This behavior can be controlled globally via the
 \code{"brms.normalize"} option.}
 
 \item{algorithm}{Character string specifying the estimation method. Available
@@ -2043,7 +2043,7 @@ generate \code{xyadj} in the \code{generated quantities} block of the
 from the priors in addition to the posterior draws. Options are \code{"no"}
 (the default), \code{"yes"}, and \code{"only"}. These prior draws can be
 used for various purposes, such as calculating Bayes factors for point
-hypotheses via \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}. Note that improper priors (including
+hypotheses via \code{\link[brms:hypothesis]{brms::hypothesis()}}. Note that improper priors (including
 the default improper priors used by \code{brm}) are not sampled. For proper
 priors, see \code{\link[brms:set_prior]{brms::set_prior()}}. Also, prior draws for the overall
 intercept are not obtained by default for technical reasons. See
@@ -2257,7 +2257,7 @@ implements a different strategy to create natural cubic splines. The
 \pkg{bsitar} offers three different types of splines: \pkg{nsp}, \pkg{nsk},
 and \pkg{rcs}. Both \pkg{nsp} and \pkg{nsk} use the B-splines basis to
 generate the natural cubic spline design matrix as implemented in
-\code{\link[splines2:naturalSpline]{splines2::nsp()}} and \code{\link[splines2:naturalSpline]{splines2::nsk()}}, whereas \pkg{rcs} is based on the
+\code{\link[splines2:nsp]{splines2::nsp()}} and \code{\link[splines2:nsk]{splines2::nsk()}}, whereas \pkg{rcs} is based on the
 truncated power basis approach (see
 \insertCite{harrell2001regression;textual}{bsitar} and
 \insertCite{R-Hmisc;textual}{bsitar} for details) to construct the spline
@@ -2356,7 +2356,7 @@ supports unquoted argument evaluation for convenience (e.g.,
 
 \strong{Priors}
 The following guidelines apply to all prior specifications. For full details,
-see \code{\link[brms:set_prior]{brms::prior()}}:
+see \code{\link[brms:prior]{brms::prior()}}:
 \itemize{
 \item \strong{Allowed distributions:} \code{normal}, \code{student_t},
 \code{cauchy}, \code{lognormal}, \code{uniform}, \code{exponential},
@@ -2544,7 +2544,7 @@ plot(model_ml)
 \insertAllCited{}
 }
 \seealso{
-\code{\link[brms:brm]{brms::brm()}} \code{\link[brms:brmsformula]{brms::brmsformula()}} \code{\link[brms:set_prior]{brms::prior()}}
+\code{\link[brms:brm]{brms::brm()}} \code{\link[brms:brmsformula]{brms::brmsformula()}} \code{\link[brms:prior]{brms::prior()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
