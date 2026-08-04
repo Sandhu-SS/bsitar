@@ -4,6 +4,8 @@
 \alias{compare_models.bgmfit}
 \alias{compare_models}
 \alias{compare_models.list}
+\alias{compare_models.character}
+\alias{compare_models.default}
 \alias{compare_model}
 \title{Model comparison with the loo package}
 \usage{
@@ -11,9 +13,10 @@
   model,
   ...,
   criterion = "loo",
-  model_names = NULL,
+  model_name = NULL,
   check_criterion = TRUE,
   add_criterion_args = list(),
+  expose_model_functions_args = list(),
   expose_function = FALSE,
   verbose = FALSE
 )
@@ -21,6 +24,10 @@
 compare_models(model, ...)
 
 \method{compare_models}{list}(model, ...)
+
+\method{compare_models}{character}(model, ...)
+
+\method{compare_models}{default}(model, ...)
 
 compare_model(model, ...)
 }
@@ -32,16 +39,19 @@ compare_model(model, ...)
 \item{criterion}{The name of the criterion to be extracted
 from \code{brmsfit} objects.}
 
-\item{model_names}{If \code{NULL} (the default) will use model names
-derived from deparsing the call. Otherwise will use the passed
-values as model names.}
+\item{model_name}{Optional name of the model. If \code{NULL}
+(the default) the name is taken from the call to \code{x}.}
 
 \item{check_criterion}{A logical (default \code{FALSE}) indicating whether to
 check and add fit criterion if not already added to model objects}
 
 \item{add_criterion_args}{A named list to set up the arguments for the
 \code{\link[=add_model_criterion]{add_model_criterion()}} function. Ignored when \code{check_criterion =
-FALSE} or when each model objects has precomputed fit criteria.}
+FALSE} or when each model objects has pre computed fit criteria.}
+
+\item{expose_model_functions_args}{A named list to set up the arguments for the
+\code{\link[=expose_model_functions]{expose_model_functions()}} function. Ignored when \code{check_criterion =
+FALSE} or when each model objects has pre computed fit criteria.}
 
 \item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
 Controls whether Stan functions are exposed for post-processing.
@@ -90,6 +100,15 @@ model_2 <- add_model_criterion(model, criterion = c("waic"))
 
 # compare models model_1 and model_2
 compare_model_12 <- compare_models(model_1, model_2, criterion = c("waic"))
+
+# compare models model_1 and model_2 - model names: "mods[[1L]]" "mods[[2L]]"
+mods <- list(model_1, model_2)
+compare_model_12 <- compare_models(mods)
+
+# compare models model_1 and model_2 - model names extracted as such
+compare_model_12 <- compare_models(list(model_1, model_2))
+compare_model_12 <- compare_models("list(model_1, model_2)")
+
 }
 
 }

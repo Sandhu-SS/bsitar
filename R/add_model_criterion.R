@@ -17,6 +17,8 @@
 #'
 #' @param return_criteria A logical (default \code{FALSE}) to indicate whether
 #'   to return the criterion. Mainly for internal use.
+#'   
+#' @param model_deriv Ignored.
 #' 
 #' @param ... Further arguments passed on to the functions from the \pkg{brms}
 #' 

@@ -17,7 +17,11 @@
 #'   
 #' @param add_criterion_args A named list to set up the arguments for the
 #'   [add_model_criterion()] function. Ignored when \code{check_criterion =
-#'   FALSE} or when each model objects has precomputed fit criteria.
+#'   FALSE} or when each model objects has pre computed fit criteria.
+#'   
+#' @param expose_model_functions_args A named list to set up the arguments for the
+#'   [expose_model_functions()] function. Ignored when \code{check_criterion =
+#'   FALSE} or when each model objects has pre computed fit criteria.
 #'   
 #' @param verbose A logical (default \code{FALSE}) to print some useful
 #'   information.
@@ -55,56 +59,75 @@
 #' 
 #' # compare models model_1 and model_2
 #' compare_model_12 <- compare_models(model_1, model_2, criterion = c("waic"))
+#' 
+#' # compare models model_1 and model_2 - model names: "mods[[1L]]" "mods[[2L]]"
+#' mods <- list(model_1, model_2)
+#' compare_model_12 <- compare_models(mods)
+#' 
+#' # compare models model_1 and model_2 - model names extracted as such
+#' compare_model_12 <- compare_models(list(model_1, model_2))
+#' compare_model_12 <- compare_models("list(model_1, model_2)")
+#' 
 #' }
 #' 
 compare_models.bgmfit <- function(model, 
                                  ..., 
                                  criterion = "loo", 
-                                 model_names = NULL,
+                                 model_name = NULL,
                                  check_criterion = TRUE,
                                  add_criterion_args = list(),
+                                 expose_model_functions_args = list(),
                                  expose_function = FALSE,
                                  verbose = FALSE) {
+
+  only_object <- NULL
+  if (is.character(model) && length(model) == 1 && 
+      grepl("^\\s*list\\s*\\(", model)) {
+    only_object <- FALSE
+  } 
+  if(is.list(model)) {
+    only_object <- FALSE
+  } 
+  if(is.bgmfit(model)) {
+    only_object <- TRUE
+  }
+  if(length(c(list(model), list(...))) > 1) {
+    only_object <- FALSE
+  }
+  
+  if (is.character(model) && length(model) == 1 && 
+      grepl("^\\s*list\\s*\\(", model)) {
+    model_list_str <-  model
+    model <- eval(parse(text = model), envir = parent.frame())
+  } else {
+    model_list_str <-  deparse(substitute(model))
+  }
+  gsub_namespace <- FALSE
+  model_list_names <- NULL
+  if(grepl("list\\(", model_list_str)) {
+    model_list_str <- gsub("list", "", model_list_str)
+    model_list_str <- strsplit(model_list_str, ",")[[1]]
+    # replace :: with _ , not when :::
+    model_list_str <- gsub("[^A-Za-z0-9_:]", "", model_list_str)
+    if(gsub_namespace) {
+      tmp <- gsub(":::", "@@@COLONPAIR@@@", model_list_str)
+      tmp <- gsub("::", "_", tmp)
+      model_list_str <- gsub("@@@COLONPAIR@@@", ":::", tmp)
+    }
+    model_list_names <- model_list_str
+  }
+  
+  if (is.null(model_name)) {
+    if(!is.null(model_list_names)) model_names <- model_list_names
+    if( is.null(model_list_names)) model_names <- NULL
+  } else {
+    model_names <- model_name
+  }
   
   if(!is.list(add_criterion_args)) {
     stop("Argument 'add_criterion_args' must be a named list")
   }
-  
-  is_brmsfit <- function(x) inherits(x, "brmsfit")
-  
-  flatten_models <- function(x) {
-    if (is.null(x)) return(list())
-    if (is_brmsfit(x)) return(list(x))
-    if (is.list(x)) return(unlist(lapply(x, flatten_models), recursive = FALSE))
-    stop("All inputs must be brmsfit objects or lists of brmsfit objects.")
-  }
-  
-  flatten_exprs <- function(expr, value) {
-    if (is.null(value)) return(character())
-    if (is_brmsfit(value)) return(deparse(expr, nlines = 1))
-    
-    if (is.list(value)) {
-      out <- vector("list", length(value))
-      nm <- names(value)
-      for (i in seq_along(value)) {
-        child_expr <- if (!is.null(nm) && nzchar(nm[i])) {
-          as.name(nm[i])
-        } else if (is.call(expr) && identical(expr[[1]], as.name("list"))) {
-          expr[[i + 1]]
-        } else {
-          as.call(list(as.name("[["), expr, i))
-        }
-        out[[i]] <- flatten_exprs(child_expr, value[[i]])
-      }
-      return(unlist(out, use.names = FALSE))
-    }
-    stop("All inputs must be brmsfit objects or lists of brmsfit objects.")
-  }
-  
-  has_criterion <- function(fit, criterion) {
-    !is.null(fit$criteria) && !is.null(fit$criteria[[criterion]])
-  }
-  
+ 
   exprs <- as.list(substitute(list(model, ...)))[-1]
   vals  <- c(list(model), list(...))
   
@@ -135,7 +158,8 @@ compare_models.bgmfit <- function(model,
       if (!has_criterion(fit, criterion)) {
         fit <- do.call(
           expose_model_functions,
-          c(list(model = fit, expose = expose_function) ))
+          c(list(model = fit, expose = expose_function), 
+            expose_model_functions_args))
       }
       fit
     })
@@ -146,7 +170,8 @@ compare_models.bgmfit <- function(model,
       if (!has_criterion(fit, criterion)) {
         fit <- do.call(
           expose_model_functions,
-          c(list(model = fit, expose = expose_function), add_criterion_args))
+          c(list(model = fit, expose = expose_function), 
+            expose_model_functions_args))
         suppressWarnings({
         fit <- do.call(
           brms::add_criterion,
@@ -181,19 +206,35 @@ compare_models <- function(model, ...) {
 }
 
 
-#' An alias of 'compare_models()'
 #' @rdname compare_models
 #' @export
 compare_models.list <- function(model, ...) {
   compare_models.bgmfit(model, ...)
 }
-  
-  
 
-#' An alias of 'compare_models()'
+
 #' @rdname compare_models
 #' @export
-#' 
+compare_models.character <- function(model, ...) {
+  compare_models.bgmfit(model, ...)
+}
+
+
+#' @rdname compare_models
+#' @export
+compare_models.default <- function(model, ...) {
+  if(!inherits(model, 'bgmfit') & 
+     !inherits(model, 'list') &
+     !inherits(model, 'character'))
+    stop(
+      "`model` must be an object of class 'bgmfit', a list, or a string",
+      call. = FALSE
+    )
+}
+  
+
+#' @rdname compare_models
+#' @export
 compare_model <- function(model, ...) {
   UseMethod("compare_models")
 }

@@ -8721,6 +8721,10 @@ set_manual_datagrid <- function(model,
                                 FUN_binary = NULL,
                                 FUN_other = NULL,
                                 verbose = FALSE) {
+  
+  # need to load 'NCmisc'
+  ept("library(NCmisc)")
+  
   xvar_temp <- idvar_temp <- NULL;
   uvarby <- model$model_info$univariate_by$by
   if(is.null(uvarby)) {

@@ -7052,7 +7052,202 @@ eval_data_exp <- function(newdata = NULL,
 }
 
 
-# set_exp_c <- c("splines::ns(logagem, df = 3)", 
-#                "stats::poly(age, defree = 2)")
+#' Check object class
+#' @description Used in [get_model_criterion()] and [compare_models()]
+#' @noRd
+is_brmsfit <- function(x) inherits(x, "brmsfit")
+
+
+#' Re-order elements of the list
+#' @description Used in [get_model_criterion()] 
+#' @noRd
+move_to_front_list <- function(x, names_to_move) {
+  c(x[names_to_move], x[!names(x) %in% names_to_move])
+}
+
+
+#' Evaluate and flatten the model list
+#' @description Used in [get_model_criterion()] and [compare_models()]
+#' @noRd
+flatten_models <- function(x) {
+  if (is.null(x)) 
+    return(list())
+  if (is_brmsfit(x)) 
+    return(list(x))
+  if (is.list(x)) 
+    return(unlist(lapply(x, flatten_models), recursive = FALSE))
+  stop("All inputs must be brmsfit object or lists of brmsfit objects.")
+}
+
+
+
+
+#' Evaluate and flatten the expression list
+#' @description Used in [get_model_criterion()] and [compare_models()]
+#' @noRd
+flatten_exprs <- function(expr, value) {
+  if (is.null(value)) 
+    return(character())
+  if (is_brmsfit(value)) 
+    return(deparse(expr, nlines = 1))
+  if (is.list(value)) {
+    out <- vector("list", length(value))
+    nm <- names(value)
+    for (i in seq_along(value)) {
+      child_expr <- if (!is.null(nm) && nzchar(nm[i])) {
+        as.name(nm[i])
+      }
+      else if (is.call(expr) && identical(expr[[1]], 
+                                          as.name("list"))) {
+        expr[[i + 1]]
+      }
+      else {
+        as.call(list(as.name("[["), expr, i))
+      }
+      out[[i]] <- flatten_exprs(child_expr, value[[i]])
+    }
+    return(unlist(out, use.names = FALSE))
+  }
+  stop("All inputs must be brmsfit objects or lists of brmsfit objects.")
+}
+
+
+#' Check if model object has pre computed fit criteria
+#' @description Used in [get_model_criterion()] and [compare_models()]
+#' @noRd
+has_criterion <- function(fit, criterion) {
+  !is.null(fit$criteria) && !is.null(fit$criteria[[criterion]])
+}
+
+
+
+#' #' Check if model object has pre computed multiple fit criteria
+#' @description Used in [get_model_criterion()]
+#' @noRd
+has_criterion_multiple <- function(fit, criterion) {
+  criterion <- as.character(criterion)
+  if (is.null(fit$criteria)) {
+    return(FALSE)
+  }
+  all(vapply(criterion, function(cr) {
+    !is.null(fit$criteria[[cr]])
+  }, logical(1)))
+}
+
+
+#' Evaluate the nested list
+#' @description Used in [get_model_criterion()]
+#' @noRd
+nested_to_df <- function(x, model_names = NULL, add_attr = FALSE) {
+  stopifnot(is.list(x))
+  `%||%` <- function(a, b) {
+    if (is.null(a) || length(a) == 0L || is.na(a) || a == "") {
+      b
+    } else {
+      a
+    }
+  }
+  
+  if (!is.null(model_names)) {
+    if (length(model_names) != length(x)) {
+      stop(
+        "`model_names` must have one element per model ",
+        "(i.e., per outer-list element)."
+      )
+    }
+    model_names <- as.character(model_names)
+  }
+  
+  outer_names <- names(x)
+  if (is.null(outer_names)) {
+    outer_names <- rep(NA_character_, length(x))
+  }
+  
+  rows <- list()
+  attr_object <- list()
+  k <- 0L
+
+  for (i in seq_along(x)) {
+    model_results <- x[[i]]
+    if (!is.list(model_results) || is.null(names(model_results))) {
+      stop(
+        "Each model must be a named list of criterion objects, ",
+        "such as `waic`, `loo`, or other criteria."
+      )
+    }
+
+    for (criterion in names(model_results)) {
+      obj <- model_results[[criterion]]
+      model_name <- if (!is.null(model_names)) {
+        model_names[i]
+      } else {
+        outer_names[i] %||%
+          attr(obj, "model_name") %||%
+          paste0("model_", i)
+      }
+
+      model_id <- outer_names[i] %||% paste0("", i)
+
+      is_scalar <- vapply(obj, function(z) {
+        !is.null(z) &&
+          is.atomic(z) &&
+          is.null(dim(z)) &&
+          length(z) == 1L
+      }, logical(1))
+      
+      scalar_part <- obj[is_scalar]
+      complex_part <- obj[!is_scalar]
+      
+      k <- k + 1L
+
+      rows[[k]] <- c(
+        list(
+          # model_name = model_name,
+          model = model_name,
+          # model_id = model_id,
+          criterion = criterion
+        ),
+        scalar_part
+      )
+
+      # model_name_model_id_criterion <- paste0(model_name, "_", model_id)
+      
+      model_name_model_id_criterion <- paste0(model_name, "", "")
+      
+
+      attr_object[[k]] <- complex_part
+      names(attr_object)[k] <- paste(model_name_model_id_criterion, 
+                                     criterion, sep = "_")
+    }
+  }
+
+  all_columns <- unique(
+    unlist(lapply(rows, names), use.names = FALSE)
+  )
+
+  rows <- lapply(rows, function(row) {
+    missing_columns <- setdiff(all_columns, names(row))
+    for (nm in missing_columns) {
+      row[[nm]] <- NA
+    }
+    row[all_columns]
+  })
+
+  out <- do.call(
+    rbind,
+    lapply(rows, function(row) {
+      as.data.frame(
+        row,
+        stringsAsFactors = FALSE,
+        check.names = FALSE
+      )
+    })
+  )
+  
+  rownames(out) <- NULL
+  if(add_attr) attr(out, "attr_object") <- attr_object
+  
+  return(out)
+}
 
 

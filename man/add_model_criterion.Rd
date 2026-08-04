@@ -115,13 +115,7 @@ execution.
 \code{mc.cores} option.
 }}
 
-\item{model_deriv}{A logical value specifying whether to estimate the
-velocity curve from the derivative function or by differentiating the
-distance curve. Set \code{model_deriv = TRUE} for functions that require
-the velocity curve, such as \code{growthparameters()} and
-\code{plot_curves()}. Set it to \code{NULL} for functions that use the
-distance curve (i.e., fitted values), such as \code{loo_validation()} and
-\code{plot_ppc()}.}
+\item{model_deriv}{Ignored.}
 
 \item{return_model}{A logical (default \code{TRUE}) to indicate whether to
 return the model object or just assign the criteria to the model. Mainly
