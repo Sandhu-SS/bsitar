@@ -5,7 +5,13 @@
 #' @description
 #' \code{get_model_criterion()} is a wrapper around [add_model_criterion()] that
 #' computes and returns model-fit criteria. See [add_model_criterion()] for
-#' details and available arguments.
+#' details and available arguments. In addition to the criteria supported by
+#' [add_model_criterion()] (\code{'loo', 'waic', 'kfold', 'loo_subsample',
+#' 'bayes_R2', 'loo_R2', 'marglik'}), \code{get_model_criterion()} also computes
+#' \code{conditional} and \code{marginal} versions of the Bayesian \code{R2} and
+#' its LOO-adjusted \code{R2} via [performance::r2_bayes()] and
+#' [performance::r2_loo()]. The LOO-adjusted \code{R2} is conceptually analogous
+#' to an adjusted \code{R2}. See [performance::r2_bayes()] for details.
 #' 
 #' @param reformat Logical indicating whether to apply [base::round()] to the
 #'   numeric variables in the output \code{data.frame}. The default is
@@ -72,6 +78,12 @@
 #' out_12 <- get_model_criterion(list(model_1, model_2))
 #' out_12 <- get_model_criterion("list(model_1, model_2)")
 #' 
+#' # compare different versions of R2, from brms and performance packages
+#' set_criterion <- c("bayes_R2", "loo_R2", 
+#' "bayes_R2_conditional", "bayes_R2_marginal", 
+#' "loo_R2_conditional", "loo_R2_marginal")
+#' out_R2 <- get_model_criterion(model_2, criterion = set_criterion)
+#' 
 #' }
 #' 
 get_model_criterion.bgmfit <- function(model,
@@ -90,7 +102,7 @@ get_model_criterion.bgmfit <- function(model,
                                        expose_function = FALSE, 
                                        verbose = FALSE,
                                        reformat = NULL,
-                                       digits = 2,
+                                       digits = 3,
                                        add_attr = FALSE) {
 
   only_object <- NULL
@@ -137,6 +149,15 @@ get_model_criterion.bgmfit <- function(model,
     model_names <- model_name
   }
   
+  conf_level <- probs[2] - probs[1]
+    
+  conf <- conf_level
+  probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+  probtitles <- probs[order(probs)] * 100
+  probtitles <- paste("Q", probtitles, sep = "")
+  set_names_  <- c('Estimate', "Est.Error", probtitles)
+  
+  
   add_args <- as.list(match.call(expand.dots = FALSE))
   defaults_it <- base::as.list(base::formals(get_model_criterion))
   for (i in names(defaults_it)) {
@@ -146,6 +167,8 @@ get_model_criterion.bgmfit <- function(model,
   defaults <- base::as.list(base::formals(get_model_criterion.bgmfit))
   defaults[['model']] <- NULL
   build_args <- utils::modifyList(defaults, add_args)
+  
+  
 
   check_criterion <- TRUE
   add_criterion_args                      <- build_args
@@ -196,19 +219,134 @@ get_model_criterion.bgmfit <- function(model,
     })
   }
   
+  
+  
+  performance_criterion  <- c("bayes_R2_conditional", "bayes_R2_marginal",
+                              "loo_R2_conditional", "loo_R2_marginal")
+  add_criterion_args_ele <- eval(add_criterion_args[['criterion']])
+  add_criterion_args[['criterion']] <- 
+    add_criterion_args_ele[!add_criterion_args_ele %in% performance_criterion]
+  rm('add_criterion_args_ele')
+  
+  
+  performance_criterion_args <- list()
+  performance_criterion_args[["robust"]]  <- robust
+  performance_criterion_args[["conf"]]    <- conf
+  performance_criterion_args[["verbose"]] <- verbose
+  
+  call_r2_bayes <- call_r2_loo <- FALSE
+  add_bayes_R2_conditional <- add_bayes_R2_marginal <- FALSE
+  add_bayes_R2_both <- add_loo_R2_conditional <- FALSE
+  add_loo_R2_marginal <- add_loo_R2_both <- FALSE
+  
+  if("bayes_R2_conditional" %in% criterion | 
+     "bayes_R2_marginal" %in% criterion) {
+    call_r2_bayes <- TRUE
+  }
+  if("bayes_R2_conditional" %in% criterion) {
+    add_bayes_R2_conditional <- TRUE
+  }
+  if("bayes_R2_marginal" %in% criterion ) {
+    add_bayes_R2_marginal <- TRUE
+  }
+  if(add_bayes_R2_conditional & add_bayes_R2_marginal) {
+    add_bayes_R2_both <- TRUE
+  }
+  
+  if("loo_R2_conditional" %in% criterion | 
+     "loo_R2_marginal" %in% criterion) {
+    call_r2_loo <- TRUE
+  }
+  if("loo_R2_conditional" %in% criterion) {
+    add_loo_R2_conditional <- TRUE
+  }
+  if("loo_R2_marginal" %in% criterion ) {
+    add_loo_R2_marginal <- TRUE
+  }
+  if(add_loo_R2_conditional & add_loo_R2_marginal) {
+    add_loo_R2_both <- TRUE
+  }
+  
+  if(call_r2_bayes | call_r2_loo) {
+    insight::check_if_installed("performance")
+  }
+  
+  make_r2_bayes_loo_out <- function(df, criterion, set_names_) {
+    Component <- NULL;
+    df_out <- as.data.frame(df )
+    select_vars <- c("R2", "SD", "CI_low", "CI_high", "Component")
+    df_out <- df_out %>% dplyr::select(dplyr::all_of(select_vars))
+    df_out <- df_out %>%
+      dplyr::rename(!!as.symbol(set_names_[1]) := 
+                      dplyr::all_of('R2')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[2]) := 
+                      dplyr::all_of('SD')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[3]) := 
+                      dplyr::all_of('CI_low')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[4]) := 
+                      dplyr::all_of('CI_high')) 
+    df_out_conditional <- df_out %>%
+      dplyr::filter(Component == "conditional") %>% 
+      dplyr::select(-dplyr::all_of("Component"))
+    df_out_marginal <- df_out %>% 
+      dplyr::filter(Component == "marginal") %>% 
+      dplyr::select(-dplyr::all_of("Component"))
+    out <- list()
+    out[[paste0(criterion, "_", 'conditional')]] <- df_out_conditional
+    out[[paste0(criterion, "_",  'marginal')]] <- df_out_marginal
+    return(out)
+  }
+  
+  
   if (check_criterion) {
     models <- lapply(models, function(fit) {
       if (!has_criterion_multiple(fit, criterion)) {
         fit <- do.call(expose_model_functions, c(list(model = fit, 
                                                               expose = expose_function) ))
         suppressWarnings({
-          fit <- do.call(add_model_criterion, c(list(model = fit), add_criterion_args))
+          out <- do.call(add_model_criterion, c(list(model = fit), 
+                                                add_criterion_args))
         })
+        
+        if(call_r2_bayes) {
+          fit <- do.call(expose_model_functions, c(list(model = fit, 
+                                                        expose = expose_function)))
+          df_out <- do.call(performance::r2_bayes, c(list(model = fit), 
+                                                     performance_criterion_args))
+          df_out_list <- make_r2_bayes_loo_out(df_out, "bayes_R2", set_names_)
+          if(add_bayes_R2_both) {
+            out <- c(out, df_out_list)
+          } else if(add_bayes_R2_conditional) {
+            out <- c(out, df_out_list[['bayes_R2_conditional']])
+          } else if(add_bayes_R2_marginal) {
+            out <- c(out, df_out_list[['bayes_R2_marginall']])
+          }
+        }
+        
+        if(call_r2_loo) {
+          fit <- do.call(expose_model_functions, c(list(model = fit, 
+                                                        expose = expose_function)))
+          suppressWarnings({
+            df_out <- do.call(performance::r2_loo, c(list(model = fit), 
+                                                     performance_criterion_args))
+          })
+          df_out_list <- make_r2_bayes_loo_out(df_out, "loo_R2", set_names_)
+          if(add_loo_R2_both) {
+            out <- c(out, df_out_list)
+          } else if(add_loo_R2_conditional) {
+            out <- c(out, df_out_list[['loo_R2_conditional']])
+          } else if(add_loo_R2_marginal) {
+            out <- c(out, df_out_list[['loo_R2_marginall']])
+          }
+        }
+
       }
-      fit
+      
+      out
     })
   }
   
+
   if (length(model_names) != length(models)) {
     nnames <- length(model_names)
     model_names_all <- paste0("model", seq_along(models) - 
@@ -218,7 +356,9 @@ get_model_criterion.bgmfit <- function(model,
     message2c("The number of model names is not same as the number of models.\n              The remaining models are named sequentially as model1,...")
   }
 
-  out <- nested_to_df(models, model_names = model_names, add_attr = T)
+  out <- nested_to_df(models, model_names = model_names, add_attr = add_attr,
+                      summary = summary, robust = robust, probs = probs,
+                      verbose = verbose)
   
   if(is.null(reformat)) {
     reformat <- TRUE

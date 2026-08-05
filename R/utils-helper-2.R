@@ -7138,7 +7138,14 @@ has_criterion_multiple <- function(fit, criterion) {
 #' Evaluate the nested list
 #' @description Used in [get_model_criterion()]
 #' @noRd
-nested_to_df <- function(x, model_names = NULL, add_attr = FALSE) {
+nested_to_df <- function(x, 
+                         model_names = NULL, 
+                         add_attr = FALSE,
+                         summary = TRUE,
+                         robust = FALSE,
+                         probs = c(0.025, 0.975),
+                         verbose = FALSE) {
+  
   stopifnot(is.list(x))
   `%||%` <- function(a, b) {
     if (is.null(a) || length(a) == 0L || is.na(a) || a == "") {
@@ -7187,7 +7194,36 @@ nested_to_df <- function(x, model_names = NULL, add_attr = FALSE) {
       }
 
       model_id <- outer_names[i] %||% paste0("", i)
+      
+      make_named_list <- function(obj) {
+        obj_colnames <- colnames(obj)
+        obj <- as.list(obj)
+        names(obj) <- obj_colnames
+        return(obj)
+      }
+      
+    
+      if(!is.list(obj)) {
+        if(criterion == "loo_R2") {
+          obj_summary <- brms::posterior_summary(obj, probs = probs, robust = robust)
+          obj_summary <- make_named_list(obj_summary)
+          obj_summary[['pointwise']] <- obj
+          obj <- obj_summary
+        }
+        if(criterion == "bayes_R2") {
+          if(!summary) {
+            obj_summary <- brms::posterior_summary(obj, probs = probs, robust = robust)
+            obj_summary <- make_named_list(obj_summary)
+            obj_summary[['pointwise']] <- obj
+            obj <- obj_summary
+          } else if(summary) {
+            obj <- make_named_list(obj)
+            add_attr <- FALSE # empty list()
+          }
+        }
+      }
 
+      
       is_scalar <- vapply(obj, function(z) {
         !is.null(z) &&
           is.atomic(z) &&
@@ -7197,24 +7233,19 @@ nested_to_df <- function(x, model_names = NULL, add_attr = FALSE) {
       
       scalar_part <- obj[is_scalar]
       complex_part <- obj[!is_scalar]
-      
+ 
       k <- k + 1L
 
       rows[[k]] <- c(
         list(
-          # model_name = model_name,
           model = model_name,
-          # model_id = model_id,
           criterion = criterion
         ),
         scalar_part
       )
 
-      # model_name_model_id_criterion <- paste0(model_name, "_", model_id)
-      
       model_name_model_id_criterion <- paste0(model_name, "", "")
       
-
       attr_object[[k]] <- complex_part
       names(attr_object)[k] <- paste(model_name_model_id_criterion, 
                                      criterion, sep = "_")
@@ -7236,6 +7267,7 @@ nested_to_df <- function(x, model_names = NULL, add_attr = FALSE) {
   out <- do.call(
     rbind,
     lapply(rows, function(row) {
+      # row <- row[!sapply(row, is.null)]
       as.data.frame(
         row,
         stringsAsFactors = FALSE,
@@ -7249,5 +7281,7 @@ nested_to_df <- function(x, model_names = NULL, add_attr = FALSE) {
   
   return(out)
 }
+
+
 
 

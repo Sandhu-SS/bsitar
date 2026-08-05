@@ -228,7 +228,19 @@ add_model_criterion.bgmfit <- function(model,
                                check_formalArgs_exceptions = c('x'),
                                check_trace_back = NULL,
                                envir = parent.frame())
-
+  
+  if(length(criterion) == 1) {
+    if(criterion == "loo_subsample") calling.args$pointwise <- NULL
+  } else if(length(criterion) > 1) {
+    if("loo_subsample" %in% criterion) {
+      warning2c("For 'loo_subsample', pointwise must be NULL. 
+                Hence setting pointwise = NULL which might affect other 
+                criteria as well")
+      calling.args$pointwise <- NULL
+    }
+  }
+  
+  
   suppressWarnings({
     . <- CustomDoCall(brms::add_criterion, calling.args)
   })

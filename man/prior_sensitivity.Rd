@@ -34,6 +34,8 @@
   empty = "-",
   print = FALSE,
   return_table = NULL,
+  tibble_table = FALSE,
+  print_table = FALSE,
   return_file = NULL,
   flex_table = FALSE,
   return_conflict = FALSE,
@@ -186,6 +188,18 @@ structured list with class attributes. Set \code{return_table = FALSE} if
 you plan to call \code{\link[=prior_conflict]{prior_conflict()}} later. Note that when
 \code{return_table = NULL} (the default), then it is internally set as
 \code{TRUE} when \code{return_conflict = FALSE}.}
+
+\item{tibble_table}{A logical indicating whether to return the table as a
+data frame (\code{tibble_table = FALSE}) or as a \code{tibble}
+(\code{tibble_table = TRUE}). Default \code{FALSE}. Ignored if
+\code{return_table = FALSE}.}
+
+\item{print_table}{A logical indicating whether to print table as a
+\code{\link[knitr:kable]{knitr::kable()}} (\code{print_table = TRUE}) or return the table as an
+object (\code{print_table = FALSE}). Note that when \code{print_table =
+TRUE}, table is only printed and not returned as an object
+(\code{invisible(NULL)}). Default \code{print_table = FALSE}. Ignored if
+\code{return_table = FALSE}.}
 
 \item{return_file}{Optional character string specifying the output type.
 Supported values are \code{"word"}, \code{"docx"}, \code{"html"},

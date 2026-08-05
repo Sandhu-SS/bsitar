@@ -79,6 +79,7 @@ jobs:
             flextable,
             ggdist,
             modelsummary,
+            performance,
             projpred,
             sitar
 

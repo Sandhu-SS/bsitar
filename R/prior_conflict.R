@@ -21,7 +21,19 @@
 #' 
 #' @param return_table A logical indicating whether to return the table 
 #' \code{return_table = TRUE} or the list \code{return_table = FALSE}.
-#'   
+#' 
+#' @param tibble_table A logical indicating whether to return the table as a
+#'   data frame (\code{tibble_table = FALSE}) or as a \code{tibble}
+#'   (\code{tibble_table = TRUE}). Default \code{FALSE}. Ignored if
+#'   \code{return_table = FALSE}.
+#' 
+#' @param print_table A logical indicating whether to print table as a
+#'   [knitr::kable()] (\code{print_table = TRUE}) or return the table as an
+#'   object (\code{print_table = FALSE}). Note that when \code{print_table =
+#'   TRUE}, table is only printed and not returned as an object
+#'   (\code{invisible(NULL)}). Default \code{print_table = FALSE}. Ignored if
+#'   \code{return_table = FALSE}.
+#' 
 #' @param flex_table A logical indicating whether to return the data frame
 #'   \code{flex_table = FALSE} or the \code{flextable} \code{flex_table = FALSE}
 #'   
@@ -117,6 +129,8 @@ prior_conflict.bgmfit <- function(x,
                                   empty = "-",
                                   print = FALSE,
                                   return_table = TRUE,
+                                  tibble_table = FALSE,
+                                  print_table = FALSE,
                                   return_file = NULL,
                                   flex_table = FALSE,
                                   path = NULL,
@@ -184,7 +198,14 @@ prior_conflict.bgmfit <- function(x,
   
   if(return_table) {
     if(!flex_table) {
-      return(out$body$dataset)
+      out <- out$body$dataset
+      if(tibble_table) out <- out %>% tibble::as_tibble()
+      if(print_table) {
+        print(knitr::kable(out))
+        return(invisible(NULL))
+      } else {
+         return(out)
+      }
     } else if( flex_table) {
       if (!is.null(title)) {
         out <- flextable::set_caption(out, caption = title)

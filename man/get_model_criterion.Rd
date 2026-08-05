@@ -25,7 +25,7 @@
   expose_function = FALSE,
   verbose = FALSE,
   reformat = NULL,
-  digits = 2,
+  digits = 3,
   add_attr = FALSE
 )
 
@@ -131,7 +131,13 @@ frame columns.
 \description{
 \code{get_model_criterion()} is a wrapper around \code{\link[=add_model_criterion]{add_model_criterion()}} that
 computes and returns model-fit criteria. See \code{\link[=add_model_criterion]{add_model_criterion()}} for
-details and available arguments.
+details and available arguments. In addition to the criteria supported by
+\code{\link[=add_model_criterion]{add_model_criterion()}} (\code{'loo', 'waic', 'kfold', 'loo_subsample',
+'bayes_R2', 'loo_R2', 'marglik'}), \code{get_model_criterion()} also computes
+\code{conditional} and \code{marginal} versions of the Bayesian \code{R2} and
+its LOO-adjusted \code{R2} via \code{\link[performance:r2_bayes]{performance::r2_bayes()}} and
+\code{\link[performance:r2_loo]{performance::r2_loo()}}. The LOO-adjusted \code{R2} is conceptually analogous
+to an adjusted \code{R2}. See \code{\link[performance:r2_bayes]{performance::r2_bayes()}} for details.
 }
 \examples{
 \donttest{
@@ -164,6 +170,12 @@ out_12 <- get_model_criterion(mods)
 # Note that list() could be supplied as a string "list()" also.
 out_12 <- get_model_criterion(list(model_1, model_2))
 out_12 <- get_model_criterion("list(model_1, model_2)")
+
+# compare different versions of R2, from brms and performance packages
+set_criterion <- c("bayes_R2", "loo_R2", 
+"bayes_R2_conditional", "bayes_R2_marginal", 
+"loo_R2_conditional", "loo_R2_marginal")
+out_R2 <- get_model_criterion(model_2, criterion = set_criterion)
 
 }
 
