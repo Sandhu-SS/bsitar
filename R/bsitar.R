@@ -2416,7 +2416,7 @@ bsitar <- function(x,
                    c_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    s_prior_beta = normal(lm, lm, autoscale = FALSE),
-                   a_cov_prior_beta = normal(0, 50.0, autoscale = FALSE),
+                   a_cov_prior_beta = normal(0, 20.0, autoscale = FALSE),
                    b_cov_prior_beta = normal(0,  2.0, autoscale = FALSE),
                    c_cov_prior_beta = normal(0,  1.0, autoscale = FALSE),
                    d_cov_prior_beta = normal(0,  1.0, autoscale = FALSE),
@@ -2440,7 +2440,7 @@ bsitar <- function(x,
                    sigma_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
                    sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
-                   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
+                   sigma_cov_prior_sd = normal(0, 0.10, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
                    rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
@@ -2696,8 +2696,6 @@ bsitar <- function(x,
     } 
   }
   mcall$threads <- mcall_threads_
-  
-  
   
   newcall_checks <- c('save_pars')
   if(!is.null(mcall$threads)) {
