@@ -25,6 +25,8 @@
   expose_function = FALSE,
   verbose = FALSE,
   reformat = NULL,
+  tibble_table = FALSE,
+  print_table = FALSE,
   digits = 3,
   add_attr = FALSE
 )
@@ -109,35 +111,54 @@ default to \code{FALSE}.}
 \item{verbose}{A logical (default \code{FALSE}) to print some useful
 information.}
 
-\item{reformat}{Logical indicating whether to apply \code{\link[base:round]{base::round()}} to the
-numeric variables in the output \code{data.frame}. The default is
-\code{NULL}, which is treated as \code{TRUE}. If \code{TRUE}, then numeric
-variables are rounded using \code{digits}.}
+\item{reformat}{Logical indicating whether to round numeric variables in the
+output \code{data.frame} using \code{\link[base:round]{base::round()}}. The default is \code{NULL},
+which is treated as \code{TRUE}. When \code{TRUE}, numeric variables are
+rounded to the number of decimal places specified by \code{digits}.}
+
+\item{tibble_table}{Logical indicating whether to return the table as a
+\code{data.frame} (\code{FALSE}) or as a \code{tibble} (\code{TRUE}).
+Default is \code{FALSE}.}
+
+\item{print_table}{Logical indicating whether to print the table using
+\code{\link[knitr:kable]{knitr::kable()}} (\code{TRUE}) or return it as an object (\code{FALSE}).
+When \code{print_table = TRUE}, the table is printed and the function
+returns \code{invisible(NULL)}. Default is \code{FALSE}.}
 
 \item{digits}{An integer (default \code{2}) to set the decimal places for
 rounding the results using the \code{\link[base:round]{base::round()}} function.}
 
-\item{add_attr}{A logical indicating whether complex list elements of
-the criteria should be added as attributes to the returned
-\code{data.frame}. Defaults to \code{FALSE}.}
+\item{add_attr}{Logical indicating whether to attach complex list elements of
+the criteria as attributes to the returned \code{data.frame}. Default is
+\code{FALSE}.}
 }
 \value{
 A \code{data.frame}. If \code{add_attr = TRUE}, an additional
 attribute named \code{"attr_object"} is attached to the returned data
 frame. This attribute contains the complex, nested list components from
-\code{add_model_criterion()} that cannot be represented as regular data
-frame columns.
+\code{add_model_criterion()} that cannot be represented as regular columns.
 }
 \description{
 \code{get_model_criterion()} is a wrapper around \code{\link[=add_model_criterion]{add_model_criterion()}} that
 computes and returns model-fit criteria. See \code{\link[=add_model_criterion]{add_model_criterion()}} for
-details and available arguments. In addition to the criteria supported by
-\code{\link[=add_model_criterion]{add_model_criterion()}} (\code{'loo', 'waic', 'kfold', 'loo_subsample',
-'bayes_R2', 'loo_R2', 'marglik'}), \code{get_model_criterion()} also computes
-\code{conditional} and \code{marginal} versions of the Bayesian \code{R2} and
-its LOO-adjusted \code{R2} via \code{\link[performance:r2_bayes]{performance::r2_bayes()}} and
-\code{\link[performance:r2_loo]{performance::r2_loo()}}. The LOO-adjusted \code{R2} is conceptually analogous
-to an adjusted \code{R2}. See \code{\link[performance:r2_bayes]{performance::r2_bayes()}} for details.
+details and available arguments.
+
+In addition to the criteria supported by \code{\link[=add_model_criterion]{add_model_criterion()}}
+(\code{'loo', 'waic', 'kfold', 'loo_subsample', 'bayes_R2', 'loo_R2',
+'marglik'}), \code{get_model_criterion()} also computes conditional and
+marginal versions of:
+\itemize{
+\item Bayesian \code{R2} (\code{bayes_R2_conditional} and
+\code{bayes_R2_marginal}) via \code{\link[performance:r2_bayes]{performance::r2_bayes()}}, and
+\item LOO-adjusted Bayesian \code{R2} (\code{loo_R2_conditional} and
+\code{loo_R2_marginal}) via \code{\link[performance:r2_loo]{performance::r2_loo()}}.
+}
+
+The LOO-adjusted \code{R2} is conceptually analogous to the adjusted
+\code{R2} in classical regression. The marginal \code{R2} reflects the
+variance explained by the fixed effects alone, whereas the conditional
+\code{R2} reflects the variance explained by both the fixed and random
+effects. See \code{\link[performance:r2_bayes]{performance::r2_bayes()}} for further details.
 }
 \examples{
 \donttest{

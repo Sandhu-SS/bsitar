@@ -5,22 +5,42 @@
 #' @description
 #' \code{get_model_criterion()} is a wrapper around [add_model_criterion()] that
 #' computes and returns model-fit criteria. See [add_model_criterion()] for
-#' details and available arguments. In addition to the criteria supported by
-#' [add_model_criterion()] (\code{'loo', 'waic', 'kfold', 'loo_subsample',
-#' 'bayes_R2', 'loo_R2', 'marglik'}), \code{get_model_criterion()} also computes
-#' \code{conditional} and \code{marginal} versions of the Bayesian \code{R2} and
-#' its LOO-adjusted \code{R2} via [performance::r2_bayes()] and
-#' [performance::r2_loo()]. The LOO-adjusted \code{R2} is conceptually analogous
-#' to an adjusted \code{R2}. See [performance::r2_bayes()] for details.
+#' details and available arguments.
+#'
+#' In addition to the criteria supported by [add_model_criterion()]
+#' (\code{'loo', 'waic', 'kfold', 'loo_subsample', 'bayes_R2', 'loo_R2',
+#' 'marglik'}), \code{get_model_criterion()} also computes conditional and
+#' marginal versions of:
+#' \itemize{
+#'   \item Bayesian \code{R2} (\code{bayes_R2_conditional} and
+#'         \code{bayes_R2_marginal}) via [performance::r2_bayes()], and
+#'   \item LOO-adjusted Bayesian \code{R2} (\code{loo_R2_conditional} and
+#'         \code{loo_R2_marginal}) via [performance::r2_loo()].
+#' }
+#'
+#' The LOO-adjusted \code{R2} is conceptually analogous to the adjusted
+#' \code{R2} in classical regression. The marginal \code{R2} reflects the
+#' variance explained by the fixed effects alone, whereas the conditional
+#' \code{R2} reflects the variance explained by both the fixed and random
+#' effects. See [performance::r2_bayes()] for further details.
 #' 
-#' @param reformat Logical indicating whether to apply [base::round()] to the
-#'   numeric variables in the output \code{data.frame}. The default is
-#'   \code{NULL}, which is treated as \code{TRUE}. If \code{TRUE}, then numeric
-#'   variables are rounded using \code{digits}.
-#' 
-#' @param add_attr A logical indicating whether complex list elements of
-#'   the criteria should be added as attributes to the returned
-#'   \code{data.frame}. Defaults to \code{FALSE}.
+#' @param reformat Logical indicating whether to round numeric variables in the
+#'   output \code{data.frame} using [base::round()]. The default is \code{NULL},
+#'   which is treated as \code{TRUE}. When \code{TRUE}, numeric variables are
+#'   rounded to the number of decimal places specified by \code{digits}.
+#'   
+#' @param tibble_table Logical indicating whether to return the table as a
+#'   \code{data.frame} (\code{FALSE}) or as a \code{tibble} (\code{TRUE}).
+#'   Default is \code{FALSE}.
+#'
+#' @param print_table Logical indicating whether to print the table using
+#'   [knitr::kable()] (\code{TRUE}) or return it as an object (\code{FALSE}).
+#'   When \code{print_table = TRUE}, the table is printed and the function
+#'   returns \code{invisible(NULL)}. Default is \code{FALSE}.
+#'
+#' @param add_attr Logical indicating whether to attach complex list elements of
+#'   the criteria as attributes to the returned \code{data.frame}. Default is
+#'   \code{FALSE}.
 #'
 #' @param ... Additional arguments passed to [add_model_criterion()].
 #' 
@@ -35,8 +55,7 @@
 #' @return A \code{data.frame}. If \code{add_attr = TRUE}, an additional
 #'   attribute named \code{"attr_object"} is attached to the returned data
 #'   frame. This attribute contains the complex, nested list components from
-#'   \code{add_model_criterion()} that cannot be represented as regular data
-#'   frame columns.
+#'   \code{add_model_criterion()} that cannot be represented as regular columns.
 #' 
 #' @rdname get_model_criterion
 #' @export
@@ -102,6 +121,8 @@ get_model_criterion.bgmfit <- function(model,
                                        expose_function = FALSE, 
                                        verbose = FALSE,
                                        reformat = NULL,
+                                       tibble_table = FALSE,
+                                       print_table = FALSE,
                                        digits = 3,
                                        add_attr = FALSE) {
 
@@ -167,8 +188,6 @@ get_model_criterion.bgmfit <- function(model,
   defaults <- base::as.list(base::formals(get_model_criterion.bgmfit))
   defaults[['model']] <- NULL
   build_args <- utils::modifyList(defaults, add_args)
-  
-  
 
   check_criterion <- TRUE
   add_criterion_args                      <- build_args
@@ -219,16 +238,41 @@ get_model_criterion.bgmfit <- function(model,
     })
   }
   
-  
+  add_model_criterion_criterion <- c('loo', 'waic', 'kfold', 
+                                     'loo_subsample', 'bayes_R2', 'loo_R2', 
+                                     'marglik')
   
   performance_criterion  <- c("bayes_R2_conditional", "bayes_R2_marginal",
                               "loo_R2_conditional", "loo_R2_marginal")
+  
   add_criterion_args_ele <- eval(add_criterion_args[['criterion']])
+  
+  all_criterion <- c(add_model_criterion_criterion, performance_criterion)
+  
+  add_criterion_args_ele_c <- c()
+  for (add_criterion_args_elei in add_criterion_args_ele) {
+    if(!add_criterion_args_elei %in% all_criterion) {
+      add_criterion_args_ele_c <- c(add_criterion_args_ele_c, 
+                                    add_criterion_args_elei)
+    }
+  }
+  
+  if(!is_emptyx(add_criterion_args_ele_c)) {
+    stop2c("Following criterion are invalid: ", 
+           collapse_comma(add_criterion_args_ele_c),
+           ". Allowed criterion are: ",
+           collapse_comma(all_criterion))
+  }
+  
   add_criterion_args[['criterion']] <- 
     add_criterion_args_ele[!add_criterion_args_ele %in% performance_criterion]
   rm('add_criterion_args_ele')
   
-  
+  call_add_criterion <- TRUE
+  if(is_emptyx(add_criterion_args[['criterion']])) {
+    call_add_criterion <- FALSE
+  }
+ 
   performance_criterion_args <- list()
   performance_criterion_args[["robust"]]  <- robust
   performance_criterion_args[["conf"]]    <- conf
@@ -267,6 +311,10 @@ get_model_criterion.bgmfit <- function(model,
     add_loo_R2_both <- TRUE
   }
   
+  if(!call_add_criterion & !call_r2_bayes & !call_r2_loo) {
+    stop2c("No valid criterion specified")
+  }
+  
   if(call_r2_bayes | call_r2_loo) {
     insight::check_if_installed("performance")
   }
@@ -297,49 +345,57 @@ get_model_criterion.bgmfit <- function(model,
     return(out)
   }
   
+  build_out_list <- function(out, df_out_list, criterion_name) {
+    out <- c(out, 
+             setNames(list(df_out_list[[criterion_name]]), criterion_name)
+             )
+    return(out)
+  }
   
   if (check_criterion) {
     models <- lapply(models, function(fit) {
       if (!has_criterion_multiple(fit, criterion)) {
-        fit <- do.call(expose_model_functions, c(list(model = fit, 
-                                                              expose = expose_function) ))
-        suppressWarnings({
-          out <- do.call(add_model_criterion, c(list(model = fit), 
-                                                add_criterion_args))
-        })
+        fit <- do.call(expose_model_functions, 
+                       c(list(model = fit, expose = expose_function) ))
+        
+        if(call_add_criterion) {
+          add_criterion_args[['clearenvfuns']] <- FALSE
+          suppressWarnings({
+            out <- do.call(add_model_criterion, c(list(model = fit), 
+                                                  add_criterion_args))
+          })
+        } else {
+          out <- list()
+        }
         
         if(call_r2_bayes) {
-          fit <- do.call(expose_model_functions, c(list(model = fit, 
-                                                        expose = expose_function)))
-          df_out <- do.call(performance::r2_bayes, c(list(model = fit), 
-                                                     performance_criterion_args))
+          df_out <- do.call(performance::r2_bayes, 
+                            c(list(model = fit), performance_criterion_args))
           df_out_list <- make_r2_bayes_loo_out(df_out, "bayes_R2", set_names_)
           if(add_bayes_R2_both) {
             out <- c(out, df_out_list)
           } else if(add_bayes_R2_conditional) {
-            out <- c(out, df_out_list[['bayes_R2_conditional']])
+            out <- build_out_list(out, df_out_list, 'bayes_R2_conditional')
           } else if(add_bayes_R2_marginal) {
-            out <- c(out, df_out_list[['bayes_R2_marginall']])
+            out <- build_out_list(out, df_out_list, 'bayes_R2_marginall')
           }
         }
         
         if(call_r2_loo) {
-          fit <- do.call(expose_model_functions, c(list(model = fit, 
-                                                        expose = expose_function)))
           suppressWarnings({
-            df_out <- do.call(performance::r2_loo, c(list(model = fit), 
-                                                     performance_criterion_args))
+            df_out <- do.call(performance::r2_loo, 
+                              c(list(model = fit), performance_criterion_args))
           })
           df_out_list <- make_r2_bayes_loo_out(df_out, "loo_R2", set_names_)
           if(add_loo_R2_both) {
             out <- c(out, df_out_list)
           } else if(add_loo_R2_conditional) {
-            out <- c(out, df_out_list[['loo_R2_conditional']])
+            out <- build_out_list(out, df_out_list, 'loo_R2_conditional')
           } else if(add_loo_R2_marginal) {
-            out <- c(out, df_out_list[['loo_R2_marginall']])
+            out <- build_out_list(out, df_out_list, 'loo_R2_marginal')
           }
         }
-
+        
       }
       
       out
@@ -370,7 +426,16 @@ get_model_criterion.bgmfit <- function(model,
                                   ~ round(.x, digits = digits)))
   }
   
-  return(out)
+  if(tibble_table) out <- out %>% tibble::as_tibble()
+  
+  if(print_table) {
+    print(knitr::kable(out))
+    return(invisible(NULL))
+  } else {
+    return(out)
+  }
+  
+  return(invisible(NULL))
 }
 
 
