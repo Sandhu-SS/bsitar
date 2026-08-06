@@ -97,7 +97,8 @@
 #' @keywords internal
 #' @noRd
 #'
-range_method <- function(x = NULL, ...,
+range_method <- function(x = NULL, 
+                         ...,
                          method = c("r", "q1", "q2", "q3"),
                          n = 1000,
                          mean = 0,
@@ -544,6 +545,8 @@ prior_summary_table.bgmfit <- function(model,
       .row_id = dplyr::row_number()
     )
   
+  
+  
   prior_parsed <-
     prior_object %>%
     ggdist::parse_dist(prior, lb = "lb", ub = "ub") %>%
@@ -568,6 +571,9 @@ prior_summary_table.bgmfit <- function(model,
         )
     }
   }
+  
+  
+  
   
   available_classes <- sort(unique(prior_parsed$class))
   available_parameters <- sort(unique(prior_parsed$nlpar))
@@ -723,7 +729,7 @@ prior_summary_table.bgmfit <- function(model,
   }
   
   set.seed(seed)
-  
+
   sim_tbl0 <-
     prior_parsed %>%
     dplyr::mutate(
@@ -795,6 +801,7 @@ prior_summary_table.bgmfit <- function(model,
       dplyr::select(-.rule_id)
   }
   
+
   draws_long <-
     sim_tbl %>%
     tidyr::unnest(draws) %>%
@@ -823,6 +830,7 @@ prior_summary_table.bgmfit <- function(model,
           ", ",
           sprintf("%0.2f", .upper)
         )
+       , ci = paste0("[", ci, "]") # comment out if dont want square brackets[]
       ) %>%
       dplyr::select(.row_id, level_lab, ci)
     
@@ -836,12 +844,14 @@ prior_summary_table.bgmfit <- function(model,
     
     ci_labs <- paste0(set_width * 100, "% CI")
   }
-  
+ 
+
   if (is.null(range_method_arg)) {
     range_method_arg <- list()
   } else if (!is.list(range_method_arg)) {
     stop2c("range_method_arg must be a named list to pass arguments to 
-           the range_method()")
+           the range_method().", " The available arguments are: ",
+           collapse_comma(methods::formalArgs(range_method)))
   }
   
   if (is.null(range_method_arg[["method"]])) range_method_arg[["method"]] <- "r"
@@ -866,6 +876,7 @@ prior_summary_table.bgmfit <- function(model,
           ", ",
           sprintf("%0.2f", xmax_range)
         )
+        , range = paste0("[", range, "]") # comment out if dont want square brackets[]
       ) %>%
       dplyr::select(.row_id, range)
   } else {
@@ -875,6 +886,8 @@ prior_summary_table.bgmfit <- function(model,
   prior_object_range_ci <-
     prior_parsed %>%
     dplyr::left_join(ci_tbl_wide, by = ".row_id")
+  
+  
   
   if (isTRUE(add_range)) {
     prior_object_range_ci <-
@@ -890,7 +903,7 @@ prior_summary_table.bgmfit <- function(model,
       prior = dplyr::if_else(
         ub == "Inf" & lb == "Inf",
         prior,
-        paste0(prior, "[", lb, ", ", ub, "]")
+        paste0(prior, "{", lb, ", ", ub, "}")
       )
     ) %>%
     dplyr::select(
@@ -923,17 +936,31 @@ prior_summary_table.bgmfit <- function(model,
     }
   }
   
-  prior_object_range_ci_out <-
-    dplyr::bind_rows(
-      prior_object_range_ci %>%
-        dplyr::filter(dpar == ""),
-      prior_object_range_ci %>%
-        dplyr::filter(dpar != "") %>%
-        dplyr::mutate(
-          class = dpar,
-          dpar = ""
-        )
-    ) %>%
+
+  prior_object_range_ci_out <- prior_object_range_ci
+  
+  prior_object_range_ci_out <- prior_object_range_ci_out %>% 
+    dplyr::mutate(
+      class = dplyr::if_else(class == "Intercept" & dpar == "sigma" & coef == "", 
+                             "b", class),
+      coef = dplyr::if_else(class == "b" & dpar == "sigma" & coef == "", 
+                            "Intercept", coef)
+    ) %>% 
+    dplyr::mutate(
+      nlpar = dplyr::if_else(dpar == "sigma" & nlpar == "", 
+                            "sigma", nlpar),
+      dpar = dplyr::if_else(nlpar == "sigma", 
+                            "", dpar)
+    )
+  
+  # when rsd_formual
+  prior_object_range_ci_out <- prior_object_range_ci_out %>% 
+    dplyr::mutate(
+      coef = dplyr::if_else(class == "sigma" & dpar == "" & coef == "", 
+                            "Intercept", coef)
+    ) 
+
+  prior_object_range_ci_out <- prior_object_range_ci_out %>% 
     dplyr::arrange(.row_id) %>%
     dplyr::mutate(
       coef = dplyr::if_else(class == "sd", paste0(coef, " (", group, ")"), coef)
@@ -944,13 +971,15 @@ prior_summary_table.bgmfit <- function(model,
     dplyr::rename(
       parameter = nlpar,
       coefficient = coef
-    ) %>%
+    ) 
+  
+  prior_object_range_ci_out <- prior_object_range_ci_out %>% 
     dplyr::mutate(
       parameter = dplyr::if_else(class == "sigma", class, parameter),
       class = dplyr::if_else(parameter == "sigma", "rsd", class),
       coefficient = gsub("ClassI", "Class I", coefficient)
     )
-  
+
   if ("tag" %in% names(prior_object_range_ci_out)) {
     tag_all_empty <- all(
       is.na(prior_object_range_ci_out$tag) |
@@ -1056,8 +1085,7 @@ prior_summary_table.bgmfit <- function(model,
   }
   
   set_lab_map <- get_lab_map(prior_object_range_ci_out$parameter)
-  
-  
+
   summary_1 <-
     prior_object_range_ci_out %>%
     dplyr::ungroup() %>%
@@ -1119,7 +1147,7 @@ prior_summary_table.bgmfit <- function(model,
           " Each coefficient is assigned a normal distribution ",
           "with mean and standard deviation specified in the ",
           "parentheses.",
-          " Square brackets with [0, Inf] indicate a half-normal ",
+          " curly brackets with {0, Inf} indicate a half-normal ",
           "distribution."
         )
       ),
@@ -1317,6 +1345,49 @@ prior_summary_table.bgmfit <- function(model,
 prior_summary_table <- function(model, ...) {
   UseMethod("prior_summary_table")
 }
+
+# Examples: prior_summary_table / prior_table
+
+# prior_table(
+#   model = model,
+#   print_table = TRUE
+# )
+# 
+# # Apply exp function to 'c' parameter
+# prior_table(
+#   model = model,
+#   transform_class = c("b"),
+#   transform_parameter = c("c"),
+#   transform_fun = function(x) exp(x),
+#   print_table = TRUE
+# )
+# 
+# # Apply functions per selected parameter, recycled across all selected classes
+# prior_table(
+#   model = model,
+#   transform_class = c("b", "sd"),
+#   transform_parameter = c("b", "c"),
+#   transform_fun = list(
+#     function(x) x,
+#     function(x) exp(x)
+#   ),
+#   print_table = TRUE
+# )
+# 
+# # Apply functions per expanded class/parameter combination
+# prior_table(
+#   model = model,
+#   transform_class = c("b", "b"),
+#   transform_parameter = c("c", "c"),
+#   transform_fun = list(
+#     function(x) x,
+#     function(x) exp(x),
+#     function(x) x,
+#     function(x) exp(x)
+#   ),
+#   print_table = TRUE
+# )
+
 
 
 

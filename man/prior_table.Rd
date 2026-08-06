@@ -222,7 +222,7 @@ prior_table(
   print_table = TRUE
 )
 
-# Apply exp function to c parameter
+# Apply 'exp' transformation to the prior for 'c' parameter
 prior_table(
   model = model,
   transform_class = c("b"),
@@ -230,33 +230,6 @@ prior_table(
   transform_fun = function(x) exp(x),
   print_table = TRUE
 )
-
-# Apply functions per selected parameter, recycled across all selected classes
-prior_table(
-  model = model,
-  transform_class = c("b", "sd"),
-  transform_parameter = c("b", "c"),
-  transform_fun = list(
-    function(x) x,
-    function(x) exp(x)
-  ),
-  print_table = TRUE
-)
-
-# Apply functions per expanded class/parameter combination
-prior_table(
-  model = model,
-  transform_class = c("b", "sd"),
-  transform_parameter = c("b", "c"),
-  transform_fun = list(
-    function(x) x,
-    function(x) exp(x),
-    function(x) x,
-    function(x) exp(x)
-  ),
-  print_table = TRUE
-)
-
 }
 
 
