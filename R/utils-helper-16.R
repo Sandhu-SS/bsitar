@@ -1275,14 +1275,6 @@ build_scale_x <- function(x_min = NULL,
 
 #######################################
 
-
-
-
-
-
-
-
-
 check_unique_cap_opt <- function(opt) {
   chars <- strsplit(opt, "")[[1]]
   letters_lower <- tolower(chars)
@@ -1314,6 +1306,7 @@ get_unique_opt_bands <- function(opt, bands, upper = FALSE) {
   return(out)
 }
 
+
 get_opt_bands <- function(opt, bands, upper = TRUE) {
   opt_chars   <- strsplit(opt, "")  [[1]] 
   bands_chars <- strsplit(bands, "")[[1]] 
@@ -1335,6 +1328,8 @@ get_opt_bands <- function(opt, bands, upper = TRUE) {
   out <- list(opt = opt_chars, bands = unname(bands_match_opt))
   return(out)
 }
+
+
 
 
 loop_opt_bands <- function(opti, 
@@ -1445,12 +1440,7 @@ loop_opt_bands <- function(opti,
   arguments$opt <- opt
   arguments$ndraws <- ndraws
   arguments$draw_ids <- draw_ids
-  
-  
-  
-  
-  
-  
+
   if(is.null(difx)) difx <- xvar
   
   arguments$model$model_info[['difx']] <- arguments[['difx']] <- difx
@@ -1504,7 +1494,6 @@ loop_opt_bands <- function(opti,
         }
       }
     }
-    
     
     if(is.null(grid_call)) {
       grid_call <- FALSE
@@ -1614,8 +1603,6 @@ loop_opt_bands <- function(opti,
     if(!exists(check___)) assign(check___, NULL)
   }
   
-  
-  
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
@@ -1648,7 +1635,6 @@ loop_opt_bands <- function(opti,
     if(is.null(cov)) cov <- model$model_info[[sigmacov_]] else cov <- cov
   } 
   
-  
   groupvar_     <- paste0('groupvar', resp_rev_)
   yvar_         <- paste0('yvar', resp_rev_)
   yvar          <- model$model_info[[yvar_]]
@@ -1674,225 +1660,6 @@ loop_opt_bands <- function(opti,
   
   Xx <- xvar
   Yy <- yvar
-  
-  
-  
-  
-  
-  
-  # arguments$model$model_info[['difx']] <- difx
-  # if(dpar == "sigma") {
-  #   sigma_model <- get_sigmamodel_info(model = model,
-  #                                      newdata = newdata,
-  #                                      dpar = dpar, 
-  #                                      resp = resp, 
-  #                                      what = 'model',
-  #                                      cov = NULL, 
-  #                                      all = FALSE, 
-  #                                      verbose = verbose)
-  #   arguments$model$model_info[['which_sigma_model']] <- 
-  #     model$model_info[['which_sigma_model']] <- sigma_model
-  #   if(is.null(transform_draws)) {
-  #     transform_draws <- 
-  #       check_set_transform_draws_sigma(model = model, 
-  #                                       dpar = dpar, 
-  #                                       xvar = xvar, 
-  #                                       resp = resp, 
-  #                                       auto = TRUE,
-  #                                       transform_draws = transform_draws,
-  #                                       itransform = itransform,
-  #                                       verbose = verbose)
-  #     arguments[['transform_draws']] <- transform_draws
-  #   }
-  #   if(sigma_model == "basic") {
-  #     if(!is.null(ipts)) {
-  #       stop2c("For sigma_model = ",  
-  #              collapse_comma(sigma_model), ", the ipts should be NULL", 
-  #              "\n  ", 
-  #              "Currently, you have set this argument as ipts = ", ipts)
-  #     }
-  #   }
-  #   msg_sigma_model_no_xvar <- 
-  #     paste0("Although 'xvar' is strictly not required for estimating 
-  #          distance curve when sigma_model = ",  collapse_comma(sigma_model), 
-  #            " but still it is better to specify 'xvar' to correctly label
-  #          and plot x-axis. Otherwise x-axis wil be based on the xvar
-  #          from the 'mu' part")
-  #   clean_msg_sigma_model_no_xvar <- trimws(gsub("\\s+", " ",
-  #                                                msg_sigma_model_no_xvar))
-  #   if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
-  #     if(is.null(xvar)) {
-  #       if(verbose) {
-  #         message(clean_msg_sigma_model_no_xvar)
-  #       }
-  #     }
-  #   }
-  #   
-  #   if(is.null(grid_call)) {
-  #     grid_call <- FALSE
-  #   }
-  #   
-  #   if(is.null(grid_by)) grid_by <- cov
-  #   
-  #   if(sigma_model != "ls" && need_velocity_curve) {
-  #     xvar <- check_set_xvar_sigma(model = model, 
-  #                                  dpar = dpar, 
-  #                                  xvar = xvar, 
-  #                                  resp = resp, 
-  #                                  auto = TRUE,
-  #                                  verbose = verbose)
-  #     
-  #     if(grid_call)
-  #     newdata <- set_manual_datagrid(model = model,
-  #                                    newdata = newdata,
-  #                                    resp = resp, 
-  #                                    dpar = NULL, 
-  #                                    idvar = NULL,
-  #                                    xvar = xvar,
-  #                                    difx = difx,
-  #                                    difx_asit = FALSE,
-  #                                    auto = TRUE,
-  #                                    xrange = NULL,
-  #                                    length.out = NULL,
-  #                                    grid_add = grid_add,
-  #                                    grid_type= NULL,
-  #                                    FUN = NULL,
-  #                                    FUN_character = NULL,
-  #                                    FUN_factor = NULL,
-  #                                    FUN_logical = NULL,
-  #                                    FUN_numeric = NULL,
-  #                                    FUN_integer = NULL,
-  #                                    FUN_binary = NULL,
-  #                                    FUN_other = NULL,
-  #                                    verbose = verbose)
-  #     arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
-  #     arguments$newdata <- newdata
-  #   } 
-  # } 
-  # 
-  # assign_function_to_environment(transform_draws, 'transform_draws',
-  #                                envir = NULL)
-  # arguments$model$model_info[['transform_draws']] <-
-  #   model$model_info[['transform_draws']] <- transform_draws
-  # get.newdata_args <- list()
-  # get.newdata_args[['model']]          <- model
-  # get.newdata_args[['newdata']]        <- newdata
-  # get.newdata_args[['xvar']]           <- xvar
-  # get.newdata_args[['idvar']]          <- idvar
-  # get.newdata_args[['resp']]           <- resp
-  # get.newdata_args[['numeric_cov_at']] <- numeric_cov_at
-  # get.newdata_args[['aux_variables']]  <- aux_variables
-  # get.newdata_args[['levels_id']]      <- levels_id
-  # get.newdata_args[['xrange']]         <- xrange
-  # get.newdata_args[['idata_method']]   <- idata_method
-  # get.newdata_args[['newdata_fixed']]  <- newdata_fixed
-  # get.newdata_args[['verbose']]        <- verbose
-  # get.newdata_args[['ipts']]           <- NULL
-  # get.newdata_args[['dpar']]           <- dpar
-  # get.newdata_args[['cov']]            <- cov
-  # newdata.xyadj <- CustomDoCall(get.newdata, get.newdata_args)
-  # 
-  # if(dpar == 'sigma') {
-  #   if(!is.null(ipts)) {
-  #     if(is.logical(ipts)) {
-  #       if(ipts) {
-  #         get.newdata_args[['ipts']]     <- ipts
-  #         get.newdata_args[['newdata']]  <- newdata
-  #         newdata <- CustomDoCall(get.newdata, get.newdata_args)
-  #         attr(newdata, 'ipts_nocall') <- TRUE
-  #       } else if(!ipts) {
-  #         newdata <- newdata
-  #         attr(newdata, 'ipts_nocall') <- FALSE
-  #       }
-  #     }
-  #   } else {
-  #     get.newdata_args[['ipts']]     <- ipts
-  #     get.newdata_args[['newdata']]  <- newdata
-  #     newdata <- CustomDoCall(get.newdata, get.newdata_args)
-  #     attr(newdata, 'ipts_nocall') <- TRUE
-  #   }
-  # } else if(dpar == 'mu') {
-  #   get.newdata_args[['ipts']]     <- ipts
-  #   get.newdata_args[['newdata']]  <- newdata
-  #   newdata                    <- CustomDoCall(get.newdata, get.newdata_args)
-  #   attr(newdata, 'ipts_nocall') <- TRUE
-  # }
-  # 
-  # arguments$newdata          <- newdata
-  # 
-  # # get.newdata_args[['ipts']] <- ipts
-  # # newdata       <- CustomDoCall(get.newdata, get.newdata_args)
-  # # arguments$newdata <- newdata
-  # 
-  # 
-  # 
-  # list_c <- attr(newdata, 'list_c')
-  # for (list_ci in names(list_c)) {
-  #   assign(list_ci, list_c[[list_ci]])
-  # }
-  # check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
-  #              'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
-  #              'uvarby', 'subindicatorsi')
-  # for (check___ in check__) {
-  #   if(!exists(check___)) assign(check___, NULL)
-  # }
-  # Xx <- xvar
-  # Yy <- yvar
-  # if (is.null(resp)) {
-  #   resp_rev_ <- resp
-  # } else if (!is.null(resp)) {
-  #   resp_rev_ <- paste0("_", resp)
-  # }
-  # if (is.null(bands)) {
-  #   bands <- ''
-  # } 
-  # 
-  # xvar_      <- paste0('xvar', resp_rev_)
-  # sigmaxvar_ <- paste0('sigma', xvar_)
-  # cov_       <- paste0('cov', resp_rev_)
-  # sigmacov_  <- paste0('sigma', cov_)
-  # uvarby     <- model$model_info$univariate_by$by
-  # if(is.null(uvarby)) uvarby <- NA 
-  # if(dpar == "mu") {
-  #   if(is.null(xvar)) {
-  #     xvar   <- model$model_info[[xvar_]]
-  #   }
-  #   cov    <- model$model_info[[cov_]]
-  # } else if(dpar == "sigma") {
-  #   if(!is.na(model$model_info[[sigmaxvar_]])) {
-  #     xvar   <- model$model_info[[sigmaxvar_]]
-  #   } else if(is.na(model$model_info[[sigmaxvar_]]) & 
-  #             !is.null(model$model_info[[xvar_]])) {
-  #     xvar   <- model$model_info[[xvar_]]
-  #   }
-  #   cov    <- model$model_info[[sigmacov_]]
-  # } 
-  # groupvar_     <- paste0('groupvar', resp_rev_)
-  # yvar_         <- paste0('yvar', resp_rev_)
-  # yvar          <- model$model_info[[yvar_]]
-  # hierarchical_ <- paste0('hierarchical', resp_rev_)
-  # if(is.null(levels_id) & is.null(idvar)) {
-  #   idvar <- model$model_info[[groupvar_]]
-  #   if (!is.null(model$model_info[[hierarchical_]])) {
-  #     idvar <- model$model_info[[hierarchical_]]
-  #   }
-  #   model$model_info[[groupvar_]] <- idvar # idvar[1]
-  # } else if (!is.null(levels_id)) {
-  #   idvar <- levels_id
-  # } else if (!is.null(idvar)) {
-  #   idvar <- idvar
-  # }
-  # # cov_       <- paste0('cov', resp_rev_)
-  # # sigmacov_  <- paste0('sigma', cov_)
-  # if(is.null(idvar)) {
-  #   if(is.null(idvar)) {
-  #     if(!is.null(model$model_info[['idvars']])) {
-  #       idvar <- model$model_info[['idvars']]
-  #     }
-  #   }
-  # }
-  # 
-  
   
   if (grepl("p", bands, ignore.case = T) & summary) {
     stop2c(
@@ -3281,6 +3048,83 @@ loop_opt_bands <- function(opti,
   if(opt == 'u' | opt == 'u') return(plot.o.u)
   if(opt.org == 'o' | opt.org == 'O') return(plot.o.O)
 } 
+
+
+
+
+
+rename_plot_list <- function(plot.list, unique_opt_sort, opt) {
+  # print(opt)
+  # print(unique_opt_sort)
+  
+  # "" and character(0) - example opt = "DO",
+  if(is_emptyx(unique_opt_sort) & is_emptyx(opt)) {
+    return(plot.list)
+  }
+  
+  if(unique_opt_sort != opt) {
+    if(grepl("D", unique_opt_sort) & grepl("D", opt)) {
+      if("d" %in% names(plot.list)) {
+        plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+      }
+    }
+    if(grepl("V", unique_opt_sort) & grepl("V", opt)) {
+      if("d" %in% names(plot.list)) {
+        plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+      }
+    }  
+  } else if(unique_opt_sort == opt & opt == "DV") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "dV") {
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Dv") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Da") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Du") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Va") {
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Vu") {
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "dVa") {
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Dva") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "DVa") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "dVu") {
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Dvu") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "DVu") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Dau") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Vau") {
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "Dvau") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "dVau") {
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } else if(unique_opt_sort == opt & opt == "DVau") {
+    plot.list[['D']] <- plot.list[['d']]; plot.list[['d']] <- NULL
+    plot.list[['V']] <- plot.list[['v']]; plot.list[['v']] <- NULL
+  } 
+  
+  plot.list <- plot.list[strsplit(unique_opt_sort, "")[[1]]]
+  return(plot.list)
+}
+
+
+
+
+is_patchwork <- function(x) {
+  inherits(x, "patchwork")
+}
 
 
 

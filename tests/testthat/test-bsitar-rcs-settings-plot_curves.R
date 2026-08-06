@@ -62,6 +62,38 @@ test_that("test plot_curves", {
   }
   
   
+  # check if all 63 combinations work
+  
+  # opt_all <- c("d", "D", "v", "V", "a", "u")
+  # 
+  # # All combinations of size 1, 2, and 3
+  # combn_list <- lapply(1:length(opt_all), function(k) {
+  #   combn(opt_all, k, simplify = FALSE)
+  # })
+  # 
+  # # Flatten to a single list
+  # all_combinations <- do.call(c, combn_list)
+  # all_combinations
+  # ix = 0
+  # for (all_combinationsi in 1:length(all_combinations)) {
+  #   ix = ix + 1
+  #   opt <- paste0(all_combinations[[all_combinationsi]], collapse = "")
+  #   print(ix)
+  #   print(opt)
+  #   plot_curves(
+  #     model = berkeley_exfit,
+  #     opt = opt, 
+  #     layout = "facet",
+  #     print = T,
+  #     ndraws = 2
+  #   )
+  # }
+  # 
+  # 
+  
+  
+  
+  
 })
 
 

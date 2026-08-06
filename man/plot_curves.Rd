@@ -112,7 +112,6 @@ plotting options:
 \item 'u': Unadjusted individual-specific distance curves
 \item 'a': Adjusted individual-specific distance curves (adjusted for
 random effects)
-\item 'O': Observed individual-specific growth curves
 }}
 
 \item{apv}{A logical value (default \code{FALSE}) indicating whether to
@@ -691,17 +690,24 @@ function can be used, which not only estimates adjusted curves but also
 enables comparison across groups using the \code{hypotheses} argument.
 }
 \details{
-The \strong{plot_curves()} function is a generic tool for
-visualizing the following six curves:
+The \code{plot_curves()} function is a generic tool for visualizing up to six
+types of growth curves:
+
 \itemize{
-\item Population average distance curve
-\item Population average velocity curve
-\item Individual-specific distance curves
-\item Individual-specific velocity curves
-\item Unadjusted individual growth curves (i.e., observed growth curves)
-\item Adjusted individual growth curves (adjusted for the model-estimated
-random effects)
+\item Population-average distance curve (\code{opt = "d"})
+\item Population-average velocity curve (\code{opt = "v"})
+\item Individual-specific distance curves (\code{opt = "D"})
+\item Individual-specific velocity curves (\code{opt = "V"})
+\item Unadjusted individual growth curves (i.e., observed growth curves;
+\code{opt = "u"})
+\item Adjusted individual growth curves, adjusted for the model-estimated
+random effects (\code{opt = "a"})
 }
+
+Users can request any combination of these plots by specifying the desired
+curve types in the \code{opt} argument. For example, to request all six
+plots, set \code{opt = "dvDVua"}. The plots are generated and assembled in
+the same order as the characters appear in \code{opt}.
 
 Internally, \strong{plot_curves()} calls the \code{\link[=growthparameters]{growthparameters()}} function
 to estimate and summarize the distance and velocity curves, as well as to

@@ -9,15 +9,25 @@
 #'   function can be used, which not only estimates adjusted curves but also
 #'   enables comparison across groups using the \code{hypotheses} argument.
 #'
-#' @details The \strong{plot_curves()} function is a generic tool for
-#'   visualizing the following six curves:
-#'   - Population average distance curve
-#'   - Population average velocity curve
-#'   - Individual-specific distance curves
-#'   - Individual-specific velocity curves
-#'   - Unadjusted individual growth curves (i.e., observed growth curves)
-#'   - Adjusted individual growth curves (adjusted for the model-estimated 
-#'   random effects)
+#' @details
+#' The \code{plot_curves()} function is a generic tool for visualizing up to six
+#' types of growth curves:
+#'
+#' \itemize{
+#'   \item Population-average distance curve (\code{opt = "d"})
+#'   \item Population-average velocity curve (\code{opt = "v"})
+#'   \item Individual-specific distance curves (\code{opt = "D"})
+#'   \item Individual-specific velocity curves (\code{opt = "V"})
+#'   \item Unadjusted individual growth curves (i.e., observed growth curves;
+#'         \code{opt = "u"})
+#'   \item Adjusted individual growth curves, adjusted for the model-estimated
+#'         random effects (\code{opt = "a"})
+#' }
+#'
+#' Users can request any combination of these plots by specifying the desired
+#' curve types in the \code{opt} argument. For example, to request all six
+#' plots, set \code{opt = "dvDVua"}. The plots are generated and assembled in
+#' the same order as the characters appear in \code{opt}.
 #'   
 #'   Internally, \strong{plot_curves()} calls the [growthparameters()] function
 #'   to estimate and summarize the distance and velocity curves, as well as to
@@ -39,7 +49,6 @@
 #'   - 'u': Unadjusted individual-specific distance curves
 #'   - 'a': Adjusted individual-specific distance curves (adjusted for 
 #'   random effects)
-#'   - 'O': Observed individual-specific growth curves
 #'
 #' @param apv A logical value (default \code{FALSE}) indicating whether to
 #'   calculate and plot the age at peak velocity (APGV) when \code{opt} includes
@@ -635,6 +644,7 @@ plot_curves.bgmfit <- function(model,
   opt           <- paste0(opt_old, collapse = "")
   bands         <- paste0(bands_old, collapse = "")
   arguments$opt <- opt
+ 
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
   } else {
@@ -1143,6 +1153,9 @@ plot_curves.bgmfit <- function(model,
   y_lab_d <- "" # addylab_d
   y_lab_v <- "" # addylab_v
   
+  title_lab_d <- addylab_d
+  title_lab_v <- addylab_v
+  
   if (is.null(label.x)) {
     label.x     <- paste0(Xx, "")
   }
@@ -1263,9 +1276,10 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         add_build_scale_x + 
-        ggplot2::labs(x = "", y = y_lab_d, title = label.d) +
+        ggplot2::labs(x = "", y = y_lab_d, title = addylab_d) +
         jtools::theme_apa(legend.pos = legendpos) +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
+        ggplot2::theme(plot.title = ggplot2::element_text(face = "plain"))
       
       if (grepl("d", bands, ignore.case = T)) {
         plot.o.d <- plot.o.d +
@@ -1336,9 +1350,10 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         add_build_scale_x + 
-        ggplot2::labs(x = "", y = y_lab_v, title = label.v) +
+        ggplot2::labs(x = "", y = y_lab_v, title = addylab_v) +
         jtools::theme_apa(legend.pos = legendpos) +
-        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
+        ggplot2::theme(plot.title = ggplot2::element_text(face = "plain"))
 
       if (grepl("v", bands, ignore.case = T)) {
         plot.o.v <- plot.o.v +
@@ -2034,6 +2049,8 @@ plot_curves.bgmfit <- function(model,
       plot.o.a <- NULL
     }
     
+   
+    
     if (grepl("u", opt, ignore.case = T)) {
       xyunadj_ed <- xyunadj_curves(model, 
                                    x = NULL,
@@ -2366,8 +2383,10 @@ plot_curves.bgmfit <- function(model,
     }
   }
 
+   
   if(loop_opt_bands_no) {
-    how_opt <- 2
+    # how_opt <- 2
+    if(nchar(opt) <= 2) how_opt <- 1 else if(nchar(opt) > 2) how_opt <- 2
   } else {
     how_opt <- -1
   }
@@ -2381,6 +2400,7 @@ plot_curves.bgmfit <- function(model,
       plot.o.a <- NULL
     if (!exists('plot.o.u'))
       plot.o.u <- NULL
+    
     
     suppressMessages({
       if (!is.null(plot.o.d)) {
@@ -2421,7 +2441,8 @@ plot_curves.bgmfit <- function(model,
       plot.list [['O']] <- plot.o.O
       plot.list <- plot.list[lengths(plot.list) != 0]
     }
-    plot.list <- plot.list[strsplit(unique_opt_sort, "")[[1]]]
+    
+    plot.list <- rename_plot_list(plot.list, unique_opt_sort, opt)
     
     for (nai in names(plot.list)) {
       if(nai == "d") add_suffix <- " (Population)"
@@ -2477,7 +2498,9 @@ plot_curves.bgmfit <- function(model,
       plot.o <-  plot.o + ggplot2::theme(legend.position = legendpos)
     }
   }
-
+  
+  if(is_patchwork(plot.o)) plot.o <- patchwork::wrap_elements(plot.o)
+  
   if (!returndata) {
     if(print) print(plot.o)
     if (grepl("d", opt, ignore.case = F) |
