@@ -2478,7 +2478,7 @@ plot_curves.bgmfit <- function(model,
   strict_ggplot <- TRUE
   if(strict_ggplot) {
     if(is_patchwork(plot.o)) plot.o <- patchwork::wrap_elements(plot.o)
-    if(!is_ggplot(plot.o)) {
+    if(!ggplot2::is_ggplot(plot.o)) {
       stop2c("Returned plot object is not of class 'ggplot'")
     }
   }
