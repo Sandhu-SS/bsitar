@@ -598,7 +598,6 @@ plot_curves.bgmfit <- function(model,
     }
   }
   
-
   unique_opt_bands_c <- get_unique_opt_bands(opt, bands, upper = FALSE)
   opt                <- unique_opt_bands_c[['opt']]
   bands              <- unique_opt_bands_c[['bands']]
@@ -727,8 +726,7 @@ plot_curves.bgmfit <- function(model,
         }
       }
     }
-    
-    
+
     if(is.null(grid_call)) {
       grid_call <- FALSE
     }
@@ -837,8 +835,6 @@ plot_curves.bgmfit <- function(model,
     if(!exists(check___)) assign(check___, NULL)
   }
 
-  
-
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
@@ -870,8 +866,7 @@ plot_curves.bgmfit <- function(model,
     }
     if(is.null(cov)) cov <- model$model_info[[sigmacov_]] else cov <- cov
   } 
-  
-  
+
   groupvar_     <- paste0('groupvar', resp_rev_)
   yvar_         <- paste0('yvar', resp_rev_)
   yvar          <- model$model_info[[yvar_]]
@@ -1137,8 +1132,7 @@ plot_curves.bgmfit <- function(model,
     color.v <- "green4"
       color.unadj <- "green4"
   }
-  
-  
+
   if (is.null(label.y)) {
     label.d     <- addylab_d # firstup(curve.d)
     label.v     <- addylab_v # firstup(curve.v)
@@ -1149,7 +1143,7 @@ plot_curves.bgmfit <- function(model,
     label.adj   <- label.unadj <- label.y
   }
   
-  # Note that labs y = "", change them to addylab_d / addylab_v if needed
+  # labs y = "", change labs to addylab_d / addylab_v if needed
   y_lab_d <- "" # addylab_d
   y_lab_v <- "" # addylab_v
   
@@ -1205,7 +1199,6 @@ plot_curves.bgmfit <- function(model,
     if(isFALSE(fill.groupby)) fill.groupby <- NA
   }
 
-  
   build_scale_x_args <- list()
   for (i in names(formals(build_scale_x))) {
     build_scale_x_args[[i]] <- transform_xaxis[[i]]
@@ -1220,9 +1213,7 @@ plot_curves.bgmfit <- function(model,
   defaults <- base::as.list(base::formals(build_scale_x))
   build_scale_x_args <- utils::modifyList(defaults, build_scale_x_args)
   add_build_scale_x <- base::do.call(build_scale_x, build_scale_x_args)
-  
 
-  
   if (grepl("d", opt, ignore.case = T) |
       grepl("v", opt, ignore.case = T)) {
     curves <- unique(d.$curve)
@@ -1914,8 +1905,7 @@ plot_curves.bgmfit <- function(model,
         dplyr::mutate(
           groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_au)))
           )
-  
-     
+
       build_scale_x_args <- list()
       for (i in names(formals(build_scale_x))) {
         build_scale_x_args[[i]] <- transform_xaxis[[i]]
@@ -1926,13 +1916,11 @@ plot_curves.bgmfit <- function(model,
       if(is.null(build_scale_x_args[["x_max"]])) {
         build_scale_x_args[["x_max"]] <- x_maximum
       }
-     
-      
+
       defaults <- base::as.list(base::formals(build_scale_x))
       build_scale_x_args <- utils::modifyList(defaults, build_scale_x_args)
       add_build_scale_x <- base::do.call(build_scale_x, build_scale_x_args)
      
-      
       out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum & 
                          out_a_[[Xx]] <= x_maximum, ]
 
@@ -2048,9 +2036,7 @@ plot_curves.bgmfit <- function(model,
     } else if (!grepl("a", opt, ignore.case = T)) {
       plot.o.a <- NULL
     }
-    
-   
-    
+
     if (grepl("u", opt, ignore.case = T)) {
       xyunadj_ed <- xyunadj_curves(model, 
                                    x = NULL,
@@ -2107,8 +2093,6 @@ plot_curves.bgmfit <- function(model,
       out_u_ <- out_u_ %>% dplyr::mutate(groupby.x = groupby, 
                                          groupby.y = groupby.x)
       
-      
-     
       build_scale_x_args <- list()
       for (i in names(formals(build_scale_x))) {
         build_scale_x_args[[i]] <- transform_xaxis[[i]]
@@ -2119,7 +2103,6 @@ plot_curves.bgmfit <- function(model,
       if(is.null(build_scale_x_args[["x_max"]])) {
         build_scale_x_args[["x_max"]] <- x_maximum
       }
-      
       
       defaults <- base::as.list(base::formals(build_scale_x))
       build_scale_x_args <- utils::modifyList(defaults, build_scale_x_args)
@@ -2382,16 +2365,14 @@ plot_curves.bgmfit <- function(model,
       }
     }
   }
-
    
   if(loop_opt_bands_no) {
-    # how_opt <- 2
-    if(nchar(opt) <= 2) how_opt <- 1 else if(nchar(opt) > 2) how_opt <- 2
+    if(nchar(opt) <= 2) nchar_opt <- 1 else if(nchar(opt) > 2) nchar_opt <- 2
   } else {
-    how_opt <- -1
+    nchar_opt <- -1
   }
   
-  if (nchar(opt) > how_opt) { # > 2 / >= 
+  if (nchar(opt) > nchar_opt) {
     if (!exists('plot.o.d'))
       plot.o.d <- NULL
     if (!exists('plot.o.v'))
@@ -2400,8 +2381,7 @@ plot_curves.bgmfit <- function(model,
       plot.o.a <- NULL
     if (!exists('plot.o.u'))
       plot.o.u <- NULL
-    
-    
+
     suppressMessages({
       if (!is.null(plot.o.d)) {
         plot.o.d <- plot.o.d +
@@ -2424,10 +2404,6 @@ plot_curves.bgmfit <- function(model,
     plot.list <- list(d = plot.o.d, v = plot.o.v, a = plot.o.a, u = plot.o.u)
     plot.list <- plot.list[lengths(plot.list) != 0]
     
-    if(loop_opt_bands_no) {
-      
-    }
-   
     if(!loop_opt_bands_no) {
       plot.o.D <- plot.list.DV[['D']]
       plot.o.V <- plot.list.DV[['V']]
@@ -2499,7 +2475,13 @@ plot_curves.bgmfit <- function(model,
     }
   }
   
-  if(is_patchwork(plot.o)) plot.o <- patchwork::wrap_elements(plot.o)
+  strict_ggplot <- TRUE
+  if(strict_ggplot) {
+    if(is_patchwork(plot.o)) plot.o <- patchwork::wrap_elements(plot.o)
+    if(!is_ggplot(plot.o)) {
+      stop2c("Returned plot object is not of class 'ggplot'")
+    }
+  }
   
   if (!returndata) {
     if(print) print(plot.o)

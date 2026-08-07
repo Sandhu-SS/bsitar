@@ -2207,19 +2207,14 @@
 #' @export
 #'
 #' @inheritParams brms::brm
-#'
 #' @importFrom stats as.formula coef df dist filter fitted gaussian lm mad 
 #' @importFrom stats model.matrix predict quantile rbeta sd setNames 
 #' @importFrom stats rcauchy rexp rlnorm rgamma rlnorm loess na.omit residuals 
 #' @importFrom stats deriv formula median update smooth.spline rnorm runif
 #' @importFrom stats complete.cases 
-#' 
 #' @importFrom rlang .data
-#'
 #' @importFrom utils combn head installed.packages packageVersion tail data
-#'
 #' @importFrom Rdpack reprompt
-#'
 #' @import brms
 #'
 #' @note The package is under continuous development, and new models,
@@ -2244,27 +2239,13 @@
 #' # 66 boys and 70 girls (ages 0-21). For this example, we use a subset of the 
 #' # data for 70 girls aged 8 to 18 years.
 #' #
-#' # A detailed description of Berkley height dataset is provided in the 'sitar' 
-#' # package documentation (help file: ?sitar::berkeley). Details on the subset
-#' # of the data used in the 'bsitar' package can be found in the vignette 
-#' # ('Fitting_models_with_SITAR', package = 'sitar').
+#' # Description of Berkley height dataset is provided in the package
+#' # documentation (help file: ?bsitar::berkeley). A detailed comparison of
+#' # the bsitar and sitar models is provided in the bsitar package vignette
+#' # "Bayesian_SITAR_model_fit"
 #' 
 #' # Load the 'berkeley_exdata' that has been pre-saved
 #' berkeley_exdata <- getNsObject(berkeley_exdata)
-#' 
-#' # Fit frequentist SITAR model with df = 3 using the sitar package 
-#' 
-#' model_ml <- sitar::sitar(x = age, y = height, id = id, 
-#'                           df = 3, 
-#'                           data = berkeley_exdata, 
-#'                           xoffset = 'mean',
-#'                           fixed = 'a+b+c', 
-#'                           random = 'a+b+c',
-#'                           a.formula = ~1, 
-#'                           b.formula = ~1, 
-#'                           c.formula = ~1
-#'                           )
-#' 
 #' 
 #' # Fit Bayesian SITAR model 
 #' 
@@ -2285,8 +2266,7 @@
 #' if(exists('berkeley_exfit')) {
 #'   model <- berkeley_exfit
 #' } else {
-#'   # Fit model with default priors
-#'   # Refer to the documentation for prior on each parameter
+#'   # Fit model with default priors. Refer to documentation for prior details.
 #'   model <- bsitar(x = age, y = height, id = id, 
 #'                   df = 3, 
 #'                   data = berkeley_exdata,
@@ -2303,9 +2283,6 @@
 #' 
 #' # Model summary
 #' summary(model)
-#' 
-#' # Model summary for the frequentist SITAR model fite using 'sitar' package
-#' print(model_ml)
 #' 
 #' # Evaluate model fit using the posterior predictive checks (PPC) plot.
 #' # plot_ppc() is a wrapper for the pp_check() from 'brms' package.
@@ -2327,9 +2304,6 @@
 #' # velocity curves along with the growth parameter such as APGV 
 #' # plot_curves() is similar to plot() from the sitar package.
 #' plot_curves(model, apv = TRUE)
-#' 
-#' # Compare plots with the frequentist SITAR model
-#' plot(model_ml)
 #' }
 #'
 bsitar <- function(x,
