@@ -488,6 +488,21 @@ prior_summary_table.bgmfit <- function(model,
     stop("add_range must be a single TRUE or FALSE value.")
   }
   
+  add_set_width <- TRUE
+  if (!is.null(set_width)) {
+    if(is.logical(set_width)) {
+      if(!set_width) {
+        add_set_width <- FALSE
+      }
+    } else if (!is.numeric(set_width)) {
+      stop("set_width must be NULL, logical TRUE/FALSE or a numeric vector.")
+    }
+  }
+  
+  if(!add_set_width & !add_range) draw_samples <- 1
+  
+  if(!add_set_width) set_width <- NULL
+  
   if (!is.null(set_width)) {
     if (!is.numeric(set_width)) {
       stop("set_width must be NULL or a numeric vector.")
@@ -5372,7 +5387,10 @@ brms_via_cmdstanr <- function(scode,
   bfit$fit <- cb_fit
   bfit     <- custom_rename_pars(x = bfit, 
                                  Rescor_by_levels = Rescor_by_levels)
-  bfit
+  if(!inherits(bfit, 'bgmfit')) {
+    attr(bfit, 'class') <- c(attr(bfit, 'class'), 'bgmfit')
+  }
+  return(bfit)
 }
 
 
@@ -5485,7 +5503,10 @@ brms_via_rstan <- function(scode,
   bfit$fit  <- cb_fit
   bfit      <- custom_rename_pars(x = bfit, 
                                   Rescor_by_levels = Rescor_by_levels) 
-  bfit
+  if(!inherits(bfit, 'bgmfit')) {
+    attr(bfit, 'class') <- c(attr(bfit, 'class'), 'bgmfit')
+  }
+  return(bfit)
 }
 
 

@@ -13204,7 +13204,10 @@ bsitar <- function(x,
       brmsfit <- CustomDoCall(brms::brm, brm_args)
     }
     
-    attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
+    if(!inherits(brmsfit, 'bgmfit')) {
+      attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
+    }
+    
     if(set_model_sigma_by_fz |
        set_model_sigma_by_fp |
        set_model_sigma_by_fe |
@@ -13265,6 +13268,11 @@ bsitar <- function(x,
     model_info[['fit_edited_scode']]  <- fit_edited_scode
     if(fit_edited_scode) {
       model_info[['emodel']]           <- scode_final
+    }
+    if(brm_args$empty) {
+      if(is.null(model_info[['emodel']])) {
+        model_info[['emodel']] <- scode_final
+      }
     }
     model_info[['parameterization']] <- parameterization
     model_info[['d_adjusted']]       <- d_adjusted
