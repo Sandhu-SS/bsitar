@@ -3487,6 +3487,7 @@ bsitar <- function(x,
   
   getdotslist <- list(...)
   
+  
   # If model is an ... argument
   if(is.null(getdotslist$model)) {
     arguments$select_model <- select_model <- 'sitar'
@@ -4441,7 +4442,7 @@ bsitar <- function(x,
     }
   }
   
-  if(grepl("^sitar", model) | grepl("^rcs", model)) {
+  if(grepl("^sitar", select_model) | grepl("^rcs", select_model)) {
     smat_preH <- smat_preH
   } else {
     smat_preH <- 0
