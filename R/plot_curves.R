@@ -2366,10 +2366,17 @@ plot_curves.bgmfit <- function(model,
     }
   }
    
+  
   if(loop_opt_bands_no) {
     if(nchar(opt) <= 2) nchar_opt <- 1 else if(nchar(opt) > 2) nchar_opt <- 2
   } else {
     nchar_opt <- -1
+  }
+  
+  if(unique_opt_sort == opt) {
+    if(nchar(opt) <= 2) {
+      if(opt == 'dv' | opt == 'DV') nchar_opt <- 2
+    }
   }
   
   if (nchar(opt) > nchar_opt) {

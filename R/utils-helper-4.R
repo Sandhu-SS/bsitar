@@ -2571,11 +2571,29 @@ prepare_formula <- function(x,
     assign(paste0('lm_', 'sdx', '_all'), NULL)
     assign(paste0('lm_', 'sdx', '_cov'), NULL)
   }
-  if(is.null(lm_s_se_all)) {
-    assign(paste0('lm_', 'sdx_se'), NULL)
-    assign(paste0('lm_', 'sdx_se', '_all'), NULL)
-    assign(paste0('lm_', 'sdx_se', '_cov'), NULL)
+  
+  
+  if(grepl("^sitar", select_model) | grepl("^rcs", select_model)) {
+    if(is.null(lm_s_se_all)) {
+      assign(paste0('lm_', 'sdx_se'), NULL)
+      assign(paste0('lm_', 'sdx_se', '_all'), NULL)
+      assign(paste0('lm_', 'sdx_se', '_cov'), NULL)
+    }
+  } else {
+    lm_s_se_all <- NULL
+    lm_s_se <- NULL
+    lm_s_se_cov <- NULL
+    lm_sdx_se <- NULL
+    lm_sdx_se_cov <- NULL
+    lm_sdx_se_all <- NULL
   }
+  
+  # if(is.null(lm_s_se_all)) {
+  #   assign(paste0('lm_', 'sdx_se'), NULL)
+  #   assign(paste0('lm_', 'sdx_se', '_all'), NULL)
+  #   assign(paste0('lm_', 'sdx_se', '_cov'), NULL)
+  # }
+  
   gsubitbt <- ""
   gsubitbt_fun <- function(x, gsubitbt) {
     gsubitbtx <- function(x, gsubitbt) gsub("[[:space:]]", gsubitbt, x)

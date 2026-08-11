@@ -2173,6 +2173,9 @@
 #'  and may fail if the structure of the generated \code{stancode} changes in
 #'  future versions of [brms::brm()].
 #'  
+#'  @param model A character string specifying the model (\code{'sitar'}). For
+#'    internal purposes only.
+#'  
 #' @param verbose An optional argument (logical, default \code{FALSE}) to
 #'   indicate whether to print information collected during setting up the model
 #'   formula priors, and initials. As an example, the user might be interested
@@ -2516,6 +2519,7 @@ bsitar <- function(x,
                    sum_zero = FALSE,
                    global_args = NULL,
                    parameterization = 'ncp',
+                   model = 'sitar',
                    verbose = FALSE,
                    ...) {
   
@@ -3485,8 +3489,27 @@ bsitar <- function(x,
     }
   }
   
-  override_select_model <- TRUE # FALSE
-  if(override_select_model) arguments$select_model <- select_model <- 'sitar'
+  # print(model)
+  # print(arguments$model)
+  
+  arguments$select_model <- select_model <- arguments$model
+  arguments$model <- NULL
+  
+  if(select_model == 'sitar') {
+    override_select_model <- FALSE
+  } else {
+    override_select_model <- TRUE
+  }
+  
+  # This was working
+  # override_select_model <- TRUE # FALSE
+  # if(override_select_model) arguments$select_model <- select_model <- 'sitar'
+  
+  
+  # print(select_model)
+  # print(arguments$select_model)
+  # stop()
+  
 
   getdotslist <- list(...)
   
@@ -4419,6 +4442,12 @@ bsitar <- function(x,
     if(getdotslist[['match_sitar_d_form']]) {
       # 
     }
+  }
+  
+  if(grepl("^sitar", model) | grepl("^rcs", model)) {
+    smat_preH <- smat_preH
+  } else {
+    smat_preH <- 0
   }
 
   if(is.null(getdotslist[['match_sitar_d_form']])) { 
@@ -5502,6 +5531,7 @@ bsitar <- function(x,
     "select_model",
     "decomp",
     "parameterization",
+    "model",
     "custom_family",
     "custom_formula",
     "custom_prior",
@@ -5787,15 +5817,9 @@ bsitar <- function(x,
          select_model == 'logistic2' |
          select_model == 'logistic3' 
          ) {
-        if(length(parm_letters_fixed) != length(allowed_parm_letters))
-          stop2c("For model '", select_model, "'", ", 
-               the number of parameters must be ",
-               length(allowed_parm_letters),
-               " \n ", 
-               "(parameters ", 
-               paste(paste0("'", allowed_parm_letters, "'"), collapse = " "),
-               ")"
-          )
+        validate_model_form_parms(select_model, 
+                                  parm_letters_fixed,
+                                  allowed_parm_letters)
       }
       
       if(select_model == 'sitar') {

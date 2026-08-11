@@ -7285,3 +7285,92 @@ nested_to_df <- function(x,
 
 
 
+
+#' Validate model form and parmeters - see utils-helper-7 for functions
+#' @description Used in [get_model_criterion()]
+#' @noRd
+validate_model_form_parms <- function(select_model,
+                                 parm_letters_fixed,
+                                 allowed_parm_letters,
+                                 verbose = FALSE) {
+  
+  if(select_model == 'pb1') {
+    model_form <- "a-2.0*(a-b)./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))"
+    parms_defi <- "a = asymtote; b = size at theta1; c = s0; 
+                   d = s1; e = theta2. 
+                   Note that 'theta1' is the timing of pre-pubertal growth spurt
+                   and 'theta2' is the timing of post-pubertal growth spurt"
+  } else if(select_model == 'pb2') {
+    model_form <- "a-((a-b)./(((0.5*exp((f.*c).*(Xm-e)))+
+                   (0.5*exp((f.*d).*(Xm-e))))^(1.0./f)))"
+    parms_defi <- "a = asymtote; b = size at theta1; c = s0; 
+                   d = s1; e = theta2; f = gamma  
+                   Note that 'theta1' is the timing of pre-pubertal growth spurt
+                   and 'theta2' is the timing of post-pubertal growth spurt"
+  } else if(select_model == 'pb3') {
+    model_form <- "a-((4.0*(a-b))./((exp(f.*(Xm-e))+
+                  exp(c.*(Xm-e))).*(1.0+exp(d.*(Xm-e)))))"
+    parms_defi <- "a = asymtote; b = size at theta1; c = s0; 
+                   d = s1; e = theta2; f = gamma  
+                   Note that 'theta1' is the timing of pre-pubertal growth spurt
+                   and 'theta2' is the timing of post-pubertal growth spurt"
+  } else if(select_model == 'logistic1') {
+    model_form <- "a./(1+exp(-b.*(Xm-c)))"
+    parms_defi <- "a - asymptote b; rate constant; c time at midpoint"
+  } else if(select_model == 'logistic2') {
+    model_form <- "((a-b)./(1+exp(-e.*(Xm-f)))) + 
+                   (b./(1+exp(-c.*(Xm-d))))"
+    parms_defi <- "a = asymtote; b = size at theta; c = s0;
+                   d = theta1; e = s1; f = theta2"
+  } else if(select_model == 'logistic3') {
+    model_form <- "(a ./ (1 + exp(-b .* (Xm - c)))) +
+                  (d ./ (1 + exp(-e .* (Xm - f)))) +
+                  (g ./ (1 + exp(-h .* (Xm - i))))"
+    parms_defi <- "a = size at infancy; b = rate at infancy; c = time at infancy;
+                   d = size at preadolescence; e = rate at preadolescence;
+                   f = time at preadolescence; g = size at adolescence;
+                   h = rate at adolescence; i = time at adolescence"
+  } 
+  
+  model_form <- gsub("Xm", "X", model_form, fixed = TRUE)
+  
+  model_form <- paste0(" The model form is: " ,
+                       model_form, ",", 
+                       " where X is the predictor", 
+                       ".")
+  
+  parms_defi <- paste0(" The parameters are defined as follows: ",
+                       parms_defi, ".")
+  
+  err_msg <- paste0("For model '", select_model, "'", ", 
+               the number of parameters must be ",
+                length(allowed_parm_letters), "",
+                " \n ", 
+                " (", 
+                paste(paste0("'", allowed_parm_letters, "'"), collapse = " "),
+                ")")
+  
+  err_msg <- paste0(err_msg, ".")
+  
+  info_msg <- paste0("For model '", select_model, "'", ", 
+               the number of parameters are ",
+                    length(allowed_parm_letters), "",
+                    " \n ", 
+                    " (", 
+                    paste(paste0("'", allowed_parm_letters, "'"),collapse = " "),
+                    ")")
+  info_msg <- paste0(info_msg, ".")
+  
+  if(length(parm_letters_fixed) != length(allowed_parm_letters)) {
+    err_msg_form_defi <- paste(err_msg, model_form, parms_defi)
+    stop2c(err_msg_form_defi) 
+  } else {
+    info_msg_form_defi <- paste(info_msg, model_form, parms_defi)
+    if(verbose) message2c(info_msg_form_defi)
+  }
+    
+  return(invisible(NULL))
+}
+
+
+
