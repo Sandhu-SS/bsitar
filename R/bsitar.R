@@ -2173,9 +2173,6 @@
 #'  and may fail if the structure of the generated \code{stancode} changes in
 #'  future versions of [brms::brm()].
 #'  
-#'  @param model A character string specifying the model (\code{'sitar'}). For
-#'    internal purposes only.
-#'  
 #' @param verbose An optional argument (logical, default \code{FALSE}) to
 #'   indicate whether to print information collected during setting up the model
 #'   formula priors, and initials. As an example, the user might be interested
@@ -2519,7 +2516,6 @@ bsitar <- function(x,
                    sum_zero = FALSE,
                    global_args = NULL,
                    parameterization = 'ncp',
-                   model = 'sitar',
                    verbose = FALSE,
                    ...) {
   
@@ -3489,11 +3485,19 @@ bsitar <- function(x,
     }
   }
   
-  # print(model)
-  # print(arguments$model)
+  getdotslist <- list(...)
   
-  arguments$select_model <- select_model <- arguments$model
-  arguments$model <- NULL
+  # If model is an ... argument
+  if(is.null(getdotslist$model)) {
+    arguments$select_model <- select_model <- 'sitar'
+  } else {
+    arguments$select_model <- select_model <- getdotslist$model
+    getdotslist$model <- NULL
+  }
+  
+  # If model is an argument
+  # arguments$select_model <- select_model <- arguments$model
+  # arguments$model <- NULL
   
   if(select_model == 'sitar') {
     override_select_model <- FALSE
@@ -3505,13 +3509,6 @@ bsitar <- function(x,
   # override_select_model <- TRUE # FALSE
   # if(override_select_model) arguments$select_model <- select_model <- 'sitar'
   
-  
-  # print(select_model)
-  # print(arguments$select_model)
-  # stop()
-  
-
-  getdotslist <- list(...)
   
   # -------------------------------------------------------------------------
   # QR DECOMPOSITION AND RELATED OPTIONS (via `getdotslist`)
