@@ -194,20 +194,23 @@ data frame (\code{tibble_table = FALSE}) or as a \code{tibble}
 (\code{tibble_table = TRUE}). Default \code{FALSE}. Ignored if
 \code{return_table = FALSE}.}
 
-\item{print_table}{A logical indicating whether to print table as a
-\code{\link[knitr:kable]{knitr::kable()}} (\code{print_table = TRUE}) or return the table as an
-object (\code{print_table = FALSE}). Note that when \code{print_table =
-TRUE}, table is only printed and not returned as an object
-(\code{invisible(NULL)}). Default \code{print_table = FALSE}. Ignored if
+\item{print_table}{A logical indicating whether to print the table using
+\code{\link[knitr:kable]{knitr::kable()}} by setting \code{print_table = TRUE}, or return it as an
+object by setting \code{print_table = FALSE}. If \code{print_table = TRUE},
+the table is printed but not returned; the function returns \code{NULL}
+invisibly. The default is \code{FALSE}. This argument is ignored when
 \code{return_table = FALSE}.}
 
-\item{return_file}{Optional character string specifying the output type.
+\item{return_file}{An optional character string specifying the output format.
 Supported values are \code{"word"}, \code{"docx"}, \code{"html"},
-\code{"png"}, \code{"pdf"}, \code{"svg"}, and \code{"xlsx"}.
-If \code{NULL}, the function returns \code{ft} unchanged.}
+\code{"png"}, \code{"pdf"}, \code{"svg"}, and \code{"xlsx"}. If
+\code{NULL}, the function returns either a data frame or a \code{flextable}
+object, depending on the value of \code{flex_table}. This argument is
+ignored when \code{path} is specified.}
 
 \item{flex_table}{A logical indicating whether to return the data frame
-\code{flex_table = FALSE} or the \code{flextable} \code{flex_table = FALSE}}
+(\code{flex_table = FALSE}) or a \code{flextable} object (\code{flex_table
+= TRUE}).}
 
 \item{return_conflict}{Optional logical indicating whether to return the raw
 sensitivity results \code{return_conflict = FALSE} from
@@ -220,16 +223,19 @@ TRUE} or \code{return_conflict = FALSE}.}
 numeric variables returned from the \code{\link[priorsense:powerscale_sensitivity]{priorsense::powerscale_sensitivity()}}.
 When \code{digits = NULL} (default), \code{digits} is ignored.}
 
-\item{path}{Optional output file path. If \code{NULL}, a default file name is
-created from \code{return_file}, such as \code{"table_output.docx"} or
-\code{"table_output.xlsx"}.}
+\item{path}{An optional character string specifying the output file path. If
+\code{NULL}, a default file name is generated based on the value of
+\code{return_file}; for example, \code{"table_output.docx"} or
+\code{"table_output.xlsx"}. If no file extension is specified and
+\code{return_file = NULL}, the default extension is \code{".xlsx"}.
+Otherwise, the file extension is set to match \code{return_file}.}
 
-\item{title}{Optional title used in exported output where supported.
-For Word and HTML output, named \code{flextable} objects can be used as
-document titles or section titles.}
+\item{title}{Optional title used in exported output where supported. For Word
+and HTML output, named \code{flextable} objects can be used as document
+titles or section titles.}
 
-\item{align}{Alignment used for Word export. Must be one of
-\code{"left"}, \code{"center"}, or \code{"right"}.}
+\item{align}{Alignment used for Word export. Must be one of \code{"left"},
+\code{"center"}, or \code{"right"}.}
 
 \item{sheet_name}{Character string giving the worksheet name for Excel
 output. Default is \code{"table"}.}

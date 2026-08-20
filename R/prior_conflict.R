@@ -10,52 +10,58 @@
 #' [prior_sensitivity()] for details.
 #' 
 #' @param x An object returned by [prior_sensitivity()].
-#' 
+#'
 #' @param threshold_prior Numeric threshold used to flag prior sensitivity.
-#' 
+#'
 #' @param threshold_lik Numeric threshold used to flag likelihood sensitivity.
-#' 
+#'
 #' @param empty A string that is used to replace \code{NULL} values.
-#' 
+#'
 #' @param print A logical to print the object.
-#' 
-#' @param return_table A logical indicating whether to return the table 
-#' \code{return_table = TRUE} or the list \code{return_table = FALSE}.
-#' 
+#'
+#' @param return_table A logical indicating whether to return the table
+#'   \code{return_table = TRUE} or the list \code{return_table = FALSE}.
+#'
 #' @param tibble_table A logical indicating whether to return the table as a
 #'   data frame (\code{tibble_table = FALSE}) or as a \code{tibble}
 #'   (\code{tibble_table = TRUE}). Default \code{FALSE}. Ignored if
 #'   \code{return_table = FALSE}.
-#' 
-#' @param print_table A logical indicating whether to print table as a
-#'   [knitr::kable()] (\code{print_table = TRUE}) or return the table as an
-#'   object (\code{print_table = FALSE}). Note that when \code{print_table =
-#'   TRUE}, table is only printed and not returned as an object
-#'   (\code{invisible(NULL)}). Default \code{print_table = FALSE}. Ignored if
+#'
+#' @param print_table A logical indicating whether to print the table using
+#'   [knitr::kable()] by setting \code{print_table = TRUE}, or return it as an
+#'   object by setting \code{print_table = FALSE}. If \code{print_table = TRUE},
+#'   the table is printed but not returned; the function returns \code{NULL}
+#'   invisibly. The default is \code{FALSE}. This argument is ignored when
 #'   \code{return_table = FALSE}.
-#' 
+#'
 #' @param flex_table A logical indicating whether to return the data frame
-#'   \code{flex_table = FALSE} or the \code{flextable} \code{flex_table = FALSE}
-#'   
-#' @param return_file Optional character string specifying the output type.
+#'   (\code{flex_table = FALSE}) or a \code{flextable} object (\code{flex_table
+#'   = TRUE}).
+#'
+#' @param return_file An optional character string specifying the output format.
 #'   Supported values are \code{"word"}, \code{"docx"}, \code{"html"},
-#'   \code{"png"}, \code{"pdf"}, \code{"svg"}, and \code{"xlsx"}.
-#'   If \code{NULL}, the function returns \code{ft} unchanged.
-#'   
-#' @param path Optional output file path. If \code{NULL}, a default file name is
-#'   created from \code{return_file}, such as \code{"table_output.docx"} or
-#'   \code{"table_output.xlsx"}.
-#'   
-#' @param title Optional title used in exported output where supported.
-#'   For Word and HTML output, named \code{flextable} objects can be used as
-#'   document titles or section titles.
-#'   
-#' @param align Alignment used for Word export. Must be one of
-#'   \code{"left"}, \code{"center"}, or \code{"right"}. 
-#'   
+#'   \code{"png"}, \code{"pdf"}, \code{"svg"}, and \code{"xlsx"}. If
+#'   \code{NULL}, the function returns either a data frame or a \code{flextable}
+#'   object, depending on the value of \code{flex_table}. This argument is
+#'   ignored when \code{path} is specified.
+#'
+#' @param path An optional character string specifying the output file path. If
+#'   \code{NULL}, a default file name is generated based on the value of
+#'   \code{return_file}; for example, \code{"table_output.docx"} or
+#'   \code{"table_output.xlsx"}. If no file extension is specified and
+#'   \code{return_file = NULL}, the default extension is \code{".xlsx"}.
+#'   Otherwise, the file extension is set to match \code{return_file}.
+#'
+#' @param title Optional title used in exported output where supported. For Word
+#'   and HTML output, named \code{flextable} objects can be used as document
+#'   titles or section titles.
+#'
+#' @param align Alignment used for Word export. Must be one of \code{"left"},
+#'   \code{"center"}, or \code{"right"}.
+#'
 #' @param sheet_name Character string giving the worksheet name for Excel
 #'   output. Default is \code{"table"}.
-#' 
+#'
 #' @param ... Ignored.
 #'
 #' @details

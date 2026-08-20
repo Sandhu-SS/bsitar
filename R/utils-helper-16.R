@@ -1157,7 +1157,7 @@ build_scale_x <- function(x_min = NULL,
                           expand_mult = 0,
                           use_coord_limits = TRUE,
                           coord_pad_mult = 0.05,
-                          coord_pad_add = 0) {
+                          coord_pad_add = 0.0) {
   
   axis_fun <- get_fun_form(xaxis_fun)
   
@@ -1211,66 +1211,66 @@ build_scale_x <- function(x_min = NULL,
 
 
 
-build_scale_x <- function(x_min = NULL,
-                          x_max = NULL,
-                          n = 5,
-                          by = NULL,
-                          xaxis_fun = NULL,
-                          accuracy = 0.1,
-                          expand_mult = 0,
-                          use_coord_limits = TRUE,
-                          coord_pad_mult = 0.05,
-                          coord_pad_add = 0) {
-  
-  axis_fun <- get_fun_form(xaxis_fun)
-  
-  breaks_fun <- function(lims) {
-    xmin <- if (base::is.null(x_min)) lims[1] else x_min
-    xmax <- if (base::is.null(x_max)) lims[2] else x_max
-    
-    if (!base::is.finite(xmin) || !base::is.finite(xmax)) {
-      return(base::numeric(0))
-    }
-    
-    if (xmin == xmax) {
-      return(xmin)
-    }
-    
-    br <- if (!base::is.null(by)) {
-      base::seq(from = xmin, to = xmax, by = by)
-    } else {
-      base::seq(from = xmin, to = xmax, length.out = n)
-    }
-    
-    br[base::is.finite(br)]
-  }
-  
-  label_fun <- function(x) {
-    scales::label_number(accuracy = accuracy)(axis_fun(x))
-  }
-  
-  scale_obj <- ggplot2::scale_x_continuous(
-    limits = NULL,
-    breaks = breaks_fun,
-    labels = label_fun,
-    expand = ggplot2::expansion(mult = expand_mult)
-  )
-  
-  if (use_coord_limits && !(base::is.null(x_min) && base::is.null(x_max))) {
-    xrng <- x_max - x_min
-    pad <- xrng * coord_pad_mult + coord_pad_add
-    
-    base::list(
-      scale_obj,
-      ggplot2::coord_cartesian(
-        xlim = base::c(x_min - pad, x_max + pad),
-        expand = FALSE
-      )
-    )
-  } else {
-    scale_obj
-  }
-}
+# build_scale_x <- function(x_min = NULL,
+#                           x_max = NULL,
+#                           n = 5,
+#                           by = NULL,
+#                           xaxis_fun = NULL,
+#                           accuracy = 0.1,
+#                           expand_mult = 0,
+#                           use_coord_limits = TRUE,
+#                           coord_pad_mult = 0.05,
+#                           coord_pad_add = 0) {
+#   
+#   axis_fun <- get_fun_form(xaxis_fun)
+#   
+#   breaks_fun <- function(lims) {
+#     xmin <- if (base::is.null(x_min)) lims[1] else x_min
+#     xmax <- if (base::is.null(x_max)) lims[2] else x_max
+#     
+#     if (!base::is.finite(xmin) || !base::is.finite(xmax)) {
+#       return(base::numeric(0))
+#     }
+#     
+#     if (xmin == xmax) {
+#       return(xmin)
+#     }
+#     
+#     br <- if (!base::is.null(by)) {
+#       base::seq(from = xmin, to = xmax, by = by)
+#     } else {
+#       base::seq(from = xmin, to = xmax, length.out = n)
+#     }
+#     
+#     br[base::is.finite(br)]
+#   }
+#   
+#   label_fun <- function(x) {
+#     scales::label_number(accuracy = accuracy)(axis_fun(x))
+#   }
+#   
+#   scale_obj <- ggplot2::scale_x_continuous(
+#     limits = NULL,
+#     breaks = breaks_fun,
+#     labels = label_fun,
+#     expand = ggplot2::expansion(mult = expand_mult)
+#   )
+#   
+#   if (use_coord_limits && !(base::is.null(x_min) && base::is.null(x_max))) {
+#     xrng <- x_max - x_min
+#     pad <- xrng * coord_pad_mult + coord_pad_add
+#     
+#     base::list(
+#       scale_obj,
+#       ggplot2::coord_cartesian(
+#         xlim = base::c(x_min - pad, x_max + pad),
+#         expand = FALSE
+#       )
+#     )
+#   } else {
+#     scale_obj
+#   }
+# }
 
 
 #######################################

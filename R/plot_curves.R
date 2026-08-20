@@ -2411,6 +2411,14 @@ plot_curves.bgmfit <- function(model,
     plot.list <- list(d = plot.o.d, v = plot.o.v, a = plot.o.a, u = plot.o.u)
     plot.list <- plot.list[lengths(plot.list) != 0]
     
+    # for (plot.listi in names(plot.list)) {
+    #   build <- ggplot2::ggplot_build(plot.list[[plot.listi]])
+    #   ylimit_expand <- build$layout$panel_params[[]]$y.range
+    #   ylimit_expand[2] <- ylimit_expand[2] + ylimit_expand[2] * 1 # 2 %
+    #   plot.list[[plot.listi]] <- plot.list[[plot.listi]] +
+    #     ggplot2::expand_limits(y = ylimit_expand)
+    # }
+    
     if(!loop_opt_bands_no) {
       plot.o.D <- plot.list.DV[['D']]
       plot.o.V <- plot.list.DV[['V']]
@@ -2425,7 +2433,12 @@ plot_curves.bgmfit <- function(model,
       plot.list <- plot.list[lengths(plot.list) != 0]
     }
     
+    
+    
     plot.list <- rename_plot_list(plot.list, unique_opt_sort, opt)
+    
+    
+    
     
     for (nai in names(plot.list)) {
       if(nai == "d") add_suffix <- " (Population)"
@@ -2464,6 +2477,9 @@ plot_curves.bgmfit <- function(model,
       if(length(plot.list) <= 2) setncol <- length(plot.list) 
       else setncol <- 2
     }
+    
+    
+    
     
     if(length(plot.list) >= 2) {
       plot.o <- patchwork::wrap_plots(plot.list,

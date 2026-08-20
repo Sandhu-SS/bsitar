@@ -752,6 +752,9 @@ prior_summary_table.bgmfit <- function(model,
       dist_key = paste(prior, lb, ub, sep = "||")
     )
   
+  # Handle constant priors such as constant(1)
+  rconstant <- function (n, rate) rate
+  
   draws_by_dist <-
     sim_tbl0 %>%
     dplyr::distinct(dist_key, .dist_obj) %>%
@@ -4150,6 +4153,7 @@ mapderivqr <- function(model,
   getdydx <- function (x, y, id, data, ndigit = 2) {
     sorder <- NULL;
     data$sorder <- as.numeric(row.names(data))
+    # data <- data %>% dplyr::mutate(sorder = dplyr::row_number())
     .data <- data %>%
       dplyr::mutate(.x = !!dplyr::sym(x)) %>%
       dplyr::mutate(.y = !!dplyr::sym(y)) %>%
@@ -4206,6 +4210,83 @@ mapderivqr <- function(model,
          "\n  ", 
          "The currect xvar used in mapderivqr() is: ", 
          collapse_comma(xvar))
+  }
+  return(dout)
+}
+
+
+#' mapderivqr_standalone
+#' @noRd
+mapderivqr_standalone <- function(xvar, 
+                                  yvar, 
+                                  idvar, 
+                                  newdata, 
+                                  deriv = 1,
+                                  summary = TRUE,
+                                  robust = FALSE,
+                                  probs = c(0.025, 0.975),
+                                  ndigit = 2) {
+  y0 <- yvar
+  getdydx <- function(x, y, id, data, ndigit = 2) {
+    sorder <- NULL
+    # data$sorder <- as.numeric(row.names(data))
+    data <- data %>% dplyr::mutate(sorder = dplyr::row_number())
+    .data <- data %>% dplyr::mutate(.x = !!dplyr::sym(x)) %>% 
+      dplyr::mutate(.y = !!dplyr::sym(y)) %>% dplyr::mutate(.id = !!dplyr::sym(id)) %>% 
+      data.frame()
+    .dydx <- function(x, y) {
+      n <- length(x)
+      i1 <- 1:2
+      i2 <- (n - 1):n
+      c(diff(y[i1])/diff(x[i1]), (y[-i1] - y[-i2])/(x[-i1] - 
+                                                      x[-i2]), diff(y[i2])/diff(x[i2]))
+    }
+    dydx <- lapply(split(.data, as.numeric(.data$.id)), function(x) {
+      x$.v <- .dydx(x$.x, x$.y)
+      x
+    })
+    dydx <- bsitar::: CustomDoCall(rbind, dydx) %>% data.frame() %>% 
+      dplyr::arrange(sorder)
+    return(round(dydx[[".v"]], ndigit))
+  }
+  mapderiv <- function(.xrow, x = xvar, y = yvar, id = idvar, 
+                       data = newdata) {
+    newdata[[y]] <- .xrow
+    getdydx(x = x, y = y, id = id, data = newdata)
+  }
+  if (is.symbol(y0)) {
+    y0 <- newdata[[deparse(y0)]]
+    y0 <- as.matrix(y0) %>% t()
+  }
+  else if (is.character(y0)) {
+    y0 <- newdata[[y0]]
+    y0 <- as.matrix(y0) %>% t()
+  }
+  else if (is.vector(y0)) {
+    y0 <- as.matrix(y0) %>% t()
+  }
+  else if (is.matrix(y0)) {
+    y0 <- y0
+  }
+  if (deriv == 1) {
+    tempx <- apply(y0, 1, mapderiv) %>% t()
+  }
+  if (deriv == 2) {
+    tempx <- apply(y0, 1, mapderiv) %>% t()
+    tempx <- apply(tempx, 1, mapderiv) %>% t()
+  }
+  if (summary) {
+    dout <- brms::posterior_summary(tempx, probs = probs, 
+                                    robust = robust)
+  }
+  else {
+    dout <- tempx
+  }
+  if (all(is.infinite(dout))) {
+    stop2c("The 'mapderivqr()' resulted in all infinite values.", 
+           "\n  ", "This could be because of an ncorrect xvar used.", 
+           "\n  ", "The currect xvar used in mapderivqr() is: ", 
+           collapse_comma(xvar))
   }
   return(dout)
 }

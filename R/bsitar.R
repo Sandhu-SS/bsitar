@@ -2390,7 +2390,7 @@ bsitar <- function(x,
                    c_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    s_prior_beta = normal(lm, lm, autoscale = FALSE),
-                   a_cov_prior_beta = normal(0, 20.0, autoscale = FALSE),
+                   a_cov_prior_beta = normal(0, 50.0, autoscale = FALSE),
                    b_cov_prior_beta = normal(0,  2.0, autoscale = FALSE),
                    c_cov_prior_beta = normal(0,  1.0, autoscale = FALSE),
                    d_cov_prior_beta = normal(0,  1.0, autoscale = FALSE),
@@ -2411,15 +2411,15 @@ bsitar <- function(x,
                    b_cov_prior_sd_str = NULL,
                    c_cov_prior_sd_str = NULL,
                    d_cov_prior_sd_str = NULL,
-                   sigma_prior_beta = normal(0, 1.0, autoscale = FALSE),
-                   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
-                   sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
-                   sigma_cov_prior_sd = normal(0, 0.10, autoscale = FALSE),
+                   sigma_prior_beta = normal(0, ysd, autoscale = FALSE), # 1.0
+                   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE), # 0.5
+                   sigma_prior_sd = normal(0, ysd, autoscale = FALSE), # 0.20
+                   sigma_cov_prior_sd = normal(0, 0.5, autoscale = FALSE), # 0.10
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
                    rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
                    dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
-                   dpar_cov_prior_sigma = normal(0, 1.0, autoscale = FALSE),
+                   dpar_cov_prior_sigma = normal(0, 0.5, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
                    gr_prior_cor = lkj(1),
@@ -2492,7 +2492,7 @@ bsitar <- function(x,
                    opencl = getOption("brms.opencl", NULL),
                    normalize = getOption("brms.normalize", TRUE),
                    algorithm = getOption("brms.algorithm", "sampling"),
-                   control = list(adapt_delta = 0.9, max_treedepth = 15),
+                   control = list(adapt_delta = 0.95, max_treedepth = 15),
                    empty = FALSE,
                    rename = TRUE,
                    pathfinder_args = NULL,
@@ -3485,6 +3485,7 @@ bsitar <- function(x,
     }
   }
   
+  # Why again again extracting list(...), use above dots_allias, but removed
   getdotslist <- list(...)
   
   
@@ -11741,7 +11742,11 @@ bsitar <- function(x,
     }
   }
   
-  brmsdots_ <- list(...)
+  # Why again again extracting list(...), use above getdotslist
+  # brmsdots_ <- list(...)
+  
+  brmsdots_ <- getdotslist
+  
   getdotslistnames <- c("match_sitar_a_form", "match_sitar_d_form",
                          "sigmamatch_sitar_a_form", "displayit", 
                         "setcolh", "setcolb", "smat", "decomp")
@@ -11756,6 +11761,35 @@ bsitar <- function(x,
   if(!is.null(custom_stanvars)) {
     bstanvars <- bstanvars + custom_stanvars
   }
+  
+  
+  
+  
+  # Moved Here 
+  
+  if(!is.null(custom_formula)) {
+    if(!brms::is.brmsformula(custom_formula) &
+       !brms::is.mvbrmsformula(custom_formula)) {
+      stop2c("The 'custom_formula' must be of 
+               class 'brmsformula' or 'mvbrmsformula'")
+    }
+    bformula <- custom_formula
+  }
+  if(!is.null(custom_prior)) {
+    if(!brms::is.brmsprior(custom_prior)) {
+      stop2c("The 'custom_prior' must be of class 'brmsprior'")
+    }
+    brmspriors <- custom_prior
+  } else if(!is.null(add_self_priors)) {
+    if(!brms::is.brmsprior(add_self_priors)) {
+      stop2c("The 'add_self_priors' must be of class 'brmsprior'")
+    }
+    brmspriors <- brmspriors + add_self_priors
+  }
+  
+  
+  
+  
   brm_args <-
     setup_brms_args(
       formula = bformula,
@@ -11769,7 +11803,7 @@ bsitar <- function(x,
       verbose = verbose,
       setarguments = brms_arguments,
       brmsdots = brmsdots_)
-
+  
   brm_args$subset <- NULL
   brm_args$fast_nsk <- NULL
   if(!is.null(custom_family)) {
@@ -11848,7 +11882,7 @@ bsitar <- function(x,
     brmspriors <- brmspriors_brmsfit_sdcor
   }
   
-  brm_args$prior <- brmspriors
+  brm_args[['prior']] <- brmspriors
   
   if(!is.null(set_self_priors) & 
      !is.null(add_self_priors) & 
@@ -11869,7 +11903,7 @@ bsitar <- function(x,
   }
   
   lbbb_ <- ubbb_ <- NULL
-  tempprior_hold <- brmspriors # brm_args$prior 
+  tempprior_hold <- brmspriors # brm_args[['prior']] 
   setpriornamesorder <- colnames(tempprior_hold)
   tempprior_hold$lbbb_ <- tempprior_hold$lb
   tempprior_hold$ubbb_ <- tempprior_hold$ub
@@ -11917,7 +11951,7 @@ bsitar <- function(x,
     }
   }
   
-  brm_args$prior <- brmspriors
+  brm_args[['prior']] <- brmspriors
   
   decomp_escode2<- function(temp_stancode2x) {
     htx <- strsplit(temp_stancode2x, "\n")[[1]]
@@ -12691,7 +12725,7 @@ bsitar <- function(x,
     brm_args[['prior']] <- brm_args[['prior']] %>% 
       dplyr::filter(class != 'sigma')
   }
-  
+  brm_argsx <<- brm_args
   scode_final  <- CustomDoCall(brms::make_stancode, brm_args)
   sdata        <- CustomDoCall(brms::make_standata, brm_args)
   if(parameterization == 'cp') {
@@ -12712,12 +12746,12 @@ bsitar <- function(x,
   }
   get_priors_eval_numeric <- TRUE
   if(get_priors_eval & get_priors_eval_numeric) {
-    get_priors_eval_out <- priors_to_textdata(spriors = brm_args$prior,
+    get_priors_eval_out <- priors_to_textdata(spriors = brm_args[['prior']],
                                                   sdata = sdata,
                                               raw = TRUE)
   }
   if(get_priors_eval & !get_priors_eval_numeric) {
-    get_priors_eval_out <- brm_args$prior
+    get_priors_eval_out <- brm_args[['prior']]
   }
   
   full_custom <- FALSE
@@ -13158,30 +13192,34 @@ bsitar <- function(x,
                             scode_final, fixed = T)
       } 
     } 
-
-    if(!is.null(custom_formula)) {
-      if(!brms::is.brmsformula(custom_formula)) {
-        stop2c("The 'custom_formula' must be of class 'brmsformula'")
-      }
-      brm_args[['formula']] <- custom_formula
-    }
-    if(!is.null(custom_prior)) {
-      if(!brms::is.brmsprior(custom_prior)) {
-        stop2c("The 'custom_prior' must be of class 'brmsprior'")
-      }
-      brm_args[['prior']] <- custom_prior
-    }
     
-    brm_args_prior <- brm_args$prior
+    # Moved up
+    
+    # if(!is.null(custom_formula)) {
+    #   if(!brms::is.brmsformula(custom_formula) &
+    #      !brms::is.mvbrmsformula(custom_formula)) {
+    #     stop2c("The 'custom_formula' must be of 
+    #            class 'brmsformula' or 'mvbrmsformula'")
+    #   }
+    #   brm_args[['formula']] <- custom_formula
+    # }
+    # if(!is.null(custom_prior)) {
+    #   if(!brms::is.brmsprior(custom_prior)) {
+    #     stop2c("The 'custom_prior' must be of class 'brmsprior'")
+    #   }
+    #   brm_args[['prior']] <- custom_prior
+    # }
+    
+    brm_args_prior <- brm_args[['prior']]
     if(!fit_edited_scode_exe_model_fit & fit_edited_scode) {
       if(get_priors) {
-        return(brm_args$prior)
+        return(brm_args[['prior']])
       } else if(get_standata) {
         return(sdata)
       } else if(get_stancode) {
         return(scode_final)
       } else if(get_priors_eval) {
-        return(brm_args$prior)
+        return(brm_args[['prior']])
       } else if(validate_priors) {
         return(CustomDoCall(brms::validate_prior, brm_args))
       } else if(get_init_eval) {

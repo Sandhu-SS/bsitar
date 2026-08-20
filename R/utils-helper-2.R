@@ -64,29 +64,65 @@ export_flextable <- function(
     sheet_name = "table"
 ) {
   
-  if (is.null(return_file)) {
+  
+  
+  if (is.null(return_file) & is.null(path)) {
     return(ft)
+  } else if (!is.null(return_file) & is.null(path)) {
+    path <- "table_output"
+  } else if (is.null(return_file) & !is.null(path)) {
+    return_file <- "xlsx"
   }
   
-  align <- match.arg(align, c("left", "center", "right"))
   return_file <- tolower(return_file)
   
-  if (is.null(path)) {
-    ext <- switch(
-      return_file,
-      word = ".docx",
-      docx = ".docx",
-      html = ".html",
-      png  = ".png",
-      # pdf  = ".pdf",
-      svg  = ".svg",
-      xlsx = ".xlsx",
-      stop2c("Unsupported return_file. Use one of: word, 
-             docx, html, png, pdf, svg, xlsx")
-    )
-    path <- paste0("table_output", ext)
+  allowed_return_file <- c("docx", "html", "png", "svg", "xlsx")
+  
+  path_ext <-  strsplit(path, "\\.(?!.*\\.)", perl = TRUE)[[1]][2] # last .
+
+  set_ext_later <- FALSE
+  if(is.na(path_ext)) {
+    if(is.null(return_file)) {
+      path <- paste0(path, ".", "xlsx")
+    } else {
+      set_ext_later <- TRUE
+    }
+  } else if(!path_ext %in% allowed_return_file) {
+    stop2c("'", path_ext, "'", " is not supported file type. 
+          Allowed file types are: ",
+          collapse_comma(allowed_return_file))
   }
   
+  
+  return_file <- sub("\\.", "", return_file)
+  
+  ext <- switch(
+    return_file,
+    word = ".docx",
+    docx = ".docx",
+    html = ".html",
+    png  = ".png",
+    # pdf  = ".pdf",
+    svg  = ".svg",
+    xlsx = ".xlsx",
+    stop2c("Unsupported return_file. Use one of: word, 
+             docx, html, png, pdf, svg, xlsx")
+  )
+  
+  
+  if(!is.na(path_ext)) ext <- paste0(".", path_ext)
+  
+  if(set_ext_later) {
+    path <- paste0(path, "", ext)
+  }
+  
+  # print(ext)
+  # print(path)
+  # stop()
+  # 
+  
+  align <- match.arg(align, c("left", "center", "right"))
+
   if (return_file %in% c("word", "docx")) {
     vals <- list(ft)
     if (!is.null(title)) names(vals) <- title
