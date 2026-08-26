@@ -2411,10 +2411,10 @@ bsitar <- function(x,
                    b_cov_prior_sd_str = NULL,
                    c_cov_prior_sd_str = NULL,
                    d_cov_prior_sd_str = NULL,
-                   sigma_prior_beta = normal(0, ysd, autoscale = FALSE), # 1.0
-                   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE), # 0.5
-                   sigma_prior_sd = normal(0, ysd, autoscale = FALSE), # 0.20
-                   sigma_cov_prior_sd = normal(0, 0.5, autoscale = FALSE), # 0.10
+                   sigma_prior_beta = normal(0, 1.0, autoscale = FALSE),
+                   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
+                   sigma_prior_sd = normal(0, 0.20, autoscale = FALSE),
+                   sigma_cov_prior_sd = normal(0, 0.10, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
                    rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
@@ -2669,6 +2669,7 @@ bsitar <- function(x,
       }
     } 
   }
+  
   mcall$threads <- mcall_threads_
   
   newcall_checks <- c('save_pars')
@@ -4776,8 +4777,7 @@ bsitar <- function(x,
         if(multivariate == "T") multivariate <- eval(parse(text = multivariate))
         multivariate <- as.list(multivariate)
         names(multivariate) <- 'mvar'
-      } # For CustomDoCall
-      
+      }
     } else if (is.character(substitute(multivariate))) {
       multivariate <- multivariate
       multivariate <- as.list(multivariate)
@@ -12725,7 +12725,7 @@ bsitar <- function(x,
     brm_args[['prior']] <- brm_args[['prior']] %>% 
       dplyr::filter(class != 'sigma')
   }
-  brm_argsx <<- brm_args
+  
   scode_final  <- CustomDoCall(brms::make_stancode, brm_args)
   sdata        <- CustomDoCall(brms::make_standata, brm_args)
   if(parameterization == 'cp') {

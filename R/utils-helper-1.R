@@ -921,7 +921,8 @@ prior_summary_table.bgmfit <- function(model,
       prior = dplyr::if_else(
         ub == "Inf" & lb == "Inf",
         prior,
-        paste0(prior, "{", lb, ", ", ub, "}")
+        # paste0(prior, "{", lb, ", ", ub, "}")
+        paste0(prior, " ", "|", lb, ", ", ub, "|")
       )
     ) %>%
     dplyr::select(
@@ -1148,7 +1149,7 @@ prior_summary_table.bgmfit <- function(model,
           " The s parameters (s1, s2,...) are spline coefficients;",
           " For Class sd, the Intercept is standard deviation of ",
           "random effects for the group enclosed in the parentheses ",
-          "(id/study);",
+          ";",
           " For Class rsd, Class I and Class II denote the ",
           "within-individual standard deviation estimates"
         )
@@ -1165,8 +1166,10 @@ prior_summary_table.bgmfit <- function(model,
           " Each coefficient is assigned a normal distribution ",
           "with mean and standard deviation specified in the ",
           "parentheses.",
-          " curly brackets with {0, Inf} indicate a half-normal ",
-          "distribution."
+          " Lower and/or upper  bounds, if any, are enclosed in the vertical ",
+          " bars || next to the coefficient. ",
+          " For instance, for half-normal distribution, bounds are |0, Inf| ",
+          "."
         )
       ),
       ref_symbols = paste0(" ", prior_sym, " "),
@@ -4245,7 +4248,7 @@ mapderivqr_standalone <- function(xvar,
       x$.v <- .dydx(x$.x, x$.y)
       x
     })
-    dydx <- bsitar::: CustomDoCall(rbind, dydx) %>% data.frame() %>% 
+    dydx <- CustomDoCall(rbind, dydx) %>% data.frame() %>% 
       dplyr::arrange(sorder)
     return(round(dydx[[".v"]], ndigit))
   }
