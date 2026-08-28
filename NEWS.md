@@ -1,5 +1,5 @@
+# bsitar 0.4.0
 
-# bsitar 0.3.4
 
 ### New features
 
