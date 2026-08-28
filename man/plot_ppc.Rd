@@ -22,6 +22,7 @@
   bw = "nrd0",
   adjust = 1,
   kernel = "gaussian",
+  bounds = NULL,
   n_dens = 1024,
   pad = TRUE,
   discrete = FALSE,
@@ -34,8 +35,6 @@
   y_alpha = 1,
   y_jitter = 0.1,
   verbose = FALSE,
-  model_deriv = NULL,
-  dummy_to_factor = NULL,
   expose_function = FALSE,
   usesavedfuns = NULL,
   clearenvfuns = NULL,
@@ -90,30 +89,48 @@ the predictive distributions.}
 
 \item{trim}{A logical scalar passed to \code{\link[ggplot2:geom_density]{ggplot2::geom_density()}}.}
 
-\item{bw, adjust, kernel, n_dens}{Optional arguments passed to
-\code{\link[stats:density]{stats::density()}} to override default kernel density estimation
-parameters. \code{n_dens} defaults to \code{1024}.}
+\item{bw}{The smoothing bandwidth to be used. The kernels are scaled such
+that this is the standard deviation of the smoothing kernel (Note this
+differs from the reference books cited below). \code{bw} can also be a
+character string giving a rule to choose the bandwidth. The default,
+\code{"nrd0"} has remained the default for historical and compatibility
+reasons, rather than as a general recommendation, where \code{"SJ"} would
+rather fit.}
+
+\item{adjust}{the bandwidth used is actually \code{adjust*bw}.
+    This makes it easy to specify values like \sQuote{half the default}
+    bandwidth.}
+
+\item{kernel}{Kernel. See list of available kernels in \code{\link[=density]{density()}}.}
+
+\item{bounds}{Known lower and upper bounds for estimated data. Default
+\code{c(-Inf, Inf)} means that there are no (finite) bounds. If any bound is
+finite, boundary effect of default density estimation will be corrected by
+reflecting tails outside \code{bounds} around their closest edge. Data points
+outside of bounds are removed with a warning.}
+
+\item{n_dens}{number of equally spaced points at which the density is to be
+estimated, should be a power of two, see \code{\link[stats:density]{stats::density()}} for details.}
 
 \item{pad}{A logical scalar passed to \code{\link[ggplot2:stat_ecdf]{ggplot2::stat_ecdf()}}.}
 
-\item{discrete}{For \code{ppc_ecdf_overlay()}, should the data be treated as
-discrete? The default is \code{FALSE}, in which case \code{geom="line"} is
-passed to \code{\link[ggplot2:stat_ecdf]{ggplot2::stat_ecdf()}}. If \code{discrete} is set to
-\code{TRUE} then \code{geom="step"} is used.}
+\item{discrete}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} The \code{discrete} argument is
+deprecated. The ECDF is a step function by definition, so \code{geom_step()} is
+now always used.}
 
-\item{binwidth}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} to override
-the default binwidth.}
+\item{binwidth}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}, \code{\link[ggplot2:geom_area]{ggplot2::geom_area()}},
+and \code{\link[ggdist:stat_dots]{ggdist::stat_dots()}} to override the default binwidth.}
 
-\item{bins}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} to override
-the default binwidth.}
+\item{bins}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} and \code{\link[ggplot2:geom_area]{ggplot2::geom_area()}}
+to override the default binning.}
 
-\item{breaks}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} as an
-alternative to \code{binwidth}.}
+\item{breaks}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} as an alternative to
+\code{binwidth}.}
 
-\item{freq}{For histograms, \code{freq=TRUE} (the default) puts count on the
-y-axis. Setting \code{freq=FALSE} puts density on the y-axis. (For many
-plots the y-axis text is off by default. To view the count or density
-labels on the y-axis see the \code{\link[bayesplot:yaxis_text]{yaxis_text()}} convenience
+\item{freq}{For histograms and frequency polygons, \code{freq=TRUE} (the default)
+puts count on the y-axis. Setting \code{freq=FALSE} puts density on the y-axis.
+(For many plots the y-axis text is off by default. To view the count or
+density labels on the y-axis see the \code{\link[bayesplot:yaxis_text]{yaxis_text()}} convenience
 function.)}
 
 \item{y_draw}{For \code{ppc_violin_grouped()}, a string specifying how to draw
@@ -127,28 +144,6 @@ will let \strong{ggplot2} determine the amount of jitter.}
 
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}
-
-\item{model_deriv}{A logical value specifying whether to estimate the
-velocity curve from the derivative function or by differentiating the
-distance curve. Set \code{model_deriv = TRUE} for functions that require
-the velocity curve, such as \code{growthparameters()} and
-\code{plot_curves()}. Set it to \code{NULL} for functions that use the
-distance curve (i.e., fitted values), such as \code{loo_validation()} and
-\code{plot_ppc()}.}
-
-\item{dummy_to_factor}{A named list (default \code{NULL}) to convert dummy
-variables into a factor variable. The list must include the following
-elements:
-\itemize{
-\item \code{factor.dummy}: A character vector of dummy variables to be
-converted to factors.
-\item \code{factor.name}: The name for the newly created factor variable
-(default is \code{'factor.var'} if \code{NULL}).
-\item \code{factor.level}: A vector specifying the factor levels.
-If \code{NULL}, levels are taken from \code{factor.dummy}.
-If \code{factor.level} is provided, its length must match
-\code{factor.dummy}.
-}}
 
 \item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
 Controls whether Stan functions are exposed for post-processing.
@@ -227,9 +222,9 @@ posterior predictive checks.
 \donttest{
 # Fit Bayesian SITAR model 
 
-# To avoid mode estimation, which takes time, the Bayesian SITAR model is fit to 
-# the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
-# See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+# To avoid mode estimation, which takes time, the Bayesian SITAR model is fit  
+# to the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
+# See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check and confirm whether the model fit object 'berkeley_exfit' exists
  berkeley_exfit <- getNsObject(berkeley_exfit)

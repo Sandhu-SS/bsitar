@@ -8,6 +8,17 @@
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
+#' @param bw The smoothing bandwidth to be used. The kernels are scaled such
+#'   that this is the standard deviation of the smoothing kernel (Note this
+#'   differs from the reference books cited below). \code{bw} can also be a
+#'   character string giving a rule to choose the bandwidth. The default,
+#'   \code{"nrd0"} has remained the default for historical and compatibility
+#'   reasons, rather than as a general recommendation, where \code{"SJ"} would
+#'   rather fit.
+#' 
+#' @param n_dens number of equally spaced points at which the density is to be
+#'   estimated, should be a power of two, see [stats::density()] for details.
+#' 
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams brms::pp_check.brmsfit
 #' @inheritParams fitted_draws.bgmfit
@@ -16,6 +27,8 @@
 #' @inheritParams bayesplot::ppc_freqpoly
 #' @inheritParams bayesplot::ppc_violin_grouped
 #' @inheritParams bayesplot::ppc_hist
+#' @inheritParams stats::density
+#' @inheritParams ggplot2::geom_density
 #' @inherit brms::pp_check.brmsfit description
 #' 
 #' @param ... Additional arguments passed to the [brms::pp_check.brmsfit()] 
@@ -33,9 +46,9 @@
 #' \donttest{
 #' # Fit Bayesian SITAR model 
 #' 
-#' # To avoid mode estimation, which takes time, the Bayesian SITAR model is fit to 
-#' # the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
-#' # See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+#' # To avoid mode estimation, which takes time, the Bayesian SITAR model is fit  
+#' # to the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
+#' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
 #' # Check and confirm whether the model fit object 'berkeley_exfit' exists
 #'  berkeley_exfit <- getNsObject(berkeley_exfit)
@@ -45,49 +58,50 @@
 #' plot_ppc(model, ndraws = NULL)
 #' }
 #' 
-plot_ppc.bgmfit <-
-  function(model,
-           type,
-           ndraws = NULL,
-           dpar = NULL,
-           draw_ids = NULL,
-           prefix = c("ppc", "ppd"),
-           group = NULL,
-           x = NULL,
-           newdata = NULL,
-           resp = NULL,
-           size = 0.25,
-           alpha = 0.7,
-           trim = FALSE,
-           bw = "nrd0",
-           adjust = 1,
-           kernel = "gaussian",
-           n_dens = 1024,
-           pad = TRUE,
-           discrete = FALSE,
-           binwidth = NULL,
-           bins = NULL,
-           breaks = NULL,
-           freq = TRUE,
-           y_draw = c("violin", "points", "both"),
-           y_size = 1,
-           y_alpha = 1,
-           y_jitter = 0.1,
-           verbose = FALSE,
-           model_deriv = NULL,
-           dummy_to_factor = NULL, 
-           expose_function = FALSE,
-           usesavedfuns = NULL,
-           clearenvfuns = NULL,
-           newdata_fixed = NULL,
-           envir = NULL,
-           ...) {
+plot_ppc.bgmfit <- function(model,
+                            type,
+                            ndraws = NULL,
+                            dpar = NULL,
+                            draw_ids = NULL,
+                            prefix = c("ppc", "ppd"),
+                            group = NULL,
+                            x = NULL,
+                            newdata = NULL,
+                            resp = NULL,
+                            size = 0.25,
+                            alpha = 0.7,
+                            trim = FALSE,
+                            bw = "nrd0",
+                            adjust = 1,
+                            kernel = "gaussian",
+                            bounds = NULL,
+                            n_dens = 1024,
+                            pad = TRUE,
+                            discrete = FALSE,
+                            binwidth = NULL,
+                            bins = NULL,
+                            breaks = NULL,
+                            freq = TRUE,
+                            y_draw = c("violin", "points", "both"),
+                            y_size = 1,
+                            y_alpha = 1,
+                            y_jitter = 0.1,
+                            verbose = FALSE,
+                            expose_function = FALSE,
+                            usesavedfuns = NULL,
+                            clearenvfuns = NULL,
+                            newdata_fixed = NULL,
+                            envir = NULL,
+                            ...) {
     
     if(is.null(envir)) {
       envir <- model$model_info$envir
     } else {
       envir <- envir
     }
+  
+    model_deriv <- NULL
+    dummy_to_factor <- NULL
     
     if(is.null(dpar)) {
       dpar <- "mu"
