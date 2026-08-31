@@ -2561,7 +2561,6 @@ bsitar <- function(x,
       } else {
         mcall <- eval_globals_in_mcall(mcall, exceptions = set_exceptions) 
       }
-      # mcall <- eval_globals_in_mcall(mcall, exceptions = set_exceptions) 
     }
   } 
  
