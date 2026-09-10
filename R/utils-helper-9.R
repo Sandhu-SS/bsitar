@@ -1320,6 +1320,19 @@ set_priors_initials <- function(a_prior_beta,
       zz <- strsplit(zz, "\\(")[[1]]
       dist <- zz[1]
       
+      # constant dist
+      if(check_is_numeric_like(zz[1])) {
+        dist <- "constant"
+        prior_str_arg <- paste0(dist, "(", zz,")")
+      } else if(zz[1] == "lm") {
+        dist <- "constant"
+        prior_str_arg <- paste0(dist, "(", zz,")")
+      } else if(length(zz) == 1) {
+        dist <- "constant"
+        prior_str_arg <- paste0(dist, "(", zz,")")
+      }
+      
+      
       list_names <-
         c(
           'prior_str_arg',
@@ -2843,10 +2856,15 @@ set_priors_initials <- function(a_prior_beta,
       }
       list_ck <- list_ck[lengths(list_ck) != 0]
       keys    <- unique(unlist(lapply(list_ck, names)))
+      # SIMPLIFY = FALSE allows correct passing of single param lm such as s
       list_ck <-
         setNames(CustomDoCall(mapply, c(FUN = c, lapply(
           list_ck, `[`, keys
-        ))), keys)
+        ), SIMPLIFY = FALSE)), keys)
+      # list_ck <-
+      #   setNames(CustomDoCall(mapply, c(FUN = c, lapply(
+      #     list_ck, `[`, keys
+      #   ))), keys)
       list_ck_sd <- list_ck_sd[lengths(list_ck_sd) != 0]
       if(length(list_ck_sd) != 0) {
         for (list_ck_sd_i in 1:length(list_ck_sd)) {

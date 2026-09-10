@@ -556,13 +556,6 @@ off this automatic assignment of \code{'exp'} to the
 FALSE} when computing the first derivative (velocity) for \code{dpar =
 'sigma'}.}
 
-\item{byfun}{A function such as \code{mean()} or \code{sum()} used to aggregate
-estimates within the subgroups defined by the \code{by} argument. \code{NULL} uses the
-\code{mean()} function. Must accept a numeric vector and return a single numeric
-value. This is sometimes used to take the sum or mean of predicted
-probabilities across outcome or predictor
-levels. See examples section.}
-
 \item{wts}{logical, string or numeric: weights to use when computing average predictions, contrasts or slopes. These weights only affect the averaging in \verb{avg_*()} or with the \code{by} argument, and not unit-level estimates. See \code{?weighted.mean}
 \itemize{
 \item string: column name of the weights variable in \code{newdata}. When supplying a column name to \code{wts}, it is recommended to supply the original data (including the weights variable) explicitly to \code{newdata}.

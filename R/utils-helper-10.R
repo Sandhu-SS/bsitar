@@ -348,6 +348,25 @@ prepare_priors <- function(prior_argument,
       for (i in set_str_names)
         error_handle1(i, dist, splitmvar_w3)
     }
+    
+    # constant dist
+    if (dist == "constant") {
+      set_str_names <- c("location")
+      if (length(splitmvar_w2) < length(set_str_names))
+        stop2c(
+          "please sepecify minimum required ",
+          length(set_str_names),
+          " parameters, i.e., ",
+          paste(set_str_names, collapse = ", ")
+        )
+      splitmvar_w2 <-
+        add_missing_mandate_names(set_str_names, splitmvar_w3, splitmvar_w2)
+      splitmvar_w3 <- sub("=[^=]+$", "", splitmvar_w2)
+      for (i in set_str_names)
+        error_handle1(i, dist, splitmvar_w3)
+    }
+    
+    
     if (dist == "student_t") {
       set_str_names <- c("df", "location", "scale")
       if (length(splitmvar_w2) < length(set_str_names))

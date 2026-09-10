@@ -11224,15 +11224,21 @@ bsitar <- function(x,
     if(remove_sigma_parameter) {
       temp_prior <- temp_prior %>% dplyr::filter(class != 'sigma')
     }
-      
+   
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
                                     prior = temp_prior,
+                                    drop_unused_levels = TRUE,
                                     data = brmsdata)
     temp_standata2 <- brms::make_standata(formula = bformula,
                                     stanvars = bstanvars,
                                     prior = temp_prior,
+                                    drop_unused_levels = TRUE,
                                     data = brmsdata)
+    
+    # brm_argsx <<- brm_args
+    # brms_argumentsx <<- brms_arguments
+    # stop()
     
     move_from_model_to_qq_for_bqinv <- 
       function(temp_stancode2x, 
@@ -11421,12 +11427,21 @@ bsitar <- function(x,
           initialsx2 <- c(initialsx2, newinits)
         }
         if(grepl("z_", initialsi)) {
-          initialsx2[[initialsi]] <- NULL
-          newinits <- set_init_gr_effects(temp_stancode2, 
-                                          temp_standata2, 
-                                          parameterization = parameterization,
-                                          what = 'z')
-          initialsx2 <- c(initialsx2, newinits)
+          # needed try() for s2z
+          try({
+            initialsx2[[initialsi]] <- NULL
+            newinits <- set_init_gr_effects(temp_stancode2, 
+                                            temp_standata2, 
+                                            parameterization = parameterization,
+                                            what = 'z')
+            initialsx2 <- c(initialsx2, newinits)
+          }, silent = TRUE)
+          # initialsx2[[initialsi]] <- NULL
+          # newinits <- set_init_gr_effects(temp_stancode2, 
+          #                                 temp_standata2, 
+          #                                 parameterization = parameterization,
+          #                                 what = 'z')
+          # initialsx2 <- c(initialsx2, newinits)
         }
       }
       uni_name <- unique(names(initialsx2))
@@ -13229,6 +13244,8 @@ bsitar <- function(x,
         return(brm_args$stanvars)
       }
     } 
+    
+   
     
     if(fit_edited_scode) {
       if(verbose) message2c("Fitting model via edited stancode...")

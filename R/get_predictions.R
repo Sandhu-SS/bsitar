@@ -175,7 +175,6 @@ get_predictions.bgmfit <-
            conf_level = 0.95,
            transform = NULL,
            transform_draws = NULL,
-           byfun = NULL,
            wts = NULL,
            hypothesis = NULL,
            equivalence = NULL,
@@ -1096,7 +1095,7 @@ get_predictions.bgmfit <-
     
     
     if(call_slopes) {
-      exclude_args <- c(exclude_args, 'transform', 'byfun')
+      exclude_args <- c(exclude_args, 'transform')
     }
 
     if(call_from_modelbased_growthparameters) {
