@@ -57,7 +57,6 @@
   conf_level = 0.95,
   transform = NULL,
   transform_draws = NULL,
-  byfun = NULL,
   wts = NULL,
   hypothesis = NULL,
   equivalence = NULL,
