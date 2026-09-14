@@ -19,7 +19,7 @@ jobs:
       matrix:
         config:
           - {os: macOS-latest,   r: 'release', rtools: ''}
-          - {os: windows-latest, r: 'release', rtools: '42'}
+          - {os: windows-latest, r: 'release', rtools: '45'}
           # some issues occured on ubuntu-latest related to pandoc-citeproc
           # https://forum.posit.co/t/github-action-e-package-pandoc-citeproc-has-no-installation-candidate/197536
           - {os: ubuntu-22.04, r: 'devel', rtools: ''}
