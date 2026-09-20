@@ -59,7 +59,7 @@ Suggests:
     splines2 (>= 0.5.4),
     scales (>= 1.3.0),
     kableExtra (>= 1.4.0),
-    knitr (>= 1.51),
+    knitr (>= 1.52),
     future (>= 1.75.0),
     future.callr (>= 1.0.0),
     future.apply (>= 1.20.2),
@@ -102,11 +102,9 @@ Suggests:
     bookdown,
     spelling,
     boot,        
-    graphics,
     grDevices,
     abind,
-    glue,
-    stats
+    glue
 URL: https://github.com/Sandhu-SS/bsitar
 BugReports: https://github.com/Sandhu-SS/bsitar/issues
 Additional_repositories:
