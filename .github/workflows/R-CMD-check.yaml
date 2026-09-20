@@ -121,19 +121,17 @@ jobs:
         run: |
           which tar
           tar --version
-        #shell: Rscript {0}
+        shell: Rscript {0}
       #  end: macOS tar check step
 
 
   
       # Some issues with processx package, so install it
       - name: Install dependencies
-
         run: |
           install.packages(c("remotes", "processx"))
           remotes::install_deps(dependencies = TRUE)
-          install.packages("pak")
-          pak::pkg_install(dependencies = TRUE)
+          install.packages("pak", dependencies = TRUE)
         shell: Rscript {0}
       
 
