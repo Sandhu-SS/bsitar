@@ -132,6 +132,7 @@ jobs:
 
 
       #  start: macOS tar check step
+      - name: Install pak
         run: |
           install.packages("pak")
         shell: Rscript {0}
@@ -152,7 +153,7 @@ jobs:
 
 
       # Some issues knitr - macos latest
-      - name: Install rstan from source
+      - name: Install knitr from source
         # if: runner.os == 'Windows'
         run: |
           pak::pkg_install("knitr", upgrade = TRUE, dependencies = TRUE)
@@ -160,7 +161,7 @@ jobs:
 
 
       # Some issues test marginaleffects
-      - name: Install rstan from source
+      - name: Install marginaleffects from source
         # if: runner.os == 'Windows'
         run: |
           pak::pkg_install("marginaleffects", upgrade = TRUE, dependencies = TRUE)
