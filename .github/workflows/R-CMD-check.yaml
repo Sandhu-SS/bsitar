@@ -115,12 +115,12 @@ jobs:
 
      
 
-        #  start: macOS tar check step
-      # - name: Check tar availability (macOS only)
-        #if: runner.os == 'macOS'
-        #run: |
-         # which tar
-          #tar --version
+      #  start: macOS tar check step
+      - name: Check tar availability (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          which tar
+          tar --version
         #shell: Rscript {0}
       #  end: macOS tar check step
 
@@ -136,6 +136,7 @@ jobs:
           pak::pkg_install(dependencies = TRUE)
         shell: Rscript {0}
       
+
       # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
       - name: Install rstan from source
         if: runner.os == 'Windows'
