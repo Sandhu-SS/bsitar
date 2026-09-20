@@ -109,8 +109,7 @@ jobs:
             modelsummary,
             performance,
             projpred,
-            sitar,
-            knitr
+            sitar
 
   
       # Some issues with processx package, so install it
@@ -126,6 +125,14 @@ jobs:
         run: |
           install.packages('StanHeaders', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
           install.packages('rstan', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
+        shell: Rscript {0}
+
+
+      # Some issues knitr - macos latest
+      - name: Install rstan from source
+        # if: runner.os == 'Windows'
+        run: |
+          install.packages("knitr", type = "source")
         shell: Rscript {0}
 
 
