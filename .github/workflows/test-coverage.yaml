@@ -122,12 +122,6 @@ jobs:
         shell: Rscript {0}
 
       
-      # Some issues test marginaleffects
-      - name: Install marginaleffects from source
-        # if: runner.os == 'Windows'
-        run: |
-          pak::pkg_install("marginaleffects", upgrade = TRUE, dependencies = TRUE)
-        shell: Rscript {0}
 
 
       # Build Cmdstan
