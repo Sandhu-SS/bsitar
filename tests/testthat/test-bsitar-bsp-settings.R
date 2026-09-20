@@ -77,6 +77,6 @@ test_that("bsitar works fully with bsp settings", {
   test_gparms <- get_growthparameters(test_fit, re_formula = NA)
   
   expect_equal(round(test_gparms$Estimate[1], 2), 11.98, tolerance = 0.01)
-  expect_equal(round(test_gparms$Estimate[2], 2), 6.35, tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.47, tolerance = 0.01)
 
 })

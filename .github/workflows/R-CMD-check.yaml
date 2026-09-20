@@ -20,7 +20,7 @@ jobs:
         config:
           - {os: macOS-latest,   r: 'release', rtools: ''}
           # some issues occured on windows-latest related to package rstan when running tests
-          # - {os: windows-latest, r: 'release', rtools: '45'}
+          - {os: windows-latest, r: 'release', rtools: '45'}
           # some issues occured on ubuntu-latest related to pandoc-citeproc
           # https://forum.posit.co/t/github-action-e-package-pandoc-citeproc-has-no-installation-candidate/197536
           - {os: ubuntu-22.04, r: 'devel', rtools: ''}
@@ -109,7 +109,8 @@ jobs:
             modelsummary,
             performance,
             projpred,
-            sitar
+            sitar,
+            knitr
 
   
       # Some issues with processx package, so install it
@@ -123,8 +124,8 @@ jobs:
       - name: Install rstan from source
         if: runner.os == 'Windows'
         run: |
-          install.packages("StanHeaders", type = "source")
-          install.packages("rstan", type = "source")
+          install.packages('StanHeaders', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
+          install.packages('rstan', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
         shell: Rscript {0}
 
 

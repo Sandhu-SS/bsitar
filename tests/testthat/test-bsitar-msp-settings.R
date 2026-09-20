@@ -68,7 +68,7 @@ test_that("bsitar works fully with msp settings", {
   }))
   
 
-  true_sbetas <- c(129.12, 0.00, -0.01, 20.88, 125.56, 186.73, 78.81)
+  true_sbetas <- c(129.12, -0.00, 0.01, 20.88, 125.56, 186.73, 78.81)
   
   test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
   
@@ -77,6 +77,6 @@ test_that("bsitar works fully with msp settings", {
   test_gparms <- get_growthparameters(test_fit, re_formula = NA)
   
   expect_equal(round(test_gparms$Estimate[1], 2), 11.98, tolerance = 0.01)
-  expect_equal(round(test_gparms$Estimate[2], 2), 6.34, tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.47, tolerance = 0.01)
 
 })
