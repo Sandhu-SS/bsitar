@@ -132,7 +132,7 @@ jobs:
       - name: Install rstan from source
         # if: runner.os == 'Windows'
         run: |
-          install.packages("knitr", type = "source")
+          pak::pkg_install("knitr", type = "source")
         shell: Rscript {0}
 
 
