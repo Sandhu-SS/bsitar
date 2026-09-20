@@ -85,8 +85,25 @@ jobs:
 
 
 
+      #  start: macOS tar check step
+      - name: Check tar availability (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          which tar
+          tar --version
+      #  end: macOS tar check step
+
+
       # Some issues with processx package, so install it
       - name: Install dependencies
+
+      #  start: macOS tar check step
+        run: |
+          install.packages("pak")
+        shell: Rscript {0}
+      #  end: macOS tar check step
+
+
         run: |
           install.packages(c("remotes", "processx"))
           remotes::install_deps(dependencies = TRUE)
@@ -108,6 +125,14 @@ jobs:
           pak::pkg_install("knitr", upgrade = TRUE, dependencies = TRUE)
         shell: Rscript {0}
 
+      
+      # Some issues test marginaleffects
+      - name: Install rstan from source
+        # if: runner.os == 'Windows'
+        run: |
+          pak::pkg_install("marginaleffects", upgrade = TRUE, dependencies = TRUE)
+        shell: Rscript {0}
+        
 
       # Build Cmdstan
       - name: Build Cmdstan
