@@ -108,7 +108,7 @@ jobs:
       - name: Install knitr from source
         # if: runner.os == 'Windows'
         run: |
-          pak::pkg_install("knitr", upgrade = TRUE, dependencies = TRUE)
+          install.packages("knitr", type = 'source', dependencies = TRUE)
         shell: Rscript {0}
 
 
