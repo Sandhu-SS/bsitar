@@ -105,7 +105,7 @@ jobs:
       - name: Install rstan from source
         # if: runner.os == 'Windows'
         run: |
-          pak::pkg_install("knitr", type = "source")
+          pak::pkg_install("knitr", upgrade = TRUE, dependencies = TRUE)
         shell: Rscript {0}
 
 
