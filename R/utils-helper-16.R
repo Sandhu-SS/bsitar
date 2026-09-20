@@ -1080,7 +1080,36 @@ add_global_label <-
 
 
 
-line_color_key <- function(data, colorkey = NULL) {
+adj_limits <- function(plot,
+                       expand = NULL,
+                       mult =  NULL) {
+  if(!ggplot2::is_ggplot(plot)) return(plot)
+  # top, right, bottom, left
+  if(is.null(expand)) expand <- c(TRUE, FALSE, FALSE, FALSE)
+  if(is.null(mult)) mult <- c(0.05, 0.05)
+  suppressMessages({
+    plot +
+      ggplot2::scale_x_continuous(
+        expand = ggplot2::expansion(
+          mult = mult
+        )
+      ) +
+      ggplot2::scale_y_continuous(
+        expand = ggplot2::expansion(
+          mult = mult
+        )
+      ) +
+      ggplot2::coord_cartesian(
+        expand = expand
+      )
+  })
+}
+
+
+
+
+line_color_key <- function(data, colorkey = NULL, band.line = TRUE) {
+  if(!band.line) return(NA)
   if(!is.null(colorkey)) {
     if(length(colorkey) == 1) {
       if(is.na(colorkey)) colorkey <- NULL

@@ -5468,7 +5468,26 @@ bsitar <- function(x,
   
   convert_to_list <- getArgNames(bsitar())
   for (ip in convert_to_list) {
+    if (grepl("_init_", ip) | ip == "knots" ) {
+      if(is.list(ip)) {
+        ept_ip <- ip
+      } else if(is.character(ip)) {
+        ept_ip <- ip
+      } else {
+        ept_ip <- ept(ip)
+        ept_ip <- deparse_0(ept_ip)
+      }
+    }
+    
     if (grepl("_init_", ip)) {
+      what_check <- "Initials"
+      what_checkadd <- "such as 0, random, or an object defined in the init_data"
+    } else if (ip == "knots" ) {
+      what_check <- "knots"
+      what_checkadd <- "object defined in the global environmnet."
+    }
+    
+    if (grepl("_init_", ip) | ip == "knots" ) {
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -5482,14 +5501,19 @@ bsitar <- function(x,
       if (!err.) {
         if (length(out) > 1 & !is.list(out)) {
           stop2c(
-            "Initials specified as vector [e.g, c(1, 2)] but must be a list, ",
-            "\n ",
-            " Note, initials can also be specified by using a single character",
-            "\n ",
-            " such as 0, random, or an object defined in the init_data",
-            "\n ",
-            " please check the following init arg: ",
-            ip
+            sprintf(
+              paste0(
+                "%s specified as a vector [%s] but must be a list,",
+                "\n Note, argument %s can also be specified by using a single ",
+                "\n character %s",
+                "\n please check the following init arg: %s"
+              ),
+              what_check,
+              ept_ip,
+              ip,
+              what_checkadd,
+              ip
+            )
           )
         }
       }
@@ -7555,7 +7579,11 @@ bsitar <- function(x,
         set_bknots <- checkgetiknotsbknots(knots, 'bknots')
       }
     } else if(is.null(mcall[['knots_selection']])) {
-      set_bknots <- checkgetiknotsbknots(knots, 'bknots')
+      if(exists('bknots')) {
+        set_bknots <- checkgetiknotsbknots(knots, 'bknots')
+      } else {
+        set_bknots <- NULL
+      }
       if(as.logical(smat_bkrange)) set_bknots <- NULL
       knots_selection_fix_bknots <- TRUE
       if(is_emptyx(smat_what)) smat_what <- 'plot1'
@@ -8896,12 +8924,12 @@ bsitar <- function(x,
     abc_check_grby_covariates_ <- intersect(abc_grby, covariates_)
     sigma_check_grby_covariates_ <- intersect(sigma_grby, sigmacovariates_)
     abc_check_grby_covariates_msg <- 
-    paste0("The names of covariate(s) and the 'by' variable in ",
-    "gr(..., by=) for '%s' must not be same. The variables can ",
-    "be exactly same but have different names. For example, if ",
-    "covariate(s) in the fixed effects '%s' are 'covname', then ",
-    " make a copy of this variables such as 'covnameid' in the data ",
-    "frame and then use it as a by variable gr(..., by=covnameid)")
+      paste0("The covariate name and the 'by' variable in ",
+             "gr(..., by) for '%s' parameters must not be same. The variables can ",
+             "be exactly same but have different names. For example, if ",
+             "covariate in the fixed effects is 'covname', then ",
+             " make a copy of it such as 'covnameid' in the data ",
+             "frame and then use it as a by variable gr(..., by=covnameid)")
     
     if(!is_emptyx(abc_check_grby_covariates_)) {
       stop2(sprintf(
@@ -11436,12 +11464,6 @@ bsitar <- function(x,
                                             what = 'z')
             initialsx2 <- c(initialsx2, newinits)
           }, silent = TRUE)
-          # initialsx2[[initialsi]] <- NULL
-          # newinits <- set_init_gr_effects(temp_stancode2, 
-          #                                 temp_standata2, 
-          #                                 parameterization = parameterization,
-          #                                 what = 'z')
-          # initialsx2 <- c(initialsx2, newinits)
         }
       }
       uni_name <- unique(names(initialsx2))

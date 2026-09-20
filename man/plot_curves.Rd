@@ -66,7 +66,10 @@
   color.groupby = NULL,
   fill.groupby = NULL,
   band.alpha = NULL,
+  band.line = FALSE,
   band.legends = FALSE,
+  mult = c(0.02, 0.05),
+  expand = c(TRUE, TRUE, FALSE, FALSE),
   show_age_takeoff = TRUE,
   show_age_peak = TRUE,
   show_age_cessation = TRUE,
@@ -481,9 +484,25 @@ and velocity curves for \code{covariates} or individual-specific curves. If
 \item{band.alpha}{A numeric value to specify the transparency of the CI bands
 around the curves. The default \code{NULL} sets the transparency to 0.4.}
 
+\item{band.line}{A logical value (default \code{FALSE}) to indicate whether
+to add line around the CI bands.}
+
 \item{band.legends}{A logical value (default \code{FALSE}) to indicate
 whether to show \code{legends} for \code{CI bands}. It sets
 \code{ggplot2::guides(fill = 'none')}}
+
+\item{mult}{vector of multiplicative range expansion factors.
+If length 1, both the lower and upper limits of the scale
+are expanded outwards by \code{mult}. If length 2, the lower limit
+is expanded by \code{mult[1]} and the upper limit by \code{mult[2]}.}
+
+\item{expand}{If \code{TRUE}, the default, adds a small expansion factor to
+the limits to ensure that data and axes don't overlap. If \code{FALSE},
+limits are taken exactly from the data or \code{xlim}/\code{ylim}.
+Giving a logical vector will separately control the expansion for the four
+directions (top, left, bottom and right). The \code{expand} argument will be
+recycled to length 4 if necessary. Alternatively, can be a named logical
+vector to control a single direction, e.g. \code{expand = c(bottom = FALSE)}.}
 
 \item{show_age_takeoff}{A logical value (default \code{TRUE}) to indicate
 whether to display the ATGV line(s) on the plot.}
@@ -720,9 +739,9 @@ fitted and predicted values.
 }
 \examples{
 \donttest{
-# Fit Bayesian SITAR model 
+# Fit Bayesian SITAR model
 
-# To avoid mode estimation which takes time, the Bayesian SITAR model is fit to 
+# To avoid mode estimation which takes time, the Bayesian SITAR model is fit to
 # the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
@@ -735,7 +754,7 @@ model <- berkeley_exfit
 plot_curves(model, opt = 'dv')
 
 # Individual-specific distance and velocity curves with default options
-# Note that \code{legendpos = 'none'} will suppress the legend positions. 
+# Note that \code{legendpos = 'none'} will suppress the legend positions.
 # This suppression is useful when plotting individual-specific curves
 
 plot_curves(model, opt = 'DV')
@@ -749,18 +768,18 @@ plot_curves(model, opt = 'dv', apv = TRUE)
 plot_curves(model, opt = 'DV', apv = TRUE)
 
 # Population average distance curve, velocity curve, and APGV with CI bands
-# To construct CI bands, growth parameters are first calculated for each  
-# posterior draw and then summarized across draws. Therefore,summary 
+# To construct CI bands, growth parameters are first calculated for each
+# posterior draw and then summarized across draws. Therefore,summary
 # option must be set to FALSE
 
 plot_curves(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
 
 # Adjusted and unadjusted individual curves
-# Note ipts = NULL (i.e., no interpolation of predictor (i.e., age) to plot a 
-# smooth curve). This is because it does not a make sense to interploate data 
-# when estimating adjusted curves. Also, layout = 'facet' (and not default 
-# layout = 'single') is used for the ease of visualizing the plotted 
-# adjusted and unadjusted individual curves. However, these lines can be 
+# Note ipts = NULL (i.e., no interpolation of predictor (i.e., age) to plot a
+# smooth curve). This is because it does not a make sense to interploate data
+# when estimating adjusted curves. Also, layout = 'facet' (and not default
+# layout = 'single') is used for the ease of visualizing the plotted
+# adjusted and unadjusted individual curves. However, these lines can be
 # superimposed on each other by setting the set layout = 'single'.
 # For other plots shown above, layout can be set as 'single' or 'facet'
 
