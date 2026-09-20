@@ -129,18 +129,11 @@ jobs:
       # Some issues with processx package, so install it
       - name: Install dependencies
 
-
-
-      #  start: macOS tar check step
-      - name: Install pak
-        run: |
-          install.packages("pak")
-        shell: Rscript {0}
-      #  end: macOS tar check step
-
         run: |
           install.packages(c("remotes", "processx"))
           remotes::install_deps(dependencies = TRUE)
+          install.packages("pak")
+          pak::pkg_install(dependencies = TRUE)
         shell: Rscript {0}
       
       # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
@@ -160,6 +153,12 @@ jobs:
         shell: Rscript {0}
 
 
+      # Some issues marginaleffects
+      - name: Install marginaleffects from source
+        # if: runner.os == 'Windows'
+        run: |
+          pak::pkg_install("marginaleffects", upgrade = TRUE, dependencies = TRUE)
+        shell: Rscript {0}
 
 
       # Build Cmdstan

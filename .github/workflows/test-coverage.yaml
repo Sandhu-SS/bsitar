@@ -93,6 +93,8 @@ jobs:
         run: |
           install.packages(c("remotes", "processx"))
           remotes::install_deps(dependencies = TRUE)
+          install.packages("pak")
+          pak::pkg_install(dependencies = TRUE)
         shell: Rscript {0}
       
       # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
@@ -111,7 +113,14 @@ jobs:
           pak::pkg_install("knitr", upgrade = TRUE, dependencies = TRUE)
         shell: Rscript {0}
 
-      
+
+      # Some issues marginaleffects
+      - name: Install marginaleffects from source
+        # if: runner.os == 'Windows'
+        run: |
+          pak::pkg_install("marginaleffects", upgrade = TRUE, dependencies = TRUE)
+        shell: Rscript {0}
+
 
       # Build Cmdstan
       - name: Build Cmdstan
