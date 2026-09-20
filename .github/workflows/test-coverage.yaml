@@ -90,14 +90,6 @@ jobs:
       # Some issues with processx package, so install it
       - name: Install dependencies
 
-      #  start: macOS tar check step
-      - name: Install pak
-        run: |
-          install.packages("pak")
-        shell: Rscript {0}
-      #  end: macOS tar check step
-
-
         run: |
           install.packages(c("remotes", "processx"))
           remotes::install_deps(dependencies = TRUE)
