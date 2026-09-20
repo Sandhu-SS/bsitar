@@ -147,7 +147,11 @@ jobs:
       - name: Install knitr from source
         # if: runner.os == 'Windows'
         run: |
-          install.packages("knitr", type = 'source', dependencies = TRUE)
+          options(repos = c(
+            yihui = 'https://yihui.r-universe.dev',
+             CRAN = 'https://cloud.r-project.org'
+              ))
+          install.packages('knitr')
         shell: Rscript {0}
 
 
