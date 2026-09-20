@@ -121,15 +121,15 @@ jobs:
       - name: Install dependencies
 
 
-       #  start: macOS tar check step
-      - name: Check tar availability (macOS only)
-        if: runner.os == 'macOS'
-        run: |
-          which tar
-          tar --version
-        shell: Rscript {0}
+        #  start: macOS tar check step
+      # - name: Check tar availability (macOS only)
+        #if: runner.os == 'macOS'
+        #run: |
+         # which tar
+          #tar --version
+        #shell: Rscript {0}
       #  end: macOS tar check step
-      
+
 
       #  start: macOS tar check step
         run: |
