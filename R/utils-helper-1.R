@@ -4744,6 +4744,18 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
 }
 
 
+call_set_modeldata <- function(model) {
+  # data_name <- attr(model$data, "data_name")
+  # assign(data_name, model$data)
+  # newdata <- get(data_name)
+  newdata <- model$model_info$bgmfit.data
+  marginaleffects::set_modeldata(model = model, newdata = newdata)
+  return(model)
+}
+
+
+
+
 #' custom_get_data.brmsfit for for \code{insight get_data}
 #'
 #' @param x A brms objects

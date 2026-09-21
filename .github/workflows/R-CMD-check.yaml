@@ -108,18 +108,19 @@ jobs:
             modelsummary,
             performance,
             projpred,
-            sitar
+            sitar,
+            rstanarm
 
       
 
      
 
       #  start: macOS tar check step
-      #- name: Check tar availability (macOS only)
-      #  if: runner.os == 'macOS'
-      #  run: |
-      #    which tar
-      #    tar --version
+      - name: Check tar availability (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          which tar
+          tar --version
       #  shell: Rscript {0}
       #  end: macOS tar check step
 
@@ -145,7 +146,7 @@ jobs:
 
       # Some issues knitr - macos latest
       - name: Install knitr from source
-        # if: runner.os == 'Windows'
+        # if: runner.os == 'macOS'
         run: |
           options(repos = c(
             yihui = 'https://yihui.r-universe.dev',

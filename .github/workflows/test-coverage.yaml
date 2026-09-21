@@ -11,7 +11,8 @@ name: test-coverage
 jobs:
   test-coverage:
     # some issues occured on ubuntu-latest related to pandoc-citeproc
-    runs-on: ubuntu-22.04
+    # runs-on: ubuntu-22.04
+    runs-on: windows-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
@@ -80,7 +81,8 @@ jobs:
             modelsummary,
             performance,
             projpred,
-            sitar
+            sitar,
+            rstanarm
 
 
 

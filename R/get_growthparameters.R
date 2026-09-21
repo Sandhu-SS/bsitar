@@ -703,22 +703,25 @@ get_growthparameters.bgmfit <- function(model,
                          verbose = verbose)
 
   if(!model$test_mode) {
-    unlock_replace_bind(package = "insight", what = "get_data",
-                        replacement = custom_get_data.brmsfit, 
-                        ept_str = T)
-    if(verbose) {
-      message2c("As model[['test_mode']] = FALSE, the full data are extracted 
-                via insight::get_data() using custom_get_data.brmsfit. This 
-                full data are required for the marginaleffects functions. To 
-                override this behavior, set model[['test_mode']] = TRUE.",
-                pad_before = "\n", 
-                pad_after = "\n")
-    }
+    # unlock_replace_bind(package = "insight", what = "get_data",
+    #                     replacement = custom_get_data.brmsfit, 
+    #                     ept_str = T)
+    # if(verbose) {
+    #   message2c("As model[['test_mode']] = FALSE, the full data are extracted 
+    #             via insight::get_data() using custom_get_data.brmsfit. This 
+    #             full data are required for the marginaleffects functions. To 
+    #             override this behavior, set model[['test_mode']] = TRUE.",
+    #             pad_before = "\n", 
+    #             pad_after = "\n")
+    # }
     
     unlock_replace_bind(package = "marginaleffects", what = "get_ci_draws",
                         replacement = custom_get_ci_draws, 
                         ept_str = T)
   }
+  
+  model <- call_set_modeldata(model)
+  
   
   if(is.null(usesavedfuns)) {
     if(!is.null(model$model_info$exefuns[[1]])) {
