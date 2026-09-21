@@ -48,7 +48,6 @@ jobs:
             projpred
             priorsense
             RWiener
-            any::rtdists
             extraDistr
             spdep
             mnormt
@@ -86,7 +85,6 @@ jobs:
             projpred
             sitar
             rstanarm
-            knitr
             marginaleffects
             processx
             xfun
@@ -115,6 +113,7 @@ jobs:
         # if: runner.os == 'Windows'
         run: |
           install.packages("knitr", type = 'source', dependencies = TRUE)
+          install.packages("rtdists")
         shell: Rscript {0}
 
 
