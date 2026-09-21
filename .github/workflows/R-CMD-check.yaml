@@ -118,7 +118,14 @@ jobs:
         run: |
           install.packages('StanHeaders', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
           install.packages('rstan', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
-          install.packages("rtdists", type = "source")
+        shell: Rscript {0}
+
+      # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
+      - name: Install from source
+        # if: runner.os == 'Windows'
+        run: |
+          setRepositories(ind = 1) # Sets to CRAN only
+          install.packages("rtdists")
         shell: Rscript {0}
 
       # Build Cmdstan
