@@ -86,6 +86,7 @@ jobs:
             knitr
             marginaleffects
             processx
+            xfun
 
 
       # Some issues with processx package, so install it
@@ -99,7 +100,7 @@ jobs:
 
       # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
       - name: Install rstan from source
-        if: runner.os == 'Windows'
+        # if: runner.os == 'Windows'
         run: |
           install.packages('StanHeaders', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
           install.packages('rstan', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
