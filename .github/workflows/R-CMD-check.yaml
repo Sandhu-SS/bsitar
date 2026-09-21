@@ -51,7 +51,7 @@ jobs:
       # stan-dev/cmdstanr
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          dependencies: TRUE
+          dependencies: "TRUE"
           extra-packages: |
             R.rsp
             rcmdcheck
