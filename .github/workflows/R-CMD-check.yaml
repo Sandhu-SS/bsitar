@@ -68,7 +68,6 @@ jobs:
             projpred
             priorsense
             RWiener
-            any::rtdists
             extraDistr
             spdep
             mnormt
@@ -106,7 +105,6 @@ jobs:
             projpred
             sitar
             rstanarm
-            knitr
             marginaleffects
             processx
             xfun
@@ -126,6 +124,7 @@ jobs:
         run: |
           setRepositories(ind = 1) # Sets to CRAN only
           install.packages("rtdists")
+          install.packages("knitr")
         shell: Rscript {0}
 
       # Build Cmdstan
