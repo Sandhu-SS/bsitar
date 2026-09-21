@@ -68,7 +68,7 @@ jobs:
             projpred
             priorsense
             RWiener
-            rtdists
+            any::rtdists
             extraDistr
             spdep
             mnormt
