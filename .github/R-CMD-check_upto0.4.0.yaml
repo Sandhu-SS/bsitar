@@ -6,15 +6,31 @@ on:
   pull_request:
     branches: [main, master]
 
-name: test-coverage
+name: R-CMD-check
 
 jobs:
-  test-coverage:
-    # some issues occured on ubuntu-latest related to pandoc-citeproc
-    # runs-on: ubuntu-22.04
-    runs-on: windows-latest
+  R-CMD-check:
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: macOS-latest,   r: 'release', rtools: ''}
+          # some issues occured on windows-latest related to package rstan when running tests
+          - {os: windows-latest, r: 'release', rtools: '45'}
+          # some issues occured on ubuntu-latest related to pandoc-citeproc
+          # https://forum.posit.co/t/github-action-e-package-pandoc-citeproc-has-no-installation-candidate/197536
+          - {os: ubuntu-22.04, r: 'devel', rtools: ''}
+          - {os: ubuntu-22.04, r: 'release', rtools: ''}
+          # some issues occured on ubuntu-oldrel related to package gls need R 4.5.0 or higher
+          - {os: ubuntu-22.04, r: 'oldrel-1', rtools: ''}
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
 
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +38,21 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: "latest"
+
       - uses: r-lib/actions/setup-r@v2
         with:
+          r-version: ${{ matrix.config.r }}
+          rtools-version: ${{ matrix.config.rtools }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
       # As cmdstanr is not yet on CRAN, configure the action to only install the
       # 'Depends' packages by default and then manually specify the 'Suggests'
       # packages that are needed for R CMD CHECK
+      # stan-dev/cmdstanr
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: NA
@@ -40,9 +64,10 @@ jobs:
             mice
             BH
             MCMCglmm
-            ape
-            stan-dev/cmdstanr
+            ape 
+            stan-dev/cmdstanr           
             RcppEigen
+            testthat
             emmeans
             projpred
             priorsense
@@ -56,9 +81,6 @@ jobs:
             statmod
             diffobj
             betareg
-            usethis
-            testthat
-            covr
             dtplyr
             doParallel
             jtools
@@ -72,6 +94,11 @@ jobs:
             kableExtra
             spelling
             Hmisc
+            future.callr
+            future.mirai
+            mirai
+            bayestestR
+            growthcleanr
             tidybayes
             openxlsx2
             distributional
@@ -83,11 +110,22 @@ jobs:
             projpred
             sitar
             rstanarm
-            knitr
-            marginaleffects
-            processx
+
+      
+
+     
+
+      #  start: macOS tar check step
+      - name: Check tar availability (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          which tar
+          tar --version
+      #  shell: Rscript {0}
+      #  end: macOS tar check step
 
 
+  
       # Some issues with processx package, so install it
       - name: Install dependencies
         run: |
@@ -108,9 +146,13 @@ jobs:
 
       # Some issues knitr - macos latest
       - name: Install knitr from source
-        # if: runner.os == 'Windows'
+        # if: runner.os == 'macOS'
         run: |
-          install.packages("knitr", type = 'source', dependencies = TRUE)
+          options(repos = c(
+            yihui = 'https://yihui.r-universe.dev',
+             CRAN = 'https://cloud.r-project.org'
+              ))
+          install.packages('knitr')
         shell: Rscript {0}
 
 
@@ -122,7 +164,6 @@ jobs:
         shell: Rscript {0}
 
 
-
       # Build Cmdstan
       - name: Build Cmdstan
         run: |
@@ -130,6 +171,9 @@ jobs:
           cmdstanr::install_cmdstan(cores = parallel::detectCores())
         shell: Rscript {0}
 
-      - name: Test coverage
-        run: covr::codecov()
-        shell: Rscript {0}
+
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          build_args: 'c("--no-manual", "--no-build-vignettes")'
+          args: 'c("--no-manual", "--as-cran", "--ignore-vignettes")'
