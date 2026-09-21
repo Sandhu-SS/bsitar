@@ -87,6 +87,7 @@ jobs:
             marginaleffects
             processx
             xfun
+            rtdists
 
 
       # Some issues with processx package, so install it
