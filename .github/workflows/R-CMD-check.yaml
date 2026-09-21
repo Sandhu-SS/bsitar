@@ -51,7 +51,7 @@ jobs:
       # stan-dev/cmdstanr
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          dependencies: "TRUE"
+          dependencies: NA
           extra-packages: |
             R.rsp
             rcmdcheck
@@ -110,7 +110,7 @@ jobs:
             marginaleffects
             processx
             xfun
-            rtdists
+            
 
       # Some issues rstan - windows latest Error in inDL(x, as.logical(local), as.logical(now)
       - name: Install rstan from source
@@ -118,6 +118,7 @@ jobs:
         run: |
           install.packages('StanHeaders', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
           install.packages('rstan', repos = c('https://stan-dev.r-universe.dev', 'https://cloud.r-project.org'))
+          install.packages("rtdists", type = "source")
         shell: Rscript {0}
 
       # Build Cmdstan
